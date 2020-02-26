@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: leader-board-aggregator
+spec:
+  selector:
+    app: leader-board-aggregator
+  ports:
+  - port: 8080
+    targetPort: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: leader-board-aggregator
+spec:
+  selector:
+    matchLabels:
+      app: leader-board-aggregator
+  template:
+    metadata:
+      labels:
+        app: leader-board-aggregator
+    spec:
+      containers:
+      - name: leader-board-aggregator
+        image: quay/io/rhdevelopers/leader-board-aggregator
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8080
+

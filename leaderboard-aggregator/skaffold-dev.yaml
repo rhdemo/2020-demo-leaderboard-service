@@ -1,0 +1,28 @@
+apiVersion: skaffold/v1
+kind: Config
+metadata:
+  name: leader-board-aggregator
+build:
+  artifacts:
+  - image: quay.io/rhdevelopers/leader-board-aggregator
+    context: .
+    sync:
+      manual:
+       - src: 'src/**/*.java'
+         dest: /usr/src/app/src
+         strip: 'src/'
+       - src: 'pom.xml'
+         dest: /usr/src/app/src
+    custom:
+      # for windows use build.cmd
+      #buildCommand: .\build.cmd
+      buildCommand: ./build.sh
+      dependencies:
+        dockerfile: 
+          path: Dockerfile.dev
+  local:
+    push: false
+deploy:
+  kubectl:
+    manifests:
+    - k8s/app.yaml

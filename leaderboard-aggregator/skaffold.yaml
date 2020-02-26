@@ -1,0 +1,13 @@
+apiVersion: skaffold/v1
+kind: Config
+metadata:
+  name: fruits-app
+build:
+  artifacts:
+  - image: rhdevelopers/fruits-app
+  local:
+    push: false
+deploy:
+  kubectl:
+    manifests:
+    - k8s/app.yaml
