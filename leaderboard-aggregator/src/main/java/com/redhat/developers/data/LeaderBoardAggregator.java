@@ -12,7 +12,6 @@ import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.Consumed;
-import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.Materialized;
 import org.apache.kafka.streams.kstream.Produced;
 import org.apache.kafka.streams.state.KeyValueBytesStoreSupplier;
@@ -29,10 +28,10 @@ public class LeaderBoardAggregator {
   @ConfigProperty(name = "quarkus.kafka-streams.topics")
   List<String> topics;
 
-  @ConfigProperty(name = "rhdemo.leaderboard-kvstore-name")
+  @ConfigProperty(name = "rhdemo.leaderboard.kvstore.name")
   String kvStoreName;
 
-  @ConfigProperty(name = "rhdemo.leaderboard-aggregator-stream")
+  @ConfigProperty(name = "rhdemo.leaderboard.aggregator.stream")
   String outStream;
  
   @Inject
@@ -40,27 +39,37 @@ public class LeaderBoardAggregator {
   
   @Produces
   public Topology buildLeaderBoard() {
+    JsonbSerde<ScoringKafkaMessage> scoringKafkaMessageSerde = new JsonbSerde<>(ScoringKafkaMessage.class);
+    //JsonbSerde<Game> gameSerde = new JsonbSerde<>(Game.class);
     JsonbSerde<Player> playerSerde = new JsonbSerde<>(Player.class);
-    JsonbSerde<LeaderBoardItem> leaderBoardSerde = new JsonbSerde<>(LeaderBoardItem.class);
     
     StreamsBuilder builder = new StreamsBuilder();
     
     KeyValueBytesStoreSupplier storeSupplier = 
         Stores.persistentKeyValueStore(kvStoreName);
 
-    KStream<String, Player> source = builder.stream(topics,
-        (Consumed.with(Serdes.String(),playerSerde)));
-    //TODO Window?
-    source
-        .groupBy((k, v) -> v.getId())
-        .aggregate(LeaderBoardItem::new, 
-            (pId, player, aggregation) -> aggregation.updateFrom(player),
-            Materialized.<String,LeaderBoardItem> as(storeSupplier)
-             .withValueSerde(leaderBoardSerde))
+    builder.stream(topics,
+        (Consumed.with(Serdes.String(),scoringKafkaMessageSerde)))
+        .selectKey((k,v) -> v.getGame().id)
+        .groupBy((k,v) -> v.getPlayer().playerId)
+        .aggregate(() -> new Player(),(key, value, aggregate) -> {
+            Player tempPlayer = value.getPlayer();
+            aggregate.avatar = tempPlayer.avatar;
+            aggregate.clusterSource = tempPlayer.clusterSource;
+            aggregate.playerId = tempPlayer.playerId;
+            aggregate.playerName = tempPlayer.playerName;
+            aggregate.right += tempPlayer.right;
+            aggregate.wrong += tempPlayer.wrong;
+            aggregate.score  += tempPlayer.score;
+            aggregate.gameId = value.getGame().id;
+            return aggregate;
+          },Materialized.<String,Player> as(storeSupplier)
+        .withValueSerde(playerSerde))
         .toStream()
         .to(outStream,
-           Produced.with(Serdes.String(), leaderBoardSerde));
+            Produced.with(Serdes.String(), playerSerde));
     
     return builder.build();
   }
+  
 }

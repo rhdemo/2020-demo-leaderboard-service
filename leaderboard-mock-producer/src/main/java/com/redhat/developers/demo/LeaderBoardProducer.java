@@ -18,7 +18,7 @@ public class LeaderBoardProducer {
 
   Logger logger = Logger.getLogger(LeaderBoardProducer.class.getName());
 
-  @ConfigProperty(name = "tick.time", defaultValue = "5")
+  @ConfigProperty(name = "tick.time")
   int tickTime;
 
   @Inject

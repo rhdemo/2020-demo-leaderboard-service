@@ -35,3 +35,5 @@
 **/Dockerfile
 **/Dockerfile.dev
 **/.kube
+
+kafka

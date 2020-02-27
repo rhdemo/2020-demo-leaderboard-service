@@ -9,7 +9,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import com.redhat.developers.service.LeaderBoardService;
+import com.redhat.developers.service.PlayerPersistenceService;
 
 /**
  * LeaderBoardSource
@@ -24,11 +24,11 @@ public class LeaderBoardResource {
   //TODO WebSocket
 
   @Inject
-  LeaderBoardService service;
+  PlayerPersistenceService playerPService;
 
   @GET
   @Path("leaderboard")
   public Response getLeaderBoard() {
-     return Response.ok(service.leaderBoardWithRankings()).build();
+     return Response.ok(playerPService.rankedPlayerList()).build();
    }
 }

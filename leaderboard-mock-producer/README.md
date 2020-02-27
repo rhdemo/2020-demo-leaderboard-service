@@ -1,30 +1,50 @@
-# leader-board-mock-producer project
+# Leaderboard Mock Producer
 
-This project uses Quarkus, the Supersonic Subatomic Java Framework.
+This is a mock data producer project, that will send data to the multiple kafka mirror streams
 
-If you want to learn more about Quarkus, please visit its website: https://quarkus.io/ .
+## Data Structure
 
-## Running the application in dev mode
-
-You can run your application in dev mode that enables live coding using:
+```json
+{
+    "game": {
+        "date": "2020-02-24T12:45:35.000Z",
+        "id": "new-game-1582548335",
+        "state": "active"
+    },
+    "player": {
+        "avatar": "{\"body\":4,\"color\":4,\"ears\":1,\"eyes\":0,\"mouth\":1,\"nose\":2}",
+        "clusterSource": "sg",
+        "game": {
+            "date": "2020-02-24T12:45:35.000Z",
+            "id": "new-game-1582548335",
+            "state": "active"
+        },
+        "playerId": "pluto",
+        "playerName": "pluto",
+        "right": 3,
+        "score": 1484,
+        "wrong": 7
+    }
+}
 ```
-./mvnw quarkus:dev
+
+## Start Streaming
+
+By default the deployment will have replicas as `0`, to start streaming scale up the replica:
+
+```shell
+oc -n leaderboard scale deployments leaderboard-mock-producer --replicas=1
 ```
 
-## Packaging and running the application
+## Stop Streaming
 
-The application is packageable using `./mvnw package`.
-It produces the executable `leader-board-mock-producer-0.0.1-runner.jar` file in `/target` directory.
-Be aware that it’s not an _über-jar_ as the dependencies are copied into the `target/lib` directory.
+```shell
+oc -n leaderboard scale deployments leaderboard-mock-producer --replicas=0
+```
 
-The application is now runnable using `java -jar target/leader-board-mock-producer-0.0.1-runner.jar`.
+## Adjusting Tick Time
 
-## Creating a native executable
-
-You can create a native executable using: `./mvnw package -Pnative`.
-
-Or you can use Docker to build the native executable using: `./mvnw package -Pnative -Dquarkus.native.container-build=true`.
-
-You can then execute your binary: `./target/leader-board-mock-producer-0.0.1-runner`
-
-If you want to learn more about building native executables, please consult https://quarkus.io/guides/building-native-image-guide .
+The application sends new game data every 20 seconds, to modify it run the following command:
+```shell
+oc -n leaderboard scale deployments leaderboard-mock-producer --replicas=0
+```

@@ -4,83 +4,25 @@ package com.redhat.developers.data;
  * Player
  */
 public class Player {
-  private String id;
-  private String nickName;
-  private int rights;
-  private int wrongs;
-  private int score;
-  private String source;
-  private String avatar;
+  public String playerId;
+  public String playerName;
+  public int right;
+  public int wrong;
+  public int score;
+  public String clusterSource;
+  public String avatar;
+  public Game game;
 
-  public Player() {
-
-  }
-
-  public Player(final String id, final String nickName, final int rights, final int wrongs, final int score,
-      final String source, final String avatar) {
-    this.id = id;
-    this.nickName = nickName;
-    this.rights = rights;
-    this.wrongs = wrongs;
+  public Player(String playerId, String playerName, int right, int wrong, int score, String clusterSource,
+      String avatar, Game game) {
+    this.playerId = playerId;
+    this.playerName = playerName;
+    this.right = right;
+    this.wrong = wrong;
     this.score = score;
-    this.source = source;
+    this.clusterSource = clusterSource;
     this.avatar = avatar;
-  }
-
-  public String getAvatar() {
-    return avatar;
-  }
-
-  public void setAvatar(String avatar) {
-    this.avatar = avatar;
-  }
-
-  public String getId() {
-    return id;
-  }
-
-  public String getSource() {
-    return source;
-  }
-
-  public void setSource(final String source) {
-    this.source = source;
-  }
-
-  public int getScore() {
-    return score;
-  }
-
-  public void setScore(final int score) {
-    this.score = score;
-  }
-
-  public int getWrongs() {
-    return wrongs;
-  }
-
-  public void setWrongs(final int wrongs) {
-    this.wrongs = wrongs;
-  }
-
-  public int getRights() {
-    return rights;
-  }
-
-  public void setRights(final int rights) {
-    this.rights = rights;
-  }
-
-  public String getNickName() {
-    return nickName;
-  }
-
-  public void setNickName(final String nickName) {
-    this.nickName = nickName;
-  }
-
-  public void setId(final String id) {
-    this.id = id;
+    this.game = game;
   }
 
 }
