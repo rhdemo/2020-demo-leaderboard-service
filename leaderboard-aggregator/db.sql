@@ -1,7 +1,3 @@
--- Adminer 4.7.6 PostgreSQL dump
-
-\connect "gamedb";
-
 DROP TABLE IF EXISTS "player";
 CREATE TABLE "public"."player" (
     "player_id" character varying(255) NOT NULL,
@@ -17,6 +13,5 @@ CREATE TABLE "public"."player" (
 
 CREATE INDEX "idx_playerid" ON "public"."player" USING btree ("player_id");
 
-TRUNCATE "player";
 
 -- 2020-02-28 04:05:10.13827+00
