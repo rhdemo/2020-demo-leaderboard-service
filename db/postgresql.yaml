@@ -8,7 +8,7 @@ spec:
   ports:
   - port: 5432
     targetPort: 5432
-  type: NodePort
+  type: LoadBalancer
 ---
 apiVersion: apps/v1
 kind: Deployment

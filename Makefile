@@ -11,7 +11,7 @@ oc_login:
 .PHONY:	import_openjdk8_is
 import_openjdk8_is:	oc_login
 	@oc import-image redhat-openjdk-18/openjdk18-openshift \
-	  --from=registry.access.redhat.com/redhat-openjdk-18/openjdk18-openshift
+	  --from=registry.access.redhat.com/redhat-openjdk-18/openjdk18-openshift --confirm
 
 .PHONY: create-leaderboard-aggregator-bc
 create-leaderboard-aggregator-bc:	oc_login

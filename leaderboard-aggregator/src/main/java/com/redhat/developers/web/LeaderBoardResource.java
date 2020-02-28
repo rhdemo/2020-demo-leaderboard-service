@@ -5,6 +5,7 @@ import javax.inject.Inject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -21,14 +22,13 @@ import com.redhat.developers.service.PlayerPersistenceService;
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class LeaderBoardResource {
-  //TODO WebSocket
 
   @Inject
   PlayerPersistenceService playerPService;
 
   @GET
-  @Path("leaderboard")
-  public Response getLeaderBoard() {
-     return Response.ok(playerPService.rankedPlayerList()).build();
+  @Path("leaderboard/{gameid}")
+  public Response getLeaderBoard(@PathParam("gameid") String gameId) {
+     return Response.ok(playerPService.rankedPlayerList(gameId)).build();
    }
 }

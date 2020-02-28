@@ -11,6 +11,7 @@ import javax.json.bind.Jsonb;
 import javax.transaction.Transactional;
 
 import com.redhat.developers.data.Player;
+import com.redhat.developers.sql.PlayerQueries;
 
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 
@@ -36,15 +37,17 @@ public class PlayerPersistenceService {
     try {
       logger.info("Saving Player:" + playerJson);
       Player player = jsonb.fromJson(playerJson, Player.class);
-      Player.upsert(client, player);
+      PlayerQueries.upsert(client, player);
     } catch (Exception e) {
       logger.log(Level.SEVERE, "Error saving player info " + playerJson, e);
     }
   }
 
 
-  public List<Player> rankedPlayerList(){
+  public List<Player> rankedPlayerList(String gameId){
     return Collections.emptyList();
   }
+
+  
 
 }

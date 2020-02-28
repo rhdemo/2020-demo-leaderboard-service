@@ -1,4 +1,4 @@
-package com.redhat.developers.data;
+package com.redhat.developers.streams;
 
 import java.util.List;
 import java.util.logging.Logger;
@@ -7,6 +7,10 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Produces;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
+
+import com.redhat.developers.data.Player;
+import com.redhat.developers.data.ScoringKafkaMessage;
+import com.redhat.developers.data.Transaction;
 
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.StreamsBuilder;
@@ -54,13 +58,18 @@ public class LeaderBoardAggregator {
         .groupBy((k,v) -> v.getPlayer().playerId)
         .aggregate(() -> new Player(),(key, value, aggregate) -> {
             Player tempPlayer = value.getPlayer();
-            aggregate.avatar = tempPlayer.avatar;
-            aggregate.clusterSource = tempPlayer.clusterSource;
+            Transaction gameTransaction = value.getTransaction();
+            aggregate.avatar = 
+              tempPlayer.avatar!=null?tempPlayer.avatar:"{}";
+            aggregate.clusterSource = 
+              tempPlayer.clusterSource!=null?tempPlayer.clusterSource:"N.A";
             aggregate.playerId = tempPlayer.playerId;
             aggregate.playerName = tempPlayer.playerName;
             aggregate.right += tempPlayer.right;
             aggregate.wrong += tempPlayer.wrong;
-            aggregate.score  += tempPlayer.score;
+            if(gameTransaction.correct) {
+                aggregate.score  += gameTransaction.points;
+            }
             aggregate.gameId = value.getGame().id;
             return aggregate;
           },Materialized.<String,Player> as(storeSupplier)

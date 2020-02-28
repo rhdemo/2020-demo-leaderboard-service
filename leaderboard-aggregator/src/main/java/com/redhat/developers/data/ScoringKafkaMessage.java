@@ -7,9 +7,18 @@ public class ScoringKafkaMessage {
 
   private Player player;
   private Game game;
+  private Transaction transaction;
 
   public Player getPlayer() {
     return player;
+  }
+
+  public Transaction getTransaction() {
+    return transaction;
+  }
+
+  public void setTransaction(Transaction transaction) {
+    this.transaction = transaction;
   }
 
   public void setPlayer(Player player) {
