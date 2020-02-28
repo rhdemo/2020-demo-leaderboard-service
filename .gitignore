@@ -37,3 +37,4 @@
 
 kafka
 .env
+leaderboard-mock-producer
