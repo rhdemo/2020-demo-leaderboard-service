@@ -1,22 +1,22 @@
-CREATE TABLE public.player (
-    playerid character varying(255) NOT NULL,
-    avatar character varying(255),
-    clustersource character varying(255),
-    playername character varying(255),
-    guess_right integer,
-    guess_score integer,
-    guess_wrong integer,
-    game_id character varying(255)
-);
+-- Adminer 4.7.6 PostgreSQL dump
 
-ALTER TABLE ONLY public.player
-    ADD CONSTRAINT player_pkey PRIMARY KEY (playerid);
+\connect "gamedb";
 
--- Index: idx_playerid
+DROP TABLE IF EXISTS "player";
+CREATE TABLE "public"."player" (
+    "player_id" character varying(255) NOT NULL,
+    "player_avatar" character varying(255),
+    "cluster_source" character varying(255),
+    "player_name" character varying(255),
+    "guess_right" integer,
+    "guess_score" integer,
+    "guess_wrong" integer,
+    "game_id" character varying(255),
+    CONSTRAINT "player_pkey" PRIMARY KEY ("player_id")
+) WITH (oids = false);
 
-DROP INDEX public.idx_playerid;
+CREATE INDEX "idx_playerid" ON "public"."player" USING btree ("player_id");
 
-CREATE INDEX idx_playerid
-    ON public.player USING btree
-    (playerid COLLATE pg_catalog."default" ASC NULLS LAST)
-    TABLESPACE pg_default;
+TRUNCATE "player";
+
+-- 2020-02-28 04:05:10.13827+00

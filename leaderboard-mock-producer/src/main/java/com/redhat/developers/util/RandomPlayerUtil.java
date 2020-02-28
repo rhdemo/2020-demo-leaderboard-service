@@ -20,7 +20,7 @@ import org.apache.commons.lang3.RandomUtils;
 @ApplicationScoped
 public class RandomPlayerUtil {
 
-  private final List<String> playerNames = Arrays.asList("tom", "jerry", "donald", "mickey", "pluto", "goofy");
+  private final List<String> playerNames = Arrays.asList("tom", "jerry", "donald", "mickey", "pluto", "goofy","minnie","winnie","daisy","tigger");
 
   @Inject
   Jsonb jsonb;
@@ -31,7 +31,7 @@ public class RandomPlayerUtil {
     String playerName = playerNames.get(0);
     int rights = RandomUtils.nextInt(0, 10);
     int wrongs = RandomUtils.nextInt(5, 10);
-    int totalScore = RandomUtils.nextInt(10, 100);
+    int totalScore = RandomUtils.nextInt(10, 50);
     Player player = new Player(playerName, playerName, rights, wrongs, totalScore, source, avatar(),game);
 
     ScoringKafkaMessage scoringMessage = new ScoringKafkaMessage();
