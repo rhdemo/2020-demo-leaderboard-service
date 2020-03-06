@@ -30,8 +30,7 @@ public class PlayerPersistenceService {
   @Inject
   PlayerQueries playerQueries;
 
-  @Transactional
-  @Incoming("leaderboard-aggregator")
+  @Incoming("leaderboard-persist-to-db")
   public void saveToDB(String playerJson) {
     try {
       logger.info("Saving Player:" + playerJson);
