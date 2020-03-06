@@ -55,9 +55,9 @@ public class LeaderBoardAggregator {
 
     builder
         .stream(topics,
-            (Consumed.with(Serdes.String(), scoringKafkaMessageSerde)))
-        .selectKey((k, v) -> v.getGame().getId())
-        .groupBy((k, v) -> v.getPlayer().getId())
+            (Consumed.with(Serdes.String(), playerSerde)))
+        .selectKey((k, v) -> v.getGameId())
+        .groupBy((k, v) -> v.getId())
         .aggregate(() -> Player.newPlayer(), this::aggregatePlayer,
             Materialized.<String, Player>as(storeSupplier)
                 .withValueSerde(playerSerde))
@@ -72,10 +72,8 @@ public class LeaderBoardAggregator {
    * @param aggregatedPlayer
    * @return
    */
-  private Player aggregatePlayer(String gameId, ScoringKafkaMessage base,
+  private Player aggregatePlayer(String gameId, Player player,
       Player aggregatedPlayer) {
-    Player player = base.getPlayer();
-    Transaction gameTransaction = base.getTransaction();
     aggregatedPlayer
         .avatar(player.getAvatar() != null ? player.getAvatar()
             : Avatar.newAvatar())
@@ -85,7 +83,7 @@ public class LeaderBoardAggregator {
         .id(player.getId()).username(player.getUsername())
         .right(player.getRight())
         .wrong(player.getWrong())
-        .score(gameTransaction.correct, player.getScore());
+        .score(player.getScore());
     return aggregatedPlayer;
   }
 }

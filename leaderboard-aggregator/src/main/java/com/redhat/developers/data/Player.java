@@ -67,11 +67,19 @@ public class Player {
     return score;
   }
 
-  public Player score(boolean isCorrect, int score) {
-    if (isCorrect) {
-      this.score += score;
-    }
+  public Player score(int score) {
+    this.score += score;
     return this;
+  }
+
+  /**
+   * @deprecated
+   * @param isCorrect
+   * @param score
+   * @return
+   */
+  public Player score(boolean isCorrect, int score) {
+    return score(score);
   }
 
   public String getCreationServer() {
