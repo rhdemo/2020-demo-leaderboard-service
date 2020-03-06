@@ -43,13 +43,8 @@ public class LeaderBoardAggregator {
    */
   @Produces
   public Topology buildLeaderBoard() {
-    JsonbSerde<ScoringKafkaMessage> scoringKafkaMessageSerde =
-        new JsonbSerde<>(ScoringKafkaMessage.class);
-    // JsonbSerde<Game> gameSerde = new JsonbSerde<>(Game.class);
     JsonbSerde<Player> playerSerde = new JsonbSerde<>(Player.class);
-
     StreamsBuilder builder = new StreamsBuilder();
-
     KeyValueBytesStoreSupplier storeSupplier =
         Stores.persistentKeyValueStore(kvStoreName);
 

@@ -58,7 +58,7 @@ public class PlayerQueries {
    */
   public CompletionStage<List<Player>> rankPlayers(PgPool client) {
     return client
-        .preparedQuery("SELECT * FROM player" +
+        .preparedQuery("SELECT * FROM player " +
             "ORDER BY guess_score DESC,"
             + "guess_right ASC,"
             + "guess_wrong DESC")
