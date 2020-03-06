@@ -31,9 +31,8 @@ public class PlayerPersistenceService {
   PlayerQueries playerQueries;
 
   @Transactional
-  @Incoming("leaderboard-persist-to-db")
+  @Incoming("leaderboard-aggregator")
   public void saveToDB(String playerJson) {
-    ;
     try {
       logger.info("Saving Player:" + playerJson);
       Player player = jsonb.fromJson(playerJson, Player.class);
