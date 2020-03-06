@@ -49,7 +49,7 @@ public class Scorer {
         .username(playerName)
         .right(rights)
         .wrong(wrongs)
-        .score(true, totalScore)
+        .score(totalScore)
         .creationServer(source)
         .scoringServer(scoreSource)
         .gameServer(gamingSource)
