@@ -56,7 +56,6 @@ public class LeaderBoardAggregator {
     builder
         .stream(topics,
             (Consumed.with(Serdes.String(), playerSerde)))
-        .selectKey((k, v) -> v.getGameId())
         .groupBy((k, v) -> v.getId())
         .aggregate(() -> Player.newPlayer(), this::aggregatePlayer,
             Materialized.<String, Player>as(storeSupplier)

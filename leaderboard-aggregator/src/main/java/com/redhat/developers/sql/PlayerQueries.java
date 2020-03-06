@@ -37,7 +37,7 @@ public class PlayerQueries {
   public CompletionStage<Optional<Player>> findById(PgPool client,
       String playerId, String gameId) {
     return client
-        .preparedQuery("SELECT * from player where player_id=$1 and game_id=$2",
+        .preparedQuery("SELECT * from player where player_id=$1",
             Tuple.of(playerId, gameId))
         .thenApply(RowSet::iterator)
         .thenApply(
@@ -56,18 +56,16 @@ public class PlayerQueries {
    * @param gameId
    * @return
    */
-  public CompletionStage<List<Player>> rankPlayers(PgPool client,
-      String gameId) {
+  public CompletionStage<List<Player>> rankPlayers(PgPool client) {
     return client
-        .preparedQuery("SELECT * FROM player WHERE game_id=$1" +
+        .preparedQuery("SELECT * FROM player" +
             "ORDER BY guess_score DESC,"
             + "guess_right ASC,"
-            + "guess_wrong DESC",
-            Tuple.of(gameId))
+            + "guess_wrong DESC")
         .thenApply(this::playersList)
         .exceptionally(e -> {
           logger.log(Level.SEVERE,
-              "Error ranking players for game id " + gameId, e);
+              "Error ranking players for game", e);
           return null;
         });
   }
@@ -98,7 +96,7 @@ public class PlayerQueries {
   public CompletionStage<Boolean> delete(PgPool client,
       String playerId, String gameId) {
     return client.preparedQuery(
-        "DELETE FROM player WHERE player_id=$1 AND game_id=$2",
+        "DELETE FROM player WHERE player_id=$1",
         Tuple.of(playerId, gameId))
         .thenApply(pgRowset -> pgRowset.rowCount() == 1)
         .exceptionally(e -> {
@@ -118,7 +116,7 @@ public class PlayerQueries {
         .username(row.getString("player_name"))
         .right(row.getInteger("guess_right"))
         .wrong(row.getInteger("guess_wrong"))
-        .score(true, row.getInteger("guess_score"))
+        .score(row.getInteger("guess_score"))
         .creationServer(row.getString("creation_server"))
         .scoringServer(row.getString("scoring_server"))
         .gameServer(row.getString("game_server"))
@@ -151,7 +149,7 @@ public class PlayerQueries {
       String playerId, String gameId) {
     return client
         .preparedQuery(
-            "SELECT player_name from player where player_id=$1 and game_id=$2",
+            "SELECT player_name from player where player_id=$1",
             Tuple.of(playerId, gameId))
         .thenApply(RowSet::iterator)
         .thenApply(iterator -> iterator.hasNext() ? true : false)
@@ -195,8 +193,8 @@ public class PlayerQueries {
         + "player_name=$2,guess_right=$3,"
         + "guess_wrong=$4,guess_score=$5,"
         + "creation_server=$6,game_server=$7,"
-        + "scoring_server=$8,player_avatar=$9"
-        + "WHERE player_id=$1 and game_id=$10", playerParams(player))
+        + "scoring_server=$8,player_avatar=$9, game_id=$10"
+        + "WHERE player_id=$1", playerParams(player))
         .thenApply(pgRowset -> pgRowset.rowCount() == 1 ? true : false)
         .exceptionally(e -> {
           logger.log(Level.SEVERE,

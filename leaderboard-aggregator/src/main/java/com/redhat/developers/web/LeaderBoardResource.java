@@ -31,11 +31,10 @@ public class LeaderBoardResource {
   PlayerPersistenceService playerPService;
 
   @GET
-  @Path("leaderboard/{gameid}")
-  public CompletionStage<Response> getLeaderBoard(
-      @PathParam("gameid") String gameId) {
-    logger.info("Getting Ranked players for game " + gameId);
-    return playerPService.rankedPlayerList(gameId)
+  @Path("leaderboard")
+  public CompletionStage<Response> getLeaderBoard() {
+    logger.info("Getting Ranked players for game ");
+    return playerPService.rankedPlayerList()
         .thenApply(results -> Response.ok(results))
         .exceptionally(e -> {
           logger.log(Level.SEVERE, "Error while getting players with ranks", e);

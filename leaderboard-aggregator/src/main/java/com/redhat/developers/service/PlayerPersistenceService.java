@@ -43,7 +43,7 @@ public class PlayerPersistenceService {
     }
   }
 
-  public CompletionStage<List<Player>> rankedPlayerList(String gameId) {
-    return playerQueries.rankPlayers(client, gameId);
+  public CompletionStage<List<Player>> rankedPlayerList() {
+    return playerQueries.rankPlayers(client);
   }
 }
