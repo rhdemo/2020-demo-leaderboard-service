@@ -1,7 +1,5 @@
 package com.redhat.developers.data;
 
-import javax.enterprise.inject.Produces;
-
 /**
  * Player
  */
@@ -22,7 +20,6 @@ public class Player {
 
   }
 
-  @Produces
   public static Player newPlayer() {
     return new Player();
   }
@@ -70,16 +67,6 @@ public class Player {
   public Player score(int score) {
     this.score += score;
     return this;
-  }
-
-  /**
-   * @deprecated
-   * @param isCorrect
-   * @param score
-   * @return
-   */
-  public Player score(boolean isCorrect, int score) {
-    return score(score);
   }
 
   public String getCreationServer() {

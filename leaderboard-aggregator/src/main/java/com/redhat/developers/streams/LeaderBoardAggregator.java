@@ -52,32 +52,31 @@ public class LeaderBoardAggregator {
         .stream(topics,
             (Consumed.with(Serdes.String(), playerSerde)))
         .groupBy((k, v) -> v.getId())
-        .aggregate(() -> Player.newPlayer(), this::aggregatePlayer,
+        .aggregate(() -> Player.newPlayer(), this::aggregatePlayerScore,
             Materialized.<String, Player>as(storeSupplier)
+                .withKeySerde(Serdes.String())
                 .withValueSerde(playerSerde))
-        .toStream().to(outStream, Produced.with(Serdes.String(), playerSerde));
+        .toStream()
+        .to(outStream, Produced.with(Serdes.String(), playerSerde));
     return builder.build();
   }
 
-  /**
-   * 
-   * @param gameId
-   * @param base
-   * @param aggregatedPlayer
-   * @return
-   */
-  private Player aggregatePlayer(String gameId, Player player,
+  private Player aggregatePlayerScore(String playerId, Player player,
       Player aggregatedPlayer) {
+    logger.info("Aggregating Player with Id" + playerId);
     aggregatedPlayer
         .avatar(player.getAvatar() != null ? player.getAvatar()
             : Avatar.newAvatar())
-        .gameId(gameId).creationServer(player.getCreationServer())
+        .gameId(player.getGameId())
+        .creationServer(player.getCreationServer())
         .gameServer(player.getGameServer())
         .scoringServer(player.getScoringServer())
-        .id(player.getId()).username(player.getUsername())
+        .id(player.getId())
+        .username(player.getUsername())
         .right(player.getRight())
         .wrong(player.getWrong())
         .score(player.getScore());
     return aggregatedPlayer;
   }
+
 }
