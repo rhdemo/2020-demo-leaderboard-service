@@ -6,8 +6,8 @@ import java.util.Optional;
 import java.util.concurrent.CompletionStage;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import javax.inject.Singleton;
 import javax.json.bind.Jsonb;
 import com.redhat.developers.data.Avatar;
 import com.redhat.developers.data.Player;
@@ -20,7 +20,7 @@ import io.vertx.axle.sqlclient.Tuple;
 /**
  * PlayerQueries
  */
-@Singleton
+@ApplicationScoped
 public class PlayerQueries {
 
   static Logger logger = Logger.getLogger(PlayerQueries.class.getName());
