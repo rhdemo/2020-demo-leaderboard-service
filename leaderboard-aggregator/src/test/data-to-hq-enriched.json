@@ -1,0 +1,84 @@
+{
+  "game": {
+    "id": "cda5b69d-763f-4dcd-89cd-76f5b417730e",
+    "state": "active",
+    "date": "2020-02-28T01:38:37.095Z",
+    "configuration": {}
+  },
+  "player": {
+    "playerId": "Horn Scourge",
+    "playerName": "Horn Scourge",
+    "score": 80,
+    "clusterSource": "lon",
+    "right": 3,
+    "wrong": 0,
+    "avatar": {
+      "body": 4,
+      "color": 4,
+      "ears": 2,
+      "eyes": 0,
+      "mouth": 2,
+      "nose": 2
+    }
+  },
+  "item": {
+    "id": 1,
+    "name": "Kernel of truth t-shirt",
+    "description": "This 4.3 ounce, 60% combed ringspun cotton/40% polyester jersey t- shirt features a slightly heathered appearance. The fabric laundered for reduced shrinkage. Next Level brand apparel. Printed. Imported.",
+    "price": [
+      8,
+      ".",
+      5,
+      5
+    ],
+    "choices": [
+      5,
+      4,
+      8,
+      5,
+      7,
+      8
+    ],
+    "answers": [
+      {
+        "format": "number"
+      },
+      {
+        "format": "decimal"
+      },
+      {
+        "format": "number"
+      },
+      {
+        "format": "number"
+      }
+    ],
+    "image": "/static/images/1.jpg"
+  },
+  "transaction": {
+    "answers": [
+      {
+        "format": "number",
+        "number": 8,
+        "from": "5",
+        "result": "correct"
+      },
+      {
+        "format": "decimal"
+      },
+      {
+        "format": "number",
+        "number": 5,
+        "result": "correct"
+      },
+      {
+        "format": "number",
+        "number": 5,
+        "result": "correct"
+      }
+    ],
+    "pointsAvailable": 0,
+    "points": 75,
+    "correct": true
+  }
+}

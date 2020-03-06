@@ -6,37 +6,48 @@ import java.util.Optional;
 import java.util.concurrent.CompletionStage;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
+import javax.inject.Inject;
+import javax.inject.Singleton;
+import javax.json.bind.Jsonb;
+import com.redhat.developers.data.Avatar;
 import com.redhat.developers.data.Player;
-
 import io.vertx.axle.pgclient.PgPool;
 import io.vertx.axle.sqlclient.Row;
 import io.vertx.axle.sqlclient.RowIterator;
 import io.vertx.axle.sqlclient.RowSet;
 import io.vertx.axle.sqlclient.Tuple;
+
 /**
  * PlayerQueries
  */
+@Singleton
 public class PlayerQueries {
 
   static Logger logger = Logger.getLogger(PlayerQueries.class.getName());
+
+  @Inject
+  Jsonb jsonb;
+
   /**
    * 
    * @param client
    * @param playerId
    * @return
    */
-  public static CompletionStage<Optional<Player>> findById(PgPool client, String playerId){
+  public CompletionStage<Optional<Player>> findById(PgPool client,
+      String playerId, String gameId) {
     return client
-    .preparedQuery("SELECT * from player where player_id=$1",
-     Tuple.of(playerId))
-     .thenApply(RowSet::iterator)
-     .thenApply(iterator -> iterator.hasNext()?from(iterator.next()):null)
-     .thenApply(o -> Optional.ofNullable(o))
-     .exceptionally(e -> {
-          logger.log(Level.SEVERE, "Error Finding player with id "+playerId, e);
+        .preparedQuery("SELECT * from player where player_id=$1 and game_id=$2",
+            Tuple.of(playerId, gameId))
+        .thenApply(RowSet::iterator)
+        .thenApply(
+            iterator -> iterator.hasNext() ? from(iterator.next()) : null)
+        .thenApply(o -> Optional.ofNullable(o))
+        .exceptionally(e -> {
+          logger.log(Level.SEVERE, "Error Finding player with id " + playerId,
+              e);
           return null;
-      });
+        });
   }
 
   /**
@@ -45,16 +56,20 @@ public class PlayerQueries {
    * @param gameId
    * @return
    */
-  public static CompletionStage<List<Player>> rankPlayers(PgPool client,String gameId){
+  public CompletionStage<List<Player>> rankPlayers(PgPool client,
+      String gameId) {
     return client
-    .preparedQuery("SELECT * from player ORDER BY guess_score DESC,"+
-                    "guess_right ASC, guess_wrong DESC WHERE game_id=$1",
-     Tuple.of(gameId))
-     .thenApply(PlayerQueries::playersList)
-     .exceptionally(e -> {
-          logger.log(Level.SEVERE, "Error ranking players for game id "+gameId, e);
+        .preparedQuery("SELECT * FROM player WHERE game_id=$1" +
+            "ORDER BY guess_score DESC,"
+            + "guess_right ASC,"
+            + "guess_wrong DESC",
+            Tuple.of(gameId))
+        .thenApply(this::playersList)
+        .exceptionally(e -> {
+          logger.log(Level.SEVERE,
+              "Error ranking players for game id " + gameId, e);
           return null;
-      });
+        });
   }
 
   /**
@@ -63,14 +78,15 @@ public class PlayerQueries {
    * @param player
    * @return
    */
-  public static CompletionStage<Boolean> upsert(PgPool client, Player player){
-    CompletionStage<Boolean> pExist = playerExist(client, player.playerId);
+  public CompletionStage<Boolean> upsert(PgPool client, Player player) {
+    CompletionStage<Boolean> pExist =
+        playerExist(client, player.getId(), player.getGameId());
     return pExist
-          .thenCompose(b -> b?update(client, player):insert(client, player))
-          .exceptionally(e -> {
-            logger.log(Level.SEVERE, e.getMessage(), e);
-            return false;
-          });
+        .thenCompose(b -> b ? update(client, player) : insert(client, player))
+        .exceptionally(e -> {
+          logger.log(Level.SEVERE, e.getMessage(), e);
+          return false;
+        });
   }
 
   /**
@@ -79,12 +95,14 @@ public class PlayerQueries {
    * @param playerId
    * @return
    */
-  public static CompletionStage<Boolean> delete(PgPool client, String playerId){
+  public CompletionStage<Boolean> delete(PgPool client,
+      String playerId, String gameId) {
     return client.preparedQuery(
-        "DELETE FROM player WHERE player_id=$1",Tuple.of(playerId))
+        "DELETE FROM player WHERE player_id=$1 AND game_id=$2",
+        Tuple.of(playerId, gameId))
         .thenApply(pgRowset -> pgRowset.rowCount() == 1)
         .exceptionally(e -> {
-          logger.log(Level.SEVERE, "Error deleting "+playerId, e);
+          logger.log(Level.SEVERE, "Error deleting " + playerId, e);
           return false;
         });
   }
@@ -94,16 +112,18 @@ public class PlayerQueries {
    * @param row
    * @return
    */
-  private static Player from(Row row) {
-    Player player = new Player();
-    player.playerId = row.getString("player_id"); 
-    player.playerName = row.getString("player_name"); 
-    player.avatar = row.getString("player_avatar"); 
-    player.clusterSource = row.getString("cluster_source"); 
-    player.right = row.getInteger("guess_right"); 
-    player.wrong = row.getInteger("guess_wrong"); 
-    player.score = row.getInteger("guess_score"); 
-    player.gameId = row.getString("game_id"); 
+  private Player from(Row row) {
+    Player player = Player.newPlayer()
+        .id(row.getString("player_id"))
+        .username(row.getString("player_name"))
+        .right(row.getInteger("guess_right"))
+        .wrong(row.getInteger("guess_wrong"))
+        .score(true, row.getInteger("guess_score"))
+        .creationServer(row.getString("creation_server"))
+        .scoringServer(row.getString("scoring_server"))
+        .gameServer(row.getString("game_server"))
+        .avatar(jsonb.fromJson(row.getString("player_avatar"), Avatar.class))
+        .gameId(row.getString("game_id"));
     return player;
   }
 
@@ -112,10 +132,10 @@ public class PlayerQueries {
    * @param rowSet
    * @return
    */
-  private static List<Player> playersList(RowSet<Row> rowSet){
+  private List<Player> playersList(RowSet<Row> rowSet) {
     List<Player> listOfPlayers = new ArrayList<>();
     RowIterator<Row> rowItr = rowSet.iterator();
-    while(rowItr.hasNext()){
+    while (rowItr.hasNext()) {
       listOfPlayers.add(from(rowItr.next()));
     }
     return listOfPlayers;
@@ -127,16 +147,19 @@ public class PlayerQueries {
    * @param playerId
    * @return
    */
-  private static CompletionStage<Boolean> playerExist(PgPool client, String playerId){
+  private CompletionStage<Boolean> playerExist(PgPool client,
+      String playerId, String gameId) {
     return client
-    .preparedQuery("SELECT player_name from player where player_id=$1",
-     Tuple.of(playerId))
-     .thenApply(RowSet::iterator)
-     .thenApply(iterator -> iterator.hasNext()?true:false)
-     .exceptionally(e -> {
-          logger.log(Level.SEVERE, "Error checking if player exists "+playerId, e);
+        .preparedQuery(
+            "SELECT player_name from player where player_id=$1 and game_id=$2",
+            Tuple.of(playerId, gameId))
+        .thenApply(RowSet::iterator)
+        .thenApply(iterator -> iterator.hasNext() ? true : false)
+        .exceptionally(e -> {
+          logger.log(Level.SEVERE,
+              "Error checking if player exists " + playerId, e);
           return null;
-      });
+        });
   }
 
   /**
@@ -145,16 +168,17 @@ public class PlayerQueries {
    * @param player
    * @return
    */
-  private static CompletionStage<Boolean> insert(PgPool client, Player player){
-    logger.info("Inserting player with id "+player.playerId);
+  private CompletionStage<Boolean> insert(PgPool client, Player player) {
+    logger.info("Inserting player with id " + player.getId());
     return client.preparedQuery("INSERT INTO player"
         + "(player_id,player_name,guess_right,"
-        + "guess_wrong,guess_score,cluster_source,"
+        + "guess_wrong,guess_score,creation_server,"
+        + "game_server,scoring_server,"
         + "player_avatar,game_id)"
-        + " VALUES ($1,$2,$3,$4,$5,$6,$7,$8)",playerParams(player))
-        .thenApply(pgRowset ->pgRowset.rowCount() == 1 ? true: false)
+        + " VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)", playerParams(player))
+        .thenApply(pgRowset -> pgRowset.rowCount() == 1 ? true : false)
         .exceptionally(e -> {
-          logger.log(Level.SEVERE, "Error Inserting "+player.playerId, e);
+          logger.log(Level.SEVERE, "Error Inserting " + player.getId(), e);
           return false;
         });
   }
@@ -165,35 +189,40 @@ public class PlayerQueries {
    * @param player
    * @return
    */
-  private static CompletionStage<Boolean> update(PgPool client, Player player){
-    logger.info("Updating player with id "+player.playerId);
+  private CompletionStage<Boolean> update(PgPool client, Player player) {
+    logger.info("Updating player with id " + player.getId());
     return client.preparedQuery("UPDATE player set "
         + "player_name=$2,guess_right=$3,"
         + "guess_wrong=$4,guess_score=$5,"
-        + "cluster_source=$6,player_avatar=$7,"
-        + "game_id=$8"
-        + "WHERE player_id=$1",playerParams(player))
-        .thenApply(pgRowset ->pgRowset.rowCount() == 1 ? true: false)
+        + "creation_server=$6,game_server=$7,"
+        + "scoring_server=$8,player_avatar=$9"
+        + "WHERE player_id=$1 and game_id=$10", playerParams(player))
+        .thenApply(pgRowset -> pgRowset.rowCount() == 1 ? true : false)
         .exceptionally(e -> {
-          logger.log(Level.SEVERE, "Error Updating "+player.playerId, e);
+          logger.log(Level.SEVERE,
+              "Error Updating " + player.getId() + " for game "
+                  + player.getGameId(),
+              e);
           return false;
-        }); 
+        });
   }
-  
+
   /**
    * 
    * @param player
    * @return
    */
-  private static Tuple playerParams(Player player) {
+  private Tuple playerParams(Player player) {
     return Tuple.tuple()
-      .addString(player.playerId)
-      .addString(player.playerName)
-      .addInteger(player.right)
-      .addInteger(player.wrong) 
-      .addInteger(player.score)
-      .addString(player.clusterSource)
-      .addString(player.avatar)
-      .addString(player.gameId);
+        .addString(player.getId())// Param Order 1
+        .addString(player.getUsername()) // Param Order 2
+        .addInteger(player.getRight()) // Param Order 3
+        .addInteger(player.getWrong()) // Param Order 4
+        .addInteger(player.getScore()) // Param Order 5
+        .addString(player.getCreationServer()) // Param Order 6
+        .addString(player.getGameServer()) // Param Order 7
+        .addString(player.getScoringServer()) // Param Order 8
+        .addString(jsonb.toJson(player.getAvatar())) // Param Order 9
+        .addString(player.getGameId()); // Param Order 10
   }
 }
