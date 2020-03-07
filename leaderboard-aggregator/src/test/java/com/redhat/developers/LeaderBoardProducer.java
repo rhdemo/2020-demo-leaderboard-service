@@ -9,7 +9,7 @@ import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
-import com.redhat.developers.data.ScoringKafkaMessage;
+import com.redhat.developers.data.GameMessage;
 import com.redhat.developers.util.Scorer;
 import org.eclipse.microprofile.reactive.messaging.Outgoing;
 import io.reactivex.Flowable;
@@ -25,7 +25,7 @@ public class LeaderBoardProducer {
   @Inject
   Jsonb jsonb;
 
-  private List<ScoringKafkaMessage> scoringMessages = new ArrayList<>();
+  private List<GameMessage> scoringMessages = new ArrayList<>();
 
   @PostConstruct
   public void init() {

@@ -2,7 +2,6 @@ package com.redhat.developers.util;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -14,10 +13,9 @@ import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import com.redhat.developers.data.Avatar;
 import com.redhat.developers.data.Game;
+import com.redhat.developers.data.GameMessage;
 import com.redhat.developers.data.Player;
-import com.redhat.developers.data.ScoringKafkaMessage;
 import org.apache.commons.lang3.RandomUtils;
-import io.reactivex.Flowable;
 
 /**
  * Scorer
@@ -34,7 +32,7 @@ public class Scorer {
   private static final List<String> EDGES =
       Arrays.asList("sg", "nyc", "sfo", "sp", "lon");
 
-  public ScoringKafkaMessage generate() {
+  public GameMessage generate() {
     Game game = newGame();
     String source = EDGES.get(RandomUtils.nextInt(0, 2));
     String scoreSource = EDGES.get(RandomUtils.nextInt(2, 4));
@@ -57,7 +55,7 @@ public class Scorer {
         .avatar(avatar())
         .gameId(newGame().getId());
 
-    ScoringKafkaMessage scoringMessage = new ScoringKafkaMessage();
+    GameMessage scoringMessage = new GameMessage();
     scoringMessage.setGame(game);
     scoringMessage.setPlayer(player);
     return scoringMessage;
@@ -80,17 +78,17 @@ public class Scorer {
         .mouth(RandomUtils.nextInt(0, 5));
   }
 
-  public List<ScoringKafkaMessage> fromFile(InputStream fin)
+  public List<GameMessage> fromFile(InputStream fin)
       throws Exception {
     Jsonb jsonb = JsonbBuilder.newBuilder().build();
     return jsonb.fromJson(fin,
-        new ArrayList<ScoringKafkaMessage>() {}.getClass()
+        new ArrayList<GameMessage>() {}.getClass()
             .getGenericSuperclass());
   }
 
   public static void main(String[] args) {
     Scorer scorer = new Scorer();
-    List<ScoringKafkaMessage> messages = new ArrayList<>();
+    List<GameMessage> messages = new ArrayList<>();
     // Flowable.range(1, 100)
     // .forEach(tick -> {
     // messages.add(scorer.generate());
@@ -102,7 +100,7 @@ public class Scorer {
           "/Users/kameshs/git/rhdemo/2020-demo-leaderboard-service/leaderboard-aggregator/src/test/resources/data.json");
       messages = scorer.fromFile(fin);
       System.out.println(messages.size());
-      List<ScoringKafkaMessage> sgMessages = messages.stream()
+      List<GameMessage> sgMessages = messages.stream()
           .filter(skm -> {
             Player player = skm.getPlayer();
             // System.out.println(jsonb.toJson(player));
