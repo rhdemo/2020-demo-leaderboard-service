@@ -1,13 +1,15 @@
 package com.redhat.developers.streams;
 
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Produces;
+import javax.inject.Inject;
+import javax.json.bind.Jsonb;
 import com.redhat.developers.data.Avatar;
+import com.redhat.developers.data.GameMessage;
 import com.redhat.developers.data.Player;
-import com.redhat.developers.data.ScoringKafkaMessage;
-import com.redhat.developers.data.Transaction;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.Topology;
@@ -36,6 +38,8 @@ public class LeaderBoardAggregator {
   @ConfigProperty(name = "rhdemo.leaderboard.aggregator.stream")
   String outStream;
 
+  @Inject
+  Jsonb jsonb;
 
   /**
    * 
@@ -43,6 +47,9 @@ public class LeaderBoardAggregator {
    */
   @Produces
   public Topology buildLeaderBoard() {
+    logger.log(Level.FINE, "Aggregator ");
+    JsonbSerde<GameMessage> gameMessageSerde =
+        new JsonbSerde<>(GameMessage.class);
     JsonbSerde<Player> playerSerde = new JsonbSerde<>(Player.class);
     StreamsBuilder builder = new StreamsBuilder();
     KeyValueBytesStoreSupplier storeSupplier =
@@ -50,8 +57,10 @@ public class LeaderBoardAggregator {
 
     builder
         .stream(topics,
-            (Consumed.with(Serdes.String(), playerSerde)))
-        .groupBy((k, v) -> v.getId())
+            (Consumed.with(Serdes.String(), gameMessageSerde)))
+        .selectKey(
+            (k, v) -> v.getPlayer().getGameId() + v.getPlayer().getId())
+        .groupBy((k, v) -> v.getPlayer().getGameId())
         .aggregate(() -> Player.newPlayer(), this::aggregatePlayerScore,
             Materialized.<String, Player>as(storeSupplier)
                 .withKeySerde(Serdes.String())
@@ -61,9 +70,11 @@ public class LeaderBoardAggregator {
     return builder.build();
   }
 
-  private Player aggregatePlayerScore(String playerId, Player player,
+  private Player aggregatePlayerScore(String key, GameMessage gameMessage,
       Player aggregatedPlayer) {
-    logger.info("Aggregating Player with Id" + playerId);
+    logger.info("Key " + key);
+    Player player = gameMessage.getPlayer();
+    logger.info("Aggregating Player with Id" + player.getId());
     aggregatedPlayer
         .avatar(player.getAvatar() != null ? player.getAvatar()
             : Avatar.newAvatar())

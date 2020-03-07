@@ -37,7 +37,7 @@ public class PlayerQueries {
   public CompletionStage<Optional<Player>> findById(PgPool client,
       String playerId, String gameId) {
     return client
-        .preparedQuery("SELECT * from player where player_id=$1",
+        .preparedQuery("SELECT * from player where player_id=$1 and game_id=$2",
             Tuple.of(playerId, gameId))
         .thenApply(RowSet::iterator)
         .thenApply(
@@ -56,12 +56,14 @@ public class PlayerQueries {
    * @param gameId
    * @return
    */
-  public CompletionStage<List<Player>> rankPlayers(PgPool client) {
+  public CompletionStage<List<Player>> rankPlayers(PgPool client,
+      String gameId) {
     return client
-        .preparedQuery("SELECT * FROM player " +
-            "ORDER BY guess_score DESC,"
+        .preparedQuery("SELECT * FROM player "
+            + "WHERE game_id=$1"
+            + "ORDER BY guess_score DESC,"
             + "guess_right ASC,"
-            + "guess_wrong DESC")
+            + "guess_wrong DESC", Tuple.of(gameId))
         .thenApply(this::playersList)
         .exceptionally(e -> {
           logger.log(Level.SEVERE,
@@ -96,7 +98,7 @@ public class PlayerQueries {
   public CompletionStage<Boolean> delete(PgPool client,
       String playerId, String gameId) {
     return client.preparedQuery(
-        "DELETE FROM player WHERE player_id=$1",
+        "DELETE FROM player WHERE player_id=$1 and game_id=$2",
         Tuple.of(playerId, gameId))
         .thenApply(pgRowset -> pgRowset.rowCount() == 1)
         .exceptionally(e -> {
@@ -149,7 +151,7 @@ public class PlayerQueries {
       String playerId, String gameId) {
     return client
         .preparedQuery(
-            "SELECT player_name from player where player_id=$1",
+            "SELECT player_name from player where player_id=$1 and game_id=$2",
             Tuple.of(playerId, gameId))
         .thenApply(RowSet::iterator)
         .thenApply(iterator -> iterator.hasNext() ? true : false)
@@ -193,8 +195,8 @@ public class PlayerQueries {
         + "player_name=$2,guess_right=$3,"
         + "guess_wrong=$4,guess_score=$5,"
         + "creation_server=$6,game_server=$7,"
-        + "scoring_server=$8,player_avatar=$9, game_id=$10"
-        + "WHERE player_id=$1", playerParams(player))
+        + "scoring_server=$8,player_avatar=$9"
+        + "WHERE player_id=$1 and game_id=$10", playerParams(player))
         .thenApply(pgRowset -> pgRowset.rowCount() == 1 ? true : false)
         .exceptionally(e -> {
           logger.log(Level.SEVERE,

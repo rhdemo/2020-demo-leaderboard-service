@@ -41,32 +41,3 @@ clean-leaderboard-aggregator:	 oc_login
 	oc delete dc/leaderboard-aggregator 
 	oc delete svc/leaderboard-aggregator
 	oc delete is/leaderboard-aggregator
-
-# Leaderboard mock producer
-.PHONY: create-mock-producer-bc
-create-mock-producer-bc:	oc_login
-	@oc new-build --name=leaderboard-mock-producer openjdk18-openshift~. \
-	  --env=MAVEN_MIRROR_URL=$(MAVEN_MIRROR_URL) \
-		--context-dir=leaderboard-mock-producer
-
-.PHONY: build-mock-producer
-build-mock-producer:	oc_login
-	@oc start-build leaderboard-mock-producer \
-	  --from-dir="$(current_dir)"
-	@oc logs -f bc/leaderboard-mock-producer
-
-.PHONY: create-app-mock-producer
-create-app-mock-producer:	oc_login
-	@oc new-app --name leaderboard-mock-producer \
-	  --image-stream=leaderboard-mock-producer \
-		--labels app.kubernetes.io/part-of=leaderboard
-		
-.PHONY:	deploy-mock-producer
-deploy-mock-producer:	 oc_login	create-mock-producer-bc	build-mock-producer	create-app-mock-producer
-
-.PHONY:	clean-mock-producer
-clean-mock-producer:	 oc_login	
-	oc delete bc/leaderboard-mock-producer 
-	oc delete dc/leaderboard-mock-producer 
-	oc delete svc/leaderboard-mock-producer
-	oc delete is/leaderboard-mock-producer

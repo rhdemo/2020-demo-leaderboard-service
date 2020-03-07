@@ -1,9 +1,9 @@
 package com.redhat.developers.data;
 
 /**
- * ScoringKafkaMessage
+ * GameMessage
  */
-public class ScoringKafkaMessage {
+public class GameMessage {
 
   private Player player;
   private Game game;

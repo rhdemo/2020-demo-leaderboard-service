@@ -1,13 +1,13 @@
 package com.redhat.developers.service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletionStage;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
-import javax.transaction.Transactional;
 import com.redhat.developers.data.Player;
 import com.redhat.developers.sql.PlayerQueries;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
@@ -41,7 +41,12 @@ public class PlayerPersistenceService {
     }
   }
 
-  public CompletionStage<List<Player>> rankedPlayerList() {
-    return playerQueries.rankPlayers(client);
+  /**
+   * 
+   * @param gameId
+   * @return
+   */
+  public CompletionStage<List<Player>> rankedPlayerList(String gameId) {
+    return playerQueries.rankPlayers(client, gameId);
   }
 }
