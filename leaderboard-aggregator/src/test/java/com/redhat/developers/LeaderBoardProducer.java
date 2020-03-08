@@ -38,7 +38,7 @@ public class LeaderBoardProducer {
     }
   }
 
-  @Outgoing("leaderboard-mirror-sg")
+  @Outgoing("demo2")
   public Flowable<String> leaderBoardProducerSg() {
     List<String> messages = this.scoringMessages.stream()
         .filter(skm -> skm.getPlayer().getCreationServer().equals("sg"))
@@ -47,37 +47,10 @@ public class LeaderBoardProducer {
     return Flowable.fromIterable(messages);
   }
 
-  @Outgoing("leaderboard-mirror-lon")
+  @Outgoing("ny1")
   public Flowable<String> leaderBoardProducerLon() {
     List<String> messages = this.scoringMessages.stream()
-        .filter(skm -> skm.getPlayer().getCreationServer().equals("lon"))
-        .map(skm -> jsonb.toJson(skm))
-        .collect(Collectors.toList());
-    return Flowable.fromIterable(messages);
-  }
-
-  @Outgoing("leaderboard-mirror-nyc")
-  public Flowable<String> leaderBoardProducerNyc() {
-    List<String> messages = this.scoringMessages.stream()
         .filter(skm -> skm.getPlayer().getCreationServer().equals("nyc"))
-        .map(skm -> jsonb.toJson(skm))
-        .collect(Collectors.toList());
-    return Flowable.fromIterable(messages);
-  }
-
-  @Outgoing("leaderboard-mirror-sp")
-  public Flowable<String> leaderBoardProducerSp() {
-    List<String> messages = this.scoringMessages.stream()
-        .filter(skm -> skm.getPlayer().getCreationServer().equals("sp"))
-        .map(skm -> jsonb.toJson(skm))
-        .collect(Collectors.toList());
-    return Flowable.fromIterable(messages);
-  }
-
-  @Outgoing("leaderboard-mirror-sfo")
-  public Flowable<String> leaderBoardProducerSfo() {
-    List<String> messages = this.scoringMessages.stream()
-        .filter(skm -> skm.getPlayer().getCreationServer().equals("sfo"))
         .map(skm -> jsonb.toJson(skm))
         .collect(Collectors.toList());
     return Flowable.fromIterable(messages);

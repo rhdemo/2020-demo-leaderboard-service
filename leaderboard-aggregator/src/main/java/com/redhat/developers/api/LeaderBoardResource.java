@@ -1,4 +1,4 @@
-package com.redhat.developers.web;
+package com.redhat.developers.api;
 
 import java.util.concurrent.CompletionStage;
 import java.util.logging.Level;
@@ -19,7 +19,6 @@ import com.redhat.developers.service.PlayerPersistenceService;
 /**
  * LeaderBoardSource TODO: Auth, Exception
  */
-@ApplicationScoped
 @Path("/api")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)

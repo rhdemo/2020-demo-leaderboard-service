@@ -9,6 +9,7 @@ public class Game {
   public String id;
   public String state;
   public String date;
+  public String config;
 
   public Game() {
 
@@ -28,6 +29,10 @@ public class Game {
     return this;
   }
 
+  public String getConfig() {
+    return config;
+  }
+
   public String getState() {
     return state;
   }
@@ -44,6 +49,11 @@ public class Game {
 
   public Game date(String date) {
     this.date = date;
+    return this;
+  }
+
+  public Game config(String config) {
+    this.config = config;
     return this;
   }
 

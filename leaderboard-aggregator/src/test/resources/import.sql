@@ -1,4 +1,17 @@
+DROP TABLE IF EXISTS "game";
+CREATE TABLE "public"."game" (
+    "game_id" character varying(255) NOT NULL,
+    "game_config" json NOT NULL,
+    "game_date" character varying(255),
+    "game_state" character varying(10) NOT NULL,
+    CONSTRAINT "game_pkey" PRIMARY KEY ("game_id")
+) WITH (oids = false);
+
+DROP INDEX IF EXISTS "idx_game_state";
+CREATE INDEX "idx_game_state" ON "public"."game" USING btree ("game_state");
+
 DROP TABLE IF EXISTS "player";
+-- TODO add Foreign Key on game.game_id
 CREATE TABLE "public"."player" (
     "player_id" character varying(255) NOT NULL,
     "player_name" character varying(255) NOT NULL,

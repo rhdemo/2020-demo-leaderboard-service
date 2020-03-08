@@ -3,6 +3,7 @@ package com.redhat.developers;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
+import com.redhat.developers.containers.PostgreSqlContainer;
 import com.redhat.developers.containers.StrimziKafkaContainer;
 import com.redhat.developers.containers.ZookeeperContainer;
 import org.testcontainers.containers.Network;
@@ -19,7 +20,7 @@ public class QuarkusTestEnv implements QuarkusTestResourceLifecycleManager {
   Logger logger = Logger.getLogger(QuarkusTestEnv.class.getName());
 
   public final static String JDBC_URL =
-      "vertx-reactive:postgresql:/%s:%d/gamedb";
+      "vertx-reactive:postgresql://%s:%d/gamedb";
 
   private static Network network = Network.newNetwork();
 
@@ -34,9 +35,7 @@ public class QuarkusTestEnv implements QuarkusTestResourceLifecycleManager {
 
 
   @Container
-  public static PostgreSQLContainer postgreSQL = new PostgreSQLContainer<>()
-      .withInitScript("import.sql")
-      .waitingFor(Wait.forListeningPort());
+  public static PostgreSqlContainer postgreSQL = new PostgreSqlContainer();
 
   @Override
   public Map<String, String> start() {
