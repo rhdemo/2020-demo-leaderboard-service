@@ -31,7 +31,7 @@ public class GameQueries {
   public CompletionStage<Optional<Game>> findById(PgPool client,
       String gameId) {
     return client
-        .preparedQuery("SELECT * from game where game_id=$1",
+        .preparedQuery("SELECT * from games where game_id=$1",
             Tuple.of(gameId))
         .thenApply(RowSet::iterator)
         .thenApply(
@@ -51,7 +51,7 @@ public class GameQueries {
    */
   public CompletionStage<Optional<Game>> findActiveGame(PgPool client) {
     return client
-        .preparedQuery("SELECT * from game where game_state='active'")
+        .preparedQuery("SELECT * from games where game_state='active'")
         .thenApply(RowSet::iterator)
         .thenApply(
             iterator -> iterator.hasNext() ? from(iterator.next()) : null)
@@ -72,7 +72,7 @@ public class GameQueries {
   public CompletionStage<List<Game>> gamesByState(PgPool client,
       String state) {
     return client
-        .preparedQuery("SELECT * from game where game_state=$1",
+        .preparedQuery("SELECT * from games where game_state=$1",
             Tuple.of(state))
         .thenApply(this::games)
         .exceptionally(e -> {
@@ -107,7 +107,7 @@ public class GameQueries {
    */
   public CompletionStage<Boolean> delete(PgPool client, String gameId) {
     return client.preparedQuery(
-        "DELETE FROM game WHERE game_id=$1",
+        "DELETE FROM games WHERE game_id=$1",
         Tuple.of(gameId))
         .thenApply(pgRowset -> pgRowset.rowCount() == 1)
         .exceptionally(e -> {
@@ -127,7 +127,7 @@ public class GameQueries {
     return Game.newGame()
         .id(row.getString("game_id"))
         .config(row.getString("game_config"))
-        .date(row.getString("game_date"))
+        .date(row.getOffsetDateTime("game_date"))
         .state(row.getString("game_state"));
   }
 
@@ -154,7 +154,7 @@ public class GameQueries {
   private CompletionStage<Boolean> gameExists(PgPool client, String gameId) {
     return client
         .preparedQuery(
-            "SELECT game_state from game where game_id=$1",
+            "SELECT game_state from games where game_id=$1",
             Tuple.of(gameId))
         .thenApply(RowSet::iterator)
         .thenApply(iterator -> iterator.hasNext() ? true : false)
@@ -173,7 +173,7 @@ public class GameQueries {
    */
   private CompletionStage<Boolean> insert(PgPool client, Game game) {
     logger.info("Inserting game with id " + game.getId());
-    return client.preparedQuery("INSERT INTO game"
+    return client.preparedQuery("INSERT INTO games"
         + "(game_id,game_config,game_date,game_state)"
         + " VALUES ($1,$2,$3,$4)", gameParams(game))
         .thenApply(pgRowset -> pgRowset.rowCount() == 1 ? true : false)
@@ -192,7 +192,7 @@ public class GameQueries {
    */
   private CompletionStage<Boolean> update(PgPool client, Game game) {
     logger.info("Updating Game with id " + game.getId());
-    return client.preparedQuery("UPDATE game set "
+    return client.preparedQuery("UPDATE games set "
         + "game_config=$2,game_date=$3,"
         + "game_state=$4"
         + "WHERE game_id=$1", gameParams(game))
@@ -213,7 +213,7 @@ public class GameQueries {
     return Tuple.tuple()
         .addString(game.getId())// Param Order 1
         .addString(game.getConfig()) // Param Order 2
-        .addString(game.getDate()) // Param Order 3
+        .addOffsetDateTime(game.getDate()) // Param Order 3
         .addString(game.getState()); // Param Order 4
   }
 }

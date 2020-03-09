@@ -4,6 +4,11 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import java.time.LocalDateTime;
+import java.time.Month;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import com.redhat.developers.data.Game;
@@ -27,6 +32,11 @@ public class GameResourceTest {
   @Inject
   Jsonb jsonb;
 
+  // Some GMT time
+  OffsetDateTime someGMTDateTime = OffsetDateTime.of(
+      LocalDateTime.of(2020, Month.MARCH, 9, 18, 01, 00),
+      ZoneOffset.ofHoursMinutes(0, 0));
+
   @BeforeEach
   public void chekEnv() {
     assertNotNull("quarkus.datasource.url");
@@ -42,7 +52,7 @@ public class GameResourceTest {
     Game game = Game.newGame()
         .id("id0001").state("active")
         .config("{}")
-        .date("2020-03-02T13:57:18.000Z");
+        .date(someGMTDateTime);
     given()
         .contentType(ContentType.JSON)
         .body(jsonb.toJson(game))
@@ -65,7 +75,7 @@ public class GameResourceTest {
     Game game = Game.newGame()
         .id("id0001").state("paused")
         .config("{}")
-        .date("2020-03-02T13:57:18.000Z");
+        .date(someGMTDateTime);
 
     given()
         .contentType(ContentType.JSON)
@@ -89,7 +99,7 @@ public class GameResourceTest {
     Game game = Game.newGame()
         .id("id0001").state("paused")
         .config("{}")
-        .date("2020-03-02T13:57:18.000Z");
+        .date(someGMTDateTime);
 
     // Check if its properly updated
     given()
@@ -103,16 +113,12 @@ public class GameResourceTest {
   @Test
   @Order(4)
   public void testGameFindActive() {
-    Game game = Game.newGame()
-        .id("id0001").state("paused")
-        .config("{}")
-        .date("2020-03-02T13:57:18.000Z");
 
     Game game2 = Game.newGame()
         .id("id0002")
         .state("active")
         .config("{}")
-        .date("2020-03-02T13:57:18.000Z");
+        .date(someGMTDateTime);
 
     given()
         .contentType(ContentType.JSON)

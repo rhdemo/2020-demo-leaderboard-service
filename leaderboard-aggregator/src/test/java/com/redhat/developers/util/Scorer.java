@@ -3,6 +3,10 @@ package com.redhat.developers.util;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.time.LocalDateTime;
+import java.time.Month;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -24,6 +28,11 @@ import org.apache.commons.lang3.RandomUtils;
 public class Scorer {
 
   public static final String GAME_ID = "new-game-1582548335";
+
+  // Some GMT time
+  OffsetDateTime someGMTDateTime = OffsetDateTime.of(
+      LocalDateTime.of(2020, Month.MARCH, 9, 18, 01, 00),
+      ZoneOffset.ofHoursMinutes(0, 0));
 
   private static final List<String> PLAYER_NAMES =
       Arrays.asList("tom", "jerry", "donald", "mickey", "pluto", "goofy",
@@ -65,7 +74,7 @@ public class Scorer {
     return Game.newGame()
         .id(GAME_ID)
         .state("active")
-        .date("2020-02-24T12:45:35.000Z");
+        .date(someGMTDateTime);
   }
 
   private Avatar avatar() {

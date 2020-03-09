@@ -37,7 +37,8 @@ public class PlayerQueries {
   public CompletionStage<Optional<Player>> findById(PgPool client,
       String playerId, String gameId) {
     return client
-        .preparedQuery("SELECT * from player where player_id=$1 and game_id=$2",
+        .preparedQuery(
+            "SELECT * from players where player_id=$1 and game_id=$2",
             Tuple.of(playerId, gameId))
         .thenApply(RowSet::iterator)
         .thenApply(
@@ -50,20 +51,15 @@ public class PlayerQueries {
         });
   }
 
-  /**
-   * 
-   * @param client
-   * @param gameId
-   * @return
-   */
-  public CompletionStage<List<Player>> rankPlayers(PgPool client,
-      String gameId) {
+
+  public CompletionStage<List<Player>> rankPlayers(PgPool client) {
     return client
-        .preparedQuery("SELECT * FROM player "
-            + "WHERE game_id=$1"
-            + "ORDER BY guess_score DESC,"
-            + "guess_right DESC,"
-            + "guess_wrong ASC", Tuple.of(gameId))
+        .preparedQuery("SELECT p.* FROM players p"
+            + " LEFT JOIN games g "
+            + " ON p.game_id = g.game_id"
+            + " ORDER BY p.guess_score DESC,"
+            + " p.guess_right DESC,"
+            + "p.guess_wrong ASC")
         .thenApply(this::playersList)
         .exceptionally(e -> {
           logger.log(Level.SEVERE,
@@ -98,7 +94,7 @@ public class PlayerQueries {
   public CompletionStage<Boolean> delete(PgPool client,
       String playerId, String gameId) {
     return client.preparedQuery(
-        "DELETE FROM player WHERE player_id=$1 and game_id=$2",
+        "DELETE FROM players WHERE player_id=$1 and game_id=$2",
         Tuple.of(playerId, gameId))
         .thenApply(pgRowset -> pgRowset.rowCount() == 1)
         .exceptionally(e -> {
@@ -151,7 +147,7 @@ public class PlayerQueries {
       String playerId, String gameId) {
     return client
         .preparedQuery(
-            "SELECT player_name from player where player_id=$1 and game_id=$2",
+            "SELECT player_name from players where player_id=$1 and game_id=$2",
             Tuple.of(playerId, gameId))
         .thenApply(RowSet::iterator)
         .thenApply(iterator -> iterator.hasNext() ? true : false)
@@ -170,7 +166,7 @@ public class PlayerQueries {
    */
   private CompletionStage<Boolean> insert(PgPool client, Player player) {
     logger.info("Inserting player with id " + player.getId());
-    return client.preparedQuery("INSERT INTO player"
+    return client.preparedQuery("INSERT INTO players"
         + "(player_id,player_name,guess_right,"
         + "guess_wrong,guess_score,creation_server,"
         + "game_server,scoring_server,"
@@ -191,7 +187,7 @@ public class PlayerQueries {
    */
   private CompletionStage<Boolean> update(PgPool client, Player player) {
     logger.info("Updating player with id " + player.getId());
-    return client.preparedQuery("UPDATE player set "
+    return client.preparedQuery("UPDATE players set "
         + "player_name=$2,guess_right=$3,"
         + "guess_wrong=$4,guess_score=$5,"
         + "creation_server=$6,game_server=$7,"

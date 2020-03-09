@@ -1,5 +1,6 @@
 package com.redhat.developers.data;
 
+import java.time.OffsetDateTime;
 import javax.enterprise.inject.Produces;
 
 /**
@@ -8,7 +9,7 @@ import javax.enterprise.inject.Produces;
 public class Game {
   public String id;
   public String state;
-  public String date;
+  public OffsetDateTime date;
   public String config;
 
   public Game() {
@@ -43,11 +44,11 @@ public class Game {
 
   }
 
-  public String getDate() {
+  public OffsetDateTime getDate() {
     return date;
   }
 
-  public Game date(String date) {
+  public Game date(OffsetDateTime date) {
     this.date = date;
     return this;
   }

@@ -3,20 +3,23 @@ package com.redhat.developers;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.fail;
+import java.time.LocalDateTime;
+import java.time.Month;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
+import com.redhat.developers.data.Game;
 import com.redhat.developers.data.GameMessage;
 import com.redhat.developers.data.Player;
+import com.redhat.developers.sql.GameQueries;
 import com.redhat.developers.sql.PlayerQueries;
 import com.redhat.developers.util.Scorer;
 import org.apache.kafka.common.serialization.Serdes;
@@ -76,6 +79,9 @@ public class LeaderBoardTest {
 
   @Inject
   PlayerQueries playerQ;
+
+  @Inject
+  GameQueries gamesQ;
 
   @Inject
   @Channel("leaderboard-persist-to-db")
@@ -170,6 +176,36 @@ public class LeaderBoardTest {
   @Order(2)
   public void testPlayerPersistence() {
     assertNotNull(playersKVStore);
+
+
+    // PST
+    OffsetDateTime somePSTDateTime = OffsetDateTime.of(
+        LocalDateTime.of(2020, Month.MARCH, 9, 18, 01, 00),
+        ZoneOffset.ofHoursMinutes(-7, 0));
+
+    // Some GMT time
+    OffsetDateTime someGMTDateTime = OffsetDateTime.of(
+        LocalDateTime.of(2020, Month.MARCH, 9, 18, 01, 00),
+        ZoneOffset.ofHoursMinutes(0, 0));
+
+    Game game = Game.newGame()
+        .id("new-game-1583157436")
+        .state("over")
+        .date(somePSTDateTime);
+    gamesQ.upsert(client, game);
+
+    game = Game.newGame()
+        .id("new-game-1583157437")
+        .state("paused")
+        .date(someGMTDateTime);
+    gamesQ.upsert(client, game);
+
+    game = Game.newGame()
+        .id("new-game-1583157438")
+        .state("active")
+        .date(OffsetDateTime.now());
+
+    gamesQ.upsert(client, game);
     // Test Persistence
     this.playersKVStore.all()
         .forEachRemaining(a -> playerEmitter.send(jsonb.toJson(a.value)));
@@ -183,9 +219,8 @@ public class LeaderBoardTest {
 
     try {
 
-      List<Player> players =
-          playerQ.rankPlayers(client, "new-game-1583157438")
-              .toCompletableFuture().join();
+      List<Player> players = playerQ.rankPlayers(client)
+          .toCompletableFuture().join();
       assertNotNull(players);
       assertEquals(3, players.size());
       Player aPlayer = players.get(0);

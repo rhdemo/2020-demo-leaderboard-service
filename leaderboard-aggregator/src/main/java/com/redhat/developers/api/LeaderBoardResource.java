@@ -3,12 +3,10 @@ package com.redhat.developers.api;
 import java.util.concurrent.CompletionStage;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -30,11 +28,10 @@ public class LeaderBoardResource {
   PlayerPersistenceService playerPService;
 
   @GET
-  @Path("leaderboard/{gameId}")
-  public CompletionStage<Response> getLeaderBoard(
-      @PathParam("gameId") String gameId) {
+  @Path("leaderboard")
+  public CompletionStage<Response> getLeaderBoard() {
     logger.info("Getting Ranked players for game ");
-    return playerPService.rankedPlayerList(gameId)
+    return playerPService.rankedPlayerList()
         .thenApply(results -> Response.ok(results))
         .exceptionally(e -> {
           logger.log(Level.SEVERE, "Error while getting players with ranks", e);

@@ -14,7 +14,6 @@ import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.Consumed;
-import org.apache.kafka.streams.kstream.GlobalKTable;
 import org.apache.kafka.streams.kstream.Materialized;
 import org.apache.kafka.streams.kstream.Produced;
 import org.apache.kafka.streams.state.KeyValueBytesStoreSupplier;
@@ -73,7 +72,7 @@ public class LeaderBoardAggregator {
   protected Player aggregatePlayerScore(String key, GameMessage gameMessage,
       Player aggregatedPlayer) {
     Player player = gameMessage.getPlayer();
-    logger.log(Level.FINE,
+    logger.log(Level.FINER,
         "Aggregation Key {0} and Player {1}",
         new Object[] {key, aggregatedPlayer.getId()});
     aggregatedPlayer
@@ -88,7 +87,7 @@ public class LeaderBoardAggregator {
         .right(player.getRight() + aggregatedPlayer.getRight())
         .wrong(player.getWrong() + aggregatedPlayer.getWrong())
         .score(player.getScore() + aggregatedPlayer.getScore());
-    logger.log(Level.FINE,
+    logger.log(Level.FINER,
         "Aggregated score for player Player {0} is {1} ",
         new Object[] {aggregatedPlayer.getId(), aggregatedPlayer.getScore()});
     return aggregatedPlayer;

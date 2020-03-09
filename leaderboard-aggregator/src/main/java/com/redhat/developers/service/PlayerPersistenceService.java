@@ -32,7 +32,7 @@ public class PlayerPersistenceService {
   @Incoming("leaderboard-persist-to-db")
   public void saveToDB(String playerJson) {
     try {
-      logger.info("Saving Player:" + playerJson);
+      logger.log(Level.FINE, "Saving Player {0} ", playerJson);
       Player player = jsonb.fromJson(playerJson, Player.class);
       playerQueries.upsert(client, player);
     } catch (Exception e) {
@@ -45,7 +45,7 @@ public class PlayerPersistenceService {
    * @param gameId
    * @return
    */
-  public CompletionStage<List<Player>> rankedPlayerList(String gameId) {
-    return playerQueries.rankPlayers(client, gameId);
+  public CompletionStage<List<Player>> rankedPlayerList() {
+    return playerQueries.rankPlayers(client);
   }
 }
