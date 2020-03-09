@@ -43,4 +43,9 @@ public class StrimziKafkaContainer
     this.kafkaPort = kafkaPort;
     return this;
   }
+
+  public void start() {
+    addFixedExposedPort(9092, 9092);
+    super.start();
+  }
 }

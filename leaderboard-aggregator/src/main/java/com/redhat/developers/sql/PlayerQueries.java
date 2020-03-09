@@ -62,8 +62,8 @@ public class PlayerQueries {
         .preparedQuery("SELECT * FROM player "
             + "WHERE game_id=$1"
             + "ORDER BY guess_score DESC,"
-            + "guess_right ASC,"
-            + "guess_wrong DESC", Tuple.of(gameId))
+            + "guess_right DESC,"
+            + "guess_wrong ASC", Tuple.of(gameId))
         .thenApply(this::playersList)
         .exceptionally(e -> {
           logger.log(Level.SEVERE,

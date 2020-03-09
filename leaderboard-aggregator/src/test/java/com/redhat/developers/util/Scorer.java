@@ -78,7 +78,7 @@ public class Scorer {
         .mouth(RandomUtils.nextInt(0, 5));
   }
 
-  public List<GameMessage> fromFile(InputStream fin)
+  public static List<GameMessage> fromFile(InputStream fin)
       throws Exception {
     Jsonb jsonb = JsonbBuilder.newBuilder().build();
     return jsonb.fromJson(fin,
