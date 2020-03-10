@@ -3,6 +3,7 @@ package com.redhat.developers.streams;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Produces;
 import javax.inject.Inject;
@@ -30,7 +31,7 @@ public class LeaderBoardAggregator {
   Logger logger = Logger.getLogger(LeaderBoardAggregator.class.getName());
 
   @ConfigProperty(name = "quarkus.kafka-streams.topics")
-  List<String> topics;
+  String topicPattern;
 
   @ConfigProperty(name = "rhdemo.leaderboard.kvstore.name")
   String kvStoreName;
@@ -55,7 +56,7 @@ public class LeaderBoardAggregator {
         Stores.persistentKeyValueStore(kvStoreName);
 
     builder
-        .stream(topics,
+        .stream(Pattern.compile(topicPattern),
             (Consumed.with(Serdes.String(), gameMessageSerde)))
         .selectKey(
             (k, v) -> v.getPlayer().getGameId() + "~" + v.getPlayer().getId())
@@ -69,6 +70,9 @@ public class LeaderBoardAggregator {
     return builder.build();
   }
 
+  /**
+   * 
+   */
   protected Player aggregatePlayerScore(String key, GameMessage gameMessage,
       Player aggregatedPlayer) {
     Player player = gameMessage.getPlayer();
