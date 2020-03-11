@@ -8,7 +8,7 @@ import javax.enterprise.inject.Produces;
  */
 public class Game {
   public String id;
-  public String state;
+  public GameState state;
   public OffsetDateTime date;
   public String config;
 
@@ -34,14 +34,18 @@ public class Game {
     return config;
   }
 
-  public String getState() {
+  public GameState getState() {
     return state;
   }
 
-  public Game state(String state) {
+  public Game state(GameState state) {
     this.state = state;
     return this;
+  }
 
+  public Game state(String state) {
+    this.state(GameState.valueOf(state));
+    return this;
   }
 
   public OffsetDateTime getDate() {

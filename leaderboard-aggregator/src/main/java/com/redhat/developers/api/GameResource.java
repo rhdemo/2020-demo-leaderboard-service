@@ -35,6 +35,15 @@ public class GameResource {
   @Inject
   PgPool client;
 
+  @Path("/game/all")
+  @GET
+  public CompletionStage<Response> all() {
+    logger.info("Finding active game");
+    return gameQueries.findAll(client)
+        .thenApply(players -> Response.ok(players))
+        .thenApply(ResponseBuilder::build);
+  }
+
   @Path("/game/active")
   @GET
   public CompletionStage<Response> activeGame() {

@@ -7,11 +7,11 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import java.time.LocalDateTime;
 import java.time.Month;
 import java.time.OffsetDateTime;
-import java.time.ZoneId;
 import java.time.ZoneOffset;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import com.redhat.developers.data.Game;
+import com.redhat.developers.data.GameState;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
@@ -37,6 +37,10 @@ public class GameResourceTest {
       LocalDateTime.of(2020, Month.MARCH, 9, 18, 01, 00),
       ZoneOffset.ofHoursMinutes(0, 0));
 
+  OffsetDateTime anotherGMTDateTime = OffsetDateTime.of(
+      LocalDateTime.of(2020, Month.MARCH, 9, 18, 04, 00),
+      ZoneOffset.ofHoursMinutes(0, 0));
+
   @BeforeEach
   public void chekEnv() {
     assertNotNull("quarkus.datasource.url");
@@ -50,7 +54,7 @@ public class GameResourceTest {
   @Order(1)
   public void testGameAdd() {
     Game game = Game.newGame()
-        .id("id0001").state("active")
+        .id("id0001").state(GameState.active)
         .config("{}")
         .date(someGMTDateTime);
     given()
@@ -73,7 +77,7 @@ public class GameResourceTest {
   @Order(2)
   public void testGameUpdate() {
     Game game = Game.newGame()
-        .id("id0001").state("paused")
+        .id("id0001").state(GameState.paused)
         .config("{}")
         .date(someGMTDateTime);
 
@@ -97,7 +101,7 @@ public class GameResourceTest {
   @Order(3)
   public void testGameFind() {
     Game game = Game.newGame()
-        .id("id0001").state("paused")
+        .id("id0001").state(GameState.paused)
         .config("{}")
         .date(someGMTDateTime);
 
@@ -116,9 +120,15 @@ public class GameResourceTest {
 
     Game game2 = Game.newGame()
         .id("id0002")
-        .state("active")
+        .state(GameState.active)
         .config("{}")
         .date(someGMTDateTime);
+
+    Game game3 = Game.newGame()
+        .id("id0003")
+        .state(GameState.active)
+        .config("{}")
+        .date(anotherGMTDateTime);
 
     given()
         .contentType(ContentType.JSON)
@@ -128,7 +138,15 @@ public class GameResourceTest {
         .statusCode(202)
         .body(is(""));
 
-    // Check we get back active game
+    given()
+        .contentType(ContentType.JSON)
+        .body(jsonb.toJson(game3))
+        .when().post("/api/game/save")
+        .then()
+        .statusCode(202)
+        .body(is(""));
+
+    // Check we get back active game sorted by time
     given()
         .when()
         .get("/api/game/id0002")
@@ -137,9 +155,35 @@ public class GameResourceTest {
         .body(is(jsonb.toJson(game2)));
   }
 
-
   @Test
   @Order(5)
+  public void testGameFindAll() {
+
+    // Game game2 = Game.newGame()
+    // .id("id0002")
+    // .state(GameState.active)
+    // .config("{}")
+    // .date(someGMTDateTime);
+
+    // Game game3 = Game.newGame()
+    // .id("id0003")
+    // .state(GameState.active)
+    // .config("{}")
+    // .date(anotherGMTDateTime);
+
+
+    // Check we get back active game sorted by time
+    given()
+        .when()
+        .get("/api/game/all")
+        .then()
+        .assertThat()
+        .contentType(ContentType.JSON)
+        .body("size()", is(6));
+  }
+
+  @Test
+  @Order(6)
   public void testGameDelete() {
     given()
         .when()
@@ -150,7 +194,7 @@ public class GameResourceTest {
   }
 
   @Test
-  @Order(6)
+  @Order(7)
   public void testGameNobody() {
     given()
         .when()

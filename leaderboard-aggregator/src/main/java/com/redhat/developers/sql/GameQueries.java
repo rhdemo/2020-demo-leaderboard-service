@@ -22,6 +22,23 @@ public class GameQueries {
 
   static Logger logger = Logger.getLogger(GameQueries.class.getName());
 
+
+  /**
+   * 
+   * @param client
+   * @return
+   */
+  public CompletionStage<List<Game>> findAll(PgPool client) {
+    return client
+        .preparedQuery("SELECT * from games ORDER BY game_date DESC")
+        .thenApply(this::games)
+        .exceptionally(e -> {
+          logger.log(Level.SEVERE, "Error retriving all games ",
+              e);
+          return null;
+        });
+  }
+
   /**
    * 
    * @param client
@@ -31,7 +48,8 @@ public class GameQueries {
   public CompletionStage<Optional<Game>> findById(PgPool client,
       String gameId) {
     return client
-        .preparedQuery("SELECT * from games where game_id=$1",
+        .preparedQuery("SELECT * from games where game_id=$1"
+            + "ORDER BY game_date DESC",
             Tuple.of(gameId))
         .thenApply(RowSet::iterator)
         .thenApply(
@@ -51,7 +69,8 @@ public class GameQueries {
    */
   public CompletionStage<Optional<Game>> findActiveGame(PgPool client) {
     return client
-        .preparedQuery("SELECT * from games where game_state='active'")
+        .preparedQuery("SELECT * from games where game_state='active'"
+            + "ORDER BY game_date DESC")
         .thenApply(RowSet::iterator)
         .thenApply(
             iterator -> iterator.hasNext() ? from(iterator.next()) : null)
@@ -72,7 +91,8 @@ public class GameQueries {
   public CompletionStage<List<Game>> gamesByState(PgPool client,
       String state) {
     return client
-        .preparedQuery("SELECT * from games where game_state=$1",
+        .preparedQuery("SELECT * from games where game_state=$1"
+            + "ORDER BY game_date ASC",
             Tuple.of(state))
         .thenApply(this::games)
         .exceptionally(e -> {
@@ -214,6 +234,6 @@ public class GameQueries {
         .addString(game.getId())// Param Order 1
         .addString(game.getConfig()) // Param Order 2
         .addOffsetDateTime(game.getDate()) // Param Order 3
-        .addString(game.getState()); // Param Order 4
+        .addString(game.getState().toString()); // Param Order 4
   }
 }
