@@ -33,7 +33,7 @@ public class LeaderBoardAggregator {
   Logger logger = Logger.getLogger(LeaderBoardAggregator.class.getName());
 
   @ConfigProperty(name = "quarkus.kafka-streams.topics")
-  Pattern topicPattern;
+  List<String> topics;
 
   @ConfigProperty(name = "rhdemo.leaderboard.kvstore.name")
   String kvStoreName;
@@ -45,7 +45,7 @@ public class LeaderBoardAggregator {
   Jsonb jsonb;
 
   /**
-   * 
+   * TODO: Topics with pattern not working
    * 
    * @return
    */
@@ -58,11 +58,11 @@ public class LeaderBoardAggregator {
     KeyValueBytesStoreSupplier storeSupplier =
         Stores.persistentKeyValueStore(kvStoreName);
 
-    logger.log(Level.FINE, "Using Topic Pattern :{0}", topicPattern);
-    validatePattern();
+    // logger.log(Level.FINE, "Using Topic Pattern :{0}", topicPattern);
+    // validatePattern();
 
     KStream<String, Player> playerStream = builder
-        .stream(topicPattern,
+        .stream(topics,
             (Consumed.with(Serdes.String(), gameMessageSerde)))
         .selectKey(
             (k, v) -> v.getPlayer().getGameId() + "~" + v.getPlayer().getId())
@@ -109,17 +109,17 @@ public class LeaderBoardAggregator {
   }
 
 
-  private void validatePattern() {
-    List<String> topics =
-        Arrays.asList("lnd1.my-topic", "ny1.my-topic", "demo2.my-topic");
+  // private void validatePattern() {
+  // List<String> topics =
+  // Arrays.asList("lnd1.my-topic", "ny1.my-topic", "demo2.my-topic");
 
-    Pattern tp = Pattern.compile(".*\\.my-topic");
+  // Pattern tp = Pattern.compile(".*\\.my-topic");
 
-    topics
-        .stream()
-        .filter(t -> tp.matcher(t).matches())
-        .forEach(t -> logger.log(Level.FINE,
-            "Topic {0} will be handled by the steam ", t));
+  // topics
+  // .stream()
+  // .filter(t -> tp.matcher(t).matches())
+  // .forEach(t -> logger.log(Level.FINE,
+  // "Topic {0} will be handled by the steam ", t));
 
-  }
+  // }
 }
