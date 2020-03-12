@@ -1,5 +1,6 @@
 package com.redhat.developers.streams;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -15,6 +16,7 @@ import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.Consumed;
+import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.Materialized;
 import org.apache.kafka.streams.kstream.Produced;
 import org.apache.kafka.streams.state.KeyValueBytesStoreSupplier;
@@ -31,7 +33,7 @@ public class LeaderBoardAggregator {
   Logger logger = Logger.getLogger(LeaderBoardAggregator.class.getName());
 
   @ConfigProperty(name = "quarkus.kafka-streams.topics")
-  String topicPattern;
+  List<String> topics;
 
   @ConfigProperty(name = "rhdemo.leaderboard.kvstore.name")
   String kvStoreName;
@@ -43,6 +45,7 @@ public class LeaderBoardAggregator {
   Jsonb jsonb;
 
   /**
+   * TODO - why topicPattern is not getting through ??
    * 
    * @return
    */
@@ -55,8 +58,11 @@ public class LeaderBoardAggregator {
     KeyValueBytesStoreSupplier storeSupplier =
         Stores.persistentKeyValueStore(kvStoreName);
 
-    builder
-        .stream(Pattern.compile("(.*\\.)(my-topic)"),
+    // logger.log(Level.FINE, "Using Topic Pattern :{0}", topicPattern);
+    // validatePattern();
+
+    KStream<String, Player> playerStream = builder
+        .stream(topics,
             (Consumed.with(Serdes.String(), gameMessageSerde)))
         .selectKey(
             (k, v) -> v.getPlayer().getGameId() + "~" + v.getPlayer().getId())
@@ -65,9 +71,14 @@ public class LeaderBoardAggregator {
             Materialized.<String, Player>as(storeSupplier)
                 .withKeySerde(Serdes.String())
                 .withValueSerde(playerSerde))
-        .toStream()
-        .to(outStream, Produced.with(Serdes.String(), playerSerde));
-    return builder.build();
+        .toStream();
+
+    playerStream.to(outStream,
+        Produced.with(Serdes.String(), playerSerde));
+
+    Topology topology = builder.build();
+    logger.log(Level.FINE, topology.describe().toString());
+    return topology;
   }
 
   /**
@@ -97,4 +108,18 @@ public class LeaderBoardAggregator {
     return aggregatedPlayer;
   }
 
+
+  private void validatePattern() {
+    List<String> topics =
+        Arrays.asList("lnd1.my-topic", "ny1.my-topic", "demo2.my-topic");
+
+    Pattern tp = Pattern.compile(".*\\.my-topic");
+
+    topics
+        .stream()
+        .filter(t -> tp.matcher(t).matches())
+        .forEach(t -> logger.log(Level.FINE,
+            "Topic {0} will be handled by the steam ", t));
+
+  }
 }
