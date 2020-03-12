@@ -56,7 +56,7 @@ public class LeaderBoardAggregator {
         Stores.persistentKeyValueStore(kvStoreName);
 
     builder
-        .stream(Pattern.compile(topicPattern),
+        .stream(Pattern.compile("(.*\\.)(my-topic)"),
             (Consumed.with(Serdes.String(), gameMessageSerde)))
         .selectKey(
             (k, v) -> v.getPlayer().getGameId() + "~" + v.getPlayer().getId())
