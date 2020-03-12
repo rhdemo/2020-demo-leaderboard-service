@@ -33,7 +33,7 @@ public class LeaderBoardAggregator {
   Logger logger = Logger.getLogger(LeaderBoardAggregator.class.getName());
 
   @ConfigProperty(name = "quarkus.kafka-streams.topics")
-  List<String> topics;
+  Pattern topicPattern;
 
   @ConfigProperty(name = "rhdemo.leaderboard.kvstore.name")
   String kvStoreName;
@@ -45,7 +45,7 @@ public class LeaderBoardAggregator {
   Jsonb jsonb;
 
   /**
-   * TODO - why topicPattern is not getting through ??
+   * 
    * 
    * @return
    */
@@ -58,11 +58,11 @@ public class LeaderBoardAggregator {
     KeyValueBytesStoreSupplier storeSupplier =
         Stores.persistentKeyValueStore(kvStoreName);
 
-    // logger.log(Level.FINE, "Using Topic Pattern :{0}", topicPattern);
-    // validatePattern();
+    logger.log(Level.FINE, "Using Topic Pattern :{0}", topicPattern);
+    validatePattern();
 
     KStream<String, Player> playerStream = builder
-        .stream(topics,
+        .stream(topicPattern,
             (Consumed.with(Serdes.String(), gameMessageSerde)))
         .selectKey(
             (k, v) -> v.getPlayer().getGameId() + "~" + v.getPlayer().getId())
