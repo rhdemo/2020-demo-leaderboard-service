@@ -59,7 +59,8 @@ public class PlayerQueries {
             + " ON p.game_id = g.game_id"
             + " ORDER BY p.guess_score DESC,"
             + " p.guess_right DESC,"
-            + "p.guess_wrong ASC")
+            + " p.guess_wrong ASC"
+            + " FETCH FIRST 10 ROW ONLY")
         .thenApply(this::playersList)
         .exceptionally(e -> {
           logger.log(Level.SEVERE,

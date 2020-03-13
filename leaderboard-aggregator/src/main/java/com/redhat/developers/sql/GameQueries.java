@@ -1,6 +1,10 @@
 package com.redhat.developers.sql;
 
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletionStage;
@@ -111,6 +115,7 @@ public class GameQueries {
   public CompletionStage<Boolean> upsert(PgPool client, Game game) {
     CompletionStage<Boolean> gameExist =
         gameExists(client, game.getId());
+    setGameDateTimestamp(game);
     return gameExist
         .thenCompose(b -> b ? update(client, game) : insert(client, game))
         .exceptionally(e -> {
@@ -235,5 +240,19 @@ public class GameQueries {
         .addString(game.getConfig()) // Param Order 2
         .addOffsetDateTime(game.getDate()) // Param Order 3
         .addString(game.getState().toString()); // Param Order 4
+  }
+
+
+  private void setGameDateTimestamp(Game game) {
+    Calendar calendar = Calendar.getInstance();
+    game.date(OffsetDateTime.of(
+        LocalDateTime.of(
+            calendar.get(Calendar.YEAR),
+            calendar.get(Calendar.MONTH),
+            calendar.get(Calendar.DAY_OF_MONTH),
+            calendar.get(Calendar.HOUR_OF_DAY),
+            calendar.get(Calendar.SECOND),
+            calendar.get(Calendar.MILLISECOND)),
+        ZoneOffset.ofHoursMinutes(0, 0)));
   }
 }
