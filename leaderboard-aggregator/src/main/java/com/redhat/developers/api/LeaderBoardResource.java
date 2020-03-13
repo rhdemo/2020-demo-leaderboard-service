@@ -8,6 +8,7 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
@@ -29,9 +30,18 @@ public class LeaderBoardResource {
 
   @GET
   @Path("leaderboard")
-  public CompletionStage<Response> getLeaderBoard() {
+  public CompletionStage<Response> getLeaderBoard(
+      @QueryParam("rowCount") String qRowCount) {
     logger.info("Getting Ranked players for game ");
-    return playerPService.rankedPlayerList()
+    int rowCount = 10;
+    if (qRowCount == null) {
+      try {
+        rowCount = Integer.parseInt(qRowCount);
+      } catch (Exception e) {
+        logger.log(Level.SEVERE, "Error with query param", e);
+      }
+    }
+    return playerPService.rankedPlayerList(rowCount)
         .thenApply(results -> Response.ok(results))
         .exceptionally(e -> {
           logger.log(Level.SEVERE, "Error while getting players with ranks", e);

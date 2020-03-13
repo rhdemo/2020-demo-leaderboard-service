@@ -45,7 +45,7 @@ public class PlayerPersistenceService {
    * @param gameId
    * @return
    */
-  public CompletionStage<List<Player>> rankedPlayerList() {
-    return playerQueries.rankPlayers(client);
+  public CompletionStage<List<Player>> rankedPlayerList(int rowCount) {
+    return playerQueries.rankPlayers(client, rowCount);
   }
 }

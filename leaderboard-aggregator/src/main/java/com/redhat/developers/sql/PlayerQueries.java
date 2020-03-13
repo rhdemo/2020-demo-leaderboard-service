@@ -52,7 +52,8 @@ public class PlayerQueries {
   }
 
 
-  public CompletionStage<List<Player>> rankPlayers(PgPool client) {
+  public CompletionStage<List<Player>> rankPlayers(PgPool client,
+      int rowCount) {
     return client
         .preparedQuery("SELECT p.* FROM players p"
             + " LEFT JOIN games g "
@@ -60,7 +61,7 @@ public class PlayerQueries {
             + " ORDER BY p.guess_score DESC,"
             + " p.guess_right DESC,"
             + " p.guess_wrong ASC"
-            + " FETCH FIRST 10 ROW ONLY")
+            + " FETCH FIRST $1 ROW ONLY", Tuple.of(rowCount))
         .thenApply(this::playersList)
         .exceptionally(e -> {
           logger.log(Level.SEVERE,
