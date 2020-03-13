@@ -1,5 +1,8 @@
 package com.redhat.developers;
 
+import static io.restassured.RestAssured.*;
+import static org.hamcrest.CoreMatchers.*;
+import static org.junit.Assert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -39,6 +42,8 @@ import org.junit.jupiter.api.TestMethodOrder;
 import io.quarkus.kafka.client.serialization.JsonbSerde;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
+import io.restassured.http.ContentType;
+import io.restassured.response.Response;
 import io.smallrye.reactive.messaging.annotations.Channel;
 import io.smallrye.reactive.messaging.annotations.Emitter;
 import io.vertx.axle.pgclient.PgPool;
@@ -190,7 +195,7 @@ public class LeaderBoardTest {
 
     Game game = Game.newGame()
         .id("new-game-1583157436")
-        .state("over")
+        .state("stopped")
         .date(somePSTDateTime);
     gamesQ.upsert(client, game);
 
@@ -247,6 +252,83 @@ public class LeaderBoardTest {
       assertEquals(1, aPlayer.getWrong());
       assertEquals(95, aPlayer.getScore());
 
+
+    } catch (CompletionException e) {
+      fail(e);
+    }
+  }
+
+  @Test()
+  @Order(3)
+  public void testPlayerPersistenceWithRowCount() {
+    assertNotNull(playersKVStore);
+
+
+    // PST
+    OffsetDateTime somePSTDateTime = OffsetDateTime.of(
+        LocalDateTime.of(2020, Month.MARCH, 9, 18, 01, 00),
+        ZoneOffset.ofHoursMinutes(-7, 0));
+
+    // Some GMT time
+    OffsetDateTime someGMTDateTime = OffsetDateTime.of(
+        LocalDateTime.of(2020, Month.MARCH, 9, 18, 01, 00),
+        ZoneOffset.ofHoursMinutes(0, 0));
+
+    Game game = Game.newGame()
+        .id("new-game-1583157436")
+        .state("stopped")
+        .date(somePSTDateTime);
+    gamesQ.upsert(client, game);
+
+    game = Game.newGame()
+        .id("new-game-1583157437")
+        .state("paused")
+        .date(someGMTDateTime);
+    gamesQ.upsert(client, game);
+
+    game = Game.newGame()
+        .id("new-game-1583157438")
+        .state("active")
+        .date(OffsetDateTime.now());
+
+    gamesQ.upsert(client, game);
+    // Test Persistence
+    this.playersKVStore.all()
+        .forEachRemaining(a -> playerEmitter.send(jsonb.toJson(a.value)));
+
+    // Sleep for 1/2 seconds - just to give some time db to be updated with all three records
+    try {
+      Thread.sleep(500);
+    } catch (Exception e) {
+
+    }
+
+    try {
+
+      Response response = given()
+          .when()
+          .get("/api/leaderboard?rowCount=1")
+          .then()
+          .contentType(ContentType.JSON)
+          .extract().response();
+
+      assertEquals(200, response.statusCode());
+
+      String jsonStr = response.getBody().asString();
+
+      List<Player> players = jsonb.fromJson(jsonStr,
+          new ArrayList<Player>() {}.getClass().getGenericSuperclass());
+
+      assertNotNull(players);
+      assertEquals(1, players.size());
+
+      Player aPlayer = players.get(0);
+      assertNotNull(aPlayer);
+      assertEquals("tom", aPlayer.getId());
+      assertEquals("tom", aPlayer.getUsername());
+      assertEquals(7, aPlayer.getRight());
+      assertEquals(2, aPlayer.getWrong());
+      assertEquals(195, aPlayer.getScore());
 
     } catch (CompletionException e) {
       fail(e);

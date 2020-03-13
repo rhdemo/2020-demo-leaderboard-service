@@ -33,15 +33,8 @@ public class LeaderBoardResource {
   @Path("leaderboard")
   public CompletionStage<Response> getLeaderBoard(
       @QueryParam("rowCount") String qRowCount) {
-    logger.log(Level.FINE, "Getting Ranked {0} players for game ", qRowCount);
-    int rowCount = 10;
-    if (qRowCount == null) {
-      try {
-        rowCount = Integer.parseInt(qRowCount);
-      } catch (Exception e) {
-        // Ignore it
-      }
-    }
+    logger.log(Level.FINE, "Getting Ranked {0} player(s) for game ", qRowCount);
+    int rowCount = qRowCount != null ? Integer.parseInt(qRowCount) : 10;
     return playerPService.rankedPlayerList(rowCount)
         .thenApply(results -> Response.ok(results))
         .exceptionally(e -> {

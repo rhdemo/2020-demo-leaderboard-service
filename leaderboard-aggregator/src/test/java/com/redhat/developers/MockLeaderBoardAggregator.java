@@ -2,7 +2,6 @@ package com.redhat.developers;
 
 import java.util.List;
 import java.util.logging.Logger;
-import java.util.regex.Pattern;
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Produces;
 import com.redhat.developers.data.GameMessage;
@@ -27,7 +26,7 @@ public class MockLeaderBoardAggregator extends LeaderBoardAggregator {
   Logger logger = Logger.getLogger(MockLeaderBoardAggregator.class.getName());
 
   @ConfigProperty(name = "quarkus.kafka-streams.topics")
-  String topicPattern;
+  List<String> topics;
 
   @ConfigProperty(name = "rhdemo.leaderboard.kvstore.name")
   String kvStoreName;
@@ -49,7 +48,7 @@ public class MockLeaderBoardAggregator extends LeaderBoardAggregator {
     JsonbSerde<Player> playerSerde = new JsonbSerde<>(Player.class);
     StreamsBuilder builder = new StreamsBuilder();
 
-    builder.stream(Pattern.compile(topicPattern),
+    builder.stream(topics,
         Consumed.with(Serdes.String(), gameMessageSerde))
         .selectKey(
             (k, v) -> v.getPlayer().getGameId() + "~" + v.getPlayer().getId())
