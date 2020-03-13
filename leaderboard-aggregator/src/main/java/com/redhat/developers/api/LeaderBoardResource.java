@@ -5,6 +5,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -32,7 +33,7 @@ public class LeaderBoardResource {
   @Path("leaderboard")
   public CompletionStage<Response> getLeaderBoard(
       @QueryParam("rowCount") String qRowCount) {
-    logger.info(Level.FINE, "Getting Ranked {0} players for game ", qRowCount);
+    logger.log(Level.FINE, "Getting Ranked {0} players for game ", qRowCount);
     int rowCount = 10;
     if (qRowCount == null) {
       try {
