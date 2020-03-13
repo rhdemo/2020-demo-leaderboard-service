@@ -219,7 +219,7 @@ public class LeaderBoardTest {
 
     try {
 
-      List<Player> players = playerQ.rankPlayers(client)
+      List<Player> players = playerQ.rankPlayers(client, 10)
           .toCompletableFuture().join();
       assertNotNull(players);
       assertEquals(3, players.size());
