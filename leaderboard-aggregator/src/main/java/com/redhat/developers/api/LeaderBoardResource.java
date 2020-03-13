@@ -32,13 +32,13 @@ public class LeaderBoardResource {
   @Path("leaderboard")
   public CompletionStage<Response> getLeaderBoard(
       @QueryParam("rowCount") String qRowCount) {
-    logger.info("Getting Ranked players for game ");
+    logger.info(Level.FINE, "Getting Ranked {0} players for game ", qRowCount);
     int rowCount = 10;
     if (qRowCount == null) {
       try {
         rowCount = Integer.parseInt(qRowCount);
       } catch (Exception e) {
-        logger.log(Level.SEVERE, "Error with query param", e);
+        // Ignore it
       }
     }
     return playerPService.rankedPlayerList(rowCount)
