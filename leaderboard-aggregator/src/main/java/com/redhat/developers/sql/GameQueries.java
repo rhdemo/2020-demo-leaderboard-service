@@ -238,14 +238,18 @@ public class GameQueries {
     return Tuple.tuple()
         .addString(game.getId())// Param Order 1
         .addString(game.getConfig()) // Param Order 2
-        .addOffsetDateTime(game.getDate()) // Param Order 3
+        .addOffsetDateTime(now()) // Param Order 3
         .addString(game.getState().toString()); // Param Order 4
   }
 
 
   private void setGameDateTimestamp(Game game) {
+    game.date(now());
+  }
+
+  private OffsetDateTime now() {
     Calendar calendar = Calendar.getInstance();
-    game.date(OffsetDateTime.of(
+    return OffsetDateTime.of(
         LocalDateTime.of(
             calendar.get(Calendar.YEAR),
             calendar.get(Calendar.MONTH),
@@ -253,6 +257,6 @@ public class GameQueries {
             calendar.get(Calendar.HOUR_OF_DAY),
             calendar.get(Calendar.MINUTE),
             calendar.get(Calendar.SECOND)),
-        ZoneOffset.ofHoursMinutes(0, 0)));
+        ZoneOffset.ofHoursMinutes(0, 0));
   }
 }
