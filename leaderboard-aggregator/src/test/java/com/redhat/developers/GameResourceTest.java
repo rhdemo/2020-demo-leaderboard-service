@@ -44,10 +44,6 @@ public class GameResourceTest {
   @BeforeEach
   public void chekEnv() {
     assertNotNull("quarkus.datasource.url");
-    String postgresqlURL = String.format(QuarkusTestEnv.JDBC_URL,
-        QuarkusTestEnv.postgreSQL.getContainerIpAddress(),
-        QuarkusTestEnv.postgreSQL.getMappedPort(5432));
-    assertEquals(postgresqlURL, System.getProperty("quarkus.datasource.url"));
   }
 
   @Test
