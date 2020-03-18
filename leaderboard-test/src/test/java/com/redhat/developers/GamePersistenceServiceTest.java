@@ -2,15 +2,12 @@ package com.redhat.developers;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.fail;
 import java.time.LocalDateTime;
 import java.time.Month;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
-import java.util.concurrent.CompletionStage;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
@@ -25,10 +22,14 @@ import org.junit.jupiter.api.TestMethodOrder;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 import io.vertx.amqp.AmqpClientOptions;
-import io.vertx.axle.amqp.*;
-import io.vertx.reactivex.core.Vertx;
+import io.vertx.axle.amqp.AmqpClient;
+import io.vertx.axle.amqp.AmqpConnection;
+import io.vertx.axle.amqp.AmqpMessage;
+import io.vertx.axle.amqp.AmqpMessageBuilder;
+import io.vertx.axle.amqp.AmqpSender;
 import io.vertx.core.net.PemKeyCertOptions;
 import io.vertx.core.net.PemTrustOptions;
+import io.vertx.reactivex.core.Vertx;
 
 /**
  * GameResourceTest

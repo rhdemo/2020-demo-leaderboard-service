@@ -13,31 +13,31 @@ import_openjdk8_is:	oc_login
 	@oc import-image redhat-openjdk-18/openjdk18-openshift \
 	  --from=registry.access.redhat.com/redhat-openjdk-18/openjdk18-openshift --confirm
 
-.PHONY: create-leaderboard-aggregator-bc
-create-leaderboard-aggregator-bc:	oc_login
-	@oc new-build --name=leaderboard-aggregator openjdk18-openshift~. \
+.PHONY: create-leaderboard-api-bc
+create-leaderboard-api-bc:	oc_login
+	@oc new-build --name=leaderboard-api openjdk18-openshift~. \
 	  --env=MAVEN_MIRROR_URL=$(MAVEN_MIRROR_URL) \
-		--context-dir=leaderboard-aggregator
+		--context-dir=leaderboard-api
 
-.PHONY: build-leaderboard-aggregator
-build-leaderboard-aggregator:	oc_login
-	@oc start-build leaderboard-aggregator \
+.PHONY: build-leaderboard-api
+build-leaderboard-api:	oc_login
+	@oc start-build leaderboard-api \
 	  --from-dir="$(current_dir)"
-	@oc logs -f bc/leaderboard-aggregator
+	@oc logs -f bc/leaderboard-api
 
-.PHONY: create-app-leaderboard-aggregator
-create-app-leaderboard-aggregator:	oc_login
-	@oc new-app --name leaderboard-aggregator \
-	  --image-stream=leaderboard-aggregator \
+.PHONY: create-app-leaderboard-api
+create-app-leaderboard-api:	oc_login
+	@oc new-app --name leaderboard-api \
+	  --image-stream=leaderboard-api \
 		--labels app.kubernetes.io/part-of=leaderboard
-	@oc expose svc/leaderboard-aggregator
+	@oc expose svc/leaderboard-api
 		
 .PHONY:	deploy-leaderboard
-deploy-leaderboard-aggregator:	oc_login	create-leaderboard-aggregator-bc	build-leaderboard-aggregator	create-app-leaderboard-aggregator
+deploy-leaderboard-api:	oc_login	create-leaderboard-api-bc	build-leaderboard-api	create-app-leaderboard-api
 
-.PHONY:	clean-leaderboard-aggregator
-clean-leaderboard-aggregator:	 oc_login	
-	oc delete bc/leaderboard-aggregator 
-	oc delete dc/leaderboard-aggregator 
-	oc delete svc/leaderboard-aggregator
-	oc delete is/leaderboard-aggregator
+.PHONY:	clean-leaderboard-api
+clean-leaderboard-api:	 oc_login	
+	oc delete bc/leaderboard-api 
+	oc delete dc/leaderboard-api 
+	oc delete svc/leaderboard-api
+	oc delete is/leaderboard-api

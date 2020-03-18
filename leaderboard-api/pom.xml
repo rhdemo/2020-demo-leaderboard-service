@@ -6,22 +6,14 @@
     <artifactId>leaderboard-parent</artifactId>
     <version>0.0.1</version>
   </parent>
-  <artifactId>leaderboard-aggregator</artifactId>
-  <name>Leaderboard Aggregator</name>
-  <description>The Kafka Streams Leader Board Aggregation</description>
+  <artifactId>leaderboard-api</artifactId>
+  <name>Leaderboard API</name>
+  <description>The Leaderboard API</description>
   <dependencies>
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>leaderboard-common</artifactId>
       <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-kafka-streams</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-resteasy-jsonb</artifactId>
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>

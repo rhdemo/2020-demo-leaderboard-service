@@ -31,7 +31,7 @@ public class LeaderBoardAggregator {
   Logger logger = Logger.getLogger(LeaderBoardAggregator.class.getName());
 
   @ConfigProperty(name = "quarkus.kafka-streams.topics")
-  List<String> topics;
+  String topic;
 
   @ConfigProperty(name = "rhdemo.leaderboard.kvstore.name")
   String kvStoreName;
@@ -60,7 +60,7 @@ public class LeaderBoardAggregator {
     // validatePattern();
 
     KStream<String, Player> playerStream = builder
-        .stream(topics,
+        .stream(topic,
             (Consumed.with(Serdes.String(), gameMessageSerde)))
         .selectKey(
             (k, v) -> v.getPlayer().getGameId() + "~" + v.getPlayer().getId())
