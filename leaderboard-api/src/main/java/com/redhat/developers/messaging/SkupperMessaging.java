@@ -51,7 +51,7 @@ public class SkupperMessaging {
         .setHostnameVerificationAlgorithm("")
         .setPort(port)
         .setHost(host)
-        .setContainerId("leadeboard-service");
+        .setContainerId("leaderboard-api");
   }
 
 }

@@ -6,6 +6,8 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import com.redhat.developers.data.Game;
+import com.redhat.developers.data.GameStateBody;
+import com.redhat.developers.data.GameStateMessage;
 import com.redhat.developers.sql.GameQueries;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import io.vertx.axle.pgclient.PgPool;
@@ -29,7 +31,10 @@ public class GamePersistenceService {
 
   @Incoming("game-state")
   public void saveGame(String payload) {
-    Game game = jsonb.fromJson(payload, Game.class);
+    GameStateMessage gameState =
+        jsonb.fromJson(payload, GameStateMessage.class);
+    GameStateBody body = gameState.body;
+    Game game = body.game;
     logger.log(FINE, "Saving game {0} ", game.getId());
     gameQueries.upsert(client, game)
         .whenComplete((v, e) -> {
