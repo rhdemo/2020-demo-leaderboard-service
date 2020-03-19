@@ -1,29 +1,30 @@
 package com.redhat.developers.data;
 
-import javax.enterprise.inject.Produces;
-
 /**
  * Game
  */
 public class GameStateBody {
 
-  public Game game;
+  private Game game;
+  private String type;
 
   public GameStateBody() {
 
   }
 
-  @Produces
-  public static GameStateBody newBody() {
-    return new GameStateBody();
-  }
-
-  public GameStateBody game(Game game) {
+  public void setGame(Game game) {
     this.game = game;
-    return this;
   }
 
   public Game getGame() {
     return game;
+  }
+
+  public void setType(String type) {
+    this.type = type;
+  }
+
+  public String getType() {
+    return type;
   }
 }

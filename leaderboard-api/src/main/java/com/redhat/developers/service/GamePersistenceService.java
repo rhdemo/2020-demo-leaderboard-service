@@ -31,17 +31,18 @@ public class GamePersistenceService {
 
   @Incoming("game-state")
   public void saveGame(String payload) {
+    logger.log(FINE, "Received Game State Payload  {0} ", payload);
     GameStateMessage gameState =
         jsonb.fromJson(payload, GameStateMessage.class);
-    GameStateBody body = gameState.body;
-    Game game = body.game;
+    GameStateBody body = gameState.getBody();
+    Game game = body.getGame();
     logger.log(FINE, "Saving game {0} ", game.getId());
     gameQueries.upsert(client, game)
         .whenComplete((v, e) -> {
           if (e != null) {
             logger.log(SEVERE, "Error while saving game ", e);
           } else {
-            logger.log(INFO, "Game {0} saved successfully", payload);
+            logger.log(INFO, "Game {0} saved successfully", game.id);
           }
         });
   }
