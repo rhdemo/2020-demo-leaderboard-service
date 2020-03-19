@@ -6,9 +6,9 @@
     <artifactId>leaderboard-parent</artifactId>
     <version>0.0.1</version>
   </parent>
-  <artifactId>leaderboard-api</artifactId>
-  <name>Leaderboard API</name>
-  <description>The Leaderboard API</description>
+  <artifactId>leaderboard-messaging</artifactId>
+  <name>Leaderboard Reactive Messaging</name>
+  <description>The Leaderboard Messaging</description>
   <dependencies>
     <dependency>
       <groupId>${project.groupId}</groupId>
@@ -17,12 +17,24 @@
     </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>leaderboard-messaging</artifactId>
+      <artifactId>leaderboard-sql</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-smallrye-openapi</artifactId>
+      <artifactId>quarkus-smallrye-reactive-messaging-kafka</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-smallrye-reactive-messaging</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-smallrye-reactive-messaging-amqp</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-smallrye-reactive-streams-operators</artifactId>
     </dependency>
   </dependencies>
   <build>

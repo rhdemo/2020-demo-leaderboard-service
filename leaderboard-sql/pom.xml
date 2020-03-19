@@ -6,9 +6,9 @@
     <artifactId>leaderboard-parent</artifactId>
     <version>0.0.1</version>
   </parent>
-  <artifactId>leaderboard-api</artifactId>
-  <name>Leaderboard API</name>
-  <description>The Leaderboard API</description>
+  <artifactId>leaderboard-sql</artifactId>
+  <name>Leaderboard SQL</name>
+  <description>The Leaderboard Persistence</description>
   <dependencies>
     <dependency>
       <groupId>${project.groupId}</groupId>
@@ -16,13 +16,8 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>leaderboard-messaging</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
       <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-smallrye-openapi</artifactId>
+      <artifactId>quarkus-reactive-pg-client</artifactId>
     </dependency>
   </dependencies>
   <build>
