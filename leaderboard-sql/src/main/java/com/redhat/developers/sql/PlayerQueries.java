@@ -57,7 +57,7 @@ public class PlayerQueries {
       int rowCount) {
     return client
         .preparedQuery("SELECT p.* FROM players p"
-            + " WHERE p.game_id=(SELECT g.game_id from games g WHERE g.game_state='active' ORDER BY game_date DESC)"
+            + " WHERE p.game_id=(SELECT g.game_id from games g WHERE ORDER BY g.game_date DESC)"
             + " ORDER BY p.guess_score DESC,"
             + " p.guess_right DESC,"
             + " p.guess_wrong ASC"
