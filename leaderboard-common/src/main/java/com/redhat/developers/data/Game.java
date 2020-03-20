@@ -7,7 +7,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 /**
  * Game
  */
-@JsonIgnoreProperties({"date"})
+@JsonIgnoreProperties({"date", "configuration"})
 public class Game {
   public String id;
   public GameState state;
