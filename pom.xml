@@ -19,8 +19,8 @@
   </properties>
   <modules>
     <module>leaderboard-common</module>
-    <module>leaderboard-api</module>
     <module>leaderboard-sql</module>
+    <module>leaderboard-api</module>
     <module>leaderboard-messaging</module>
     <module>leaderboard-broadcast</module>
     <module>leaderboard-aggregator</module>
@@ -76,26 +76,62 @@
   </build>
   <profiles>
     <profile>
-      <id>release</id>
+      <id>api</id>
       <activation>
         <property>
-          <name>release</name>
+          <name>api</name>
+        </property>
+      </activation>
+      <modules>
+        <module>leaderboard-common</module>
+        <module>leaderboard-sql</module>
+        <module>leaderboard-api</module>
+      </modules>
+    </profile>
+    <profile>
+      <id>aggregator</id>
+      <activation>
+        <property>
+          <name>aggregator</name>
+        </property>
+      </activation>
+      <modules>
+        <module>leaderboard-common</module>
+        <module>leaderboard-sql</module>
+        <module>leaderboard-aggregator</module>
+      </modules>
+    </profile>
+    <profile>
+      <id>messaging</id>
+      <activation>
+        <property>
+          <name>messaging</name>
         </property>
       </activation>
       <modules>
         <module>leaderboard-common</module>
         <module>leaderboard-sql</module>
         <module>leaderboard-messaging</module>
+      </modules>
+    </profile>
+    <profile>
+      <id>broadcast</id>
+      <activation>
+        <property>
+          <name>broadcast</name>
+        </property>
+      </activation>
+      <modules>
+        <module>leaderboard-common</module>
+        <module>leaderboard-sql</module>
         <module>leaderboard-broadcast</module>
-        <module>leaderboard-api</module>
-        <module>leaderboard-aggregator</module>
       </modules>
     </profile>
     <profile>
       <id>it</id>
       <activation>
         <property>
-          <name>native</name>
+          <name>it</name>
         </property>
       </activation>
       <modules>
