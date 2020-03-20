@@ -12,7 +12,7 @@ public class Game {
   public String id;
   public GameState state;
   public OffsetDateTime date;
-  public String config;
+  public String configuration;
 
   public Game() {
 
@@ -32,8 +32,8 @@ public class Game {
     return this;
   }
 
-  public String getConfig() {
-    return config;
+  public String getConfiguration() {
+    return configuration;
   }
 
   public GameState getState() {
@@ -59,8 +59,8 @@ public class Game {
     return this;
   }
 
-  public Game config(String config) {
-    this.config = config;
+  public Game configuration(String configuration) {
+    this.configuration = configuration;
     return this;
   }
 

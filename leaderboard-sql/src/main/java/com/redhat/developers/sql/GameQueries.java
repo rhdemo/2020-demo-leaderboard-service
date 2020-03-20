@@ -152,7 +152,7 @@ public class GameQueries {
   private Game from(Row row) {
     return Game.newGame()
         .id(row.getString("game_id"))
-        .config(row.getString("game_config"))
+        .configuration(row.getString("game_config"))
         .date(row.getOffsetDateTime("game_date"))
         .state(row.getString("game_state"));
   }
@@ -238,7 +238,7 @@ public class GameQueries {
   private Tuple gameParams(Game game) {
     return Tuple.tuple()
         .addString(game.getId())// Param Order 1
-        .addString(game.getConfig()) // Param Order 2
+        .addString(game.getConfiguration()) // Param Order 2
         .addOffsetDateTime(now()) // Param Order 3
         .addString(game.getState().toString()); // Param Order 4
   }
