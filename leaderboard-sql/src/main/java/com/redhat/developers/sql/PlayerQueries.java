@@ -57,7 +57,7 @@ public class PlayerQueries {
     return client
         .preparedQuery("SELECT p.* FROM players p"
             + " LEFT JOIN games g "
-            + " ON p.game_id = g.game_id"
+            + " ON p.game_id = g.game_id and g.game_state='active'"
             + " ORDER BY p.guess_score DESC,"
             + " p.guess_right DESC,"
             + " p.guess_wrong ASC"
