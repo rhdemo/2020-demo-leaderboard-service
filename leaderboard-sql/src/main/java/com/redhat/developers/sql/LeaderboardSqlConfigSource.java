@@ -1,6 +1,6 @@
 package com.redhat.developers.sql;
 
-import static java.util.logging.Level.FINE;
+import static java.util.logging.Level.FINEST;
 import static java.util.logging.Level.SEVERE;
 import java.io.IOException;
 import java.util.HashMap;
@@ -20,7 +20,7 @@ public class LeaderboardSqlConfigSource implements ConfigSource {
   final Map<String, String> DS_MAP = new HashMap<>();
 
   private void init() {
-    logger.log(FINE, "Loading properties form 'leaderboard-sql.properties'");
+    logger.log(FINEST, "Loading properties form 'leaderboard-sql.properties'");
     try {
       Properties properties = new Properties();
       properties
