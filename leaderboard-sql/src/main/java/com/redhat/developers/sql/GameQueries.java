@@ -74,7 +74,8 @@ public class GameQueries {
   public CompletionStage<Optional<Game>> findActiveGame(PgPool client) {
     return client
         .preparedQuery("SELECT * from games where game_state='active'"
-            + "ORDER BY game_date DESC")
+            + " ORDER BY game_date DESC"
+            + " FETCH FIRST 1 ROW ONLY")
         .thenApply(RowSet::iterator)
         .thenApply(
             iterator -> iterator.hasNext() ? from(iterator.next()) : null)
