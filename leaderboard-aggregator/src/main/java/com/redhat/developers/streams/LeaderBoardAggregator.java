@@ -57,8 +57,6 @@ public class LeaderBoardAggregator {
     KStream<String, Player> playerStream = builder
         .stream(topic,
             (Consumed.with(Serdes.String(), gameMessageSerde)))
-        // .selectKey(
-        // (k, v) -> v.getPlayer().getGameId() + "~" + v.getPlayer().getId())
         .groupByKey()
         .aggregate(() -> Player.newPlayer(), this::aggregatePlayerScore,
             Materialized.<String, Player>as(storeSupplier)
@@ -100,19 +98,4 @@ public class LeaderBoardAggregator {
         new Object[] {aggregatedPlayer.getId(), aggregatedPlayer.getScore()});
     return aggregatedPlayer;
   }
-
-
-  // private void validatePattern() {
-  // List<String> topics =
-  // Arrays.asList("lnd1.my-topic", "ny1.my-topic", "demo2.my-topic");
-
-  // Pattern tp = Pattern.compile(".*\\.my-topic");
-
-  // topics
-  // .stream()
-  // .filter(t -> tp.matcher(t).matches())
-  // .forEach(t -> logger.log(Level.FINE,
-  // "Topic {0} will be handled by the steam ", t));
-
-  // }
 }
