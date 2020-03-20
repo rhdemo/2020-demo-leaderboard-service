@@ -110,19 +110,6 @@
       </modules>
     </profile>
     <profile>
-      <id>messaging</id>
-      <activation>
-        <property>
-          <name>messaging</name>
-        </property>
-      </activation>
-      <modules>
-        <module>leaderboard-common</module>
-        <module>leaderboard-sql</module>
-        <module>leaderboard-messaging</module>
-      </modules>
-    </profile>
-    <profile>
       <id>broadcast</id>
       <activation>
         <property>
@@ -133,6 +120,19 @@
         <module>leaderboard-common</module>
         <module>leaderboard-sql</module>
         <module>leaderboard-broadcast</module>
+      </modules>
+    </profile>
+    <profile>
+      <id>messaging</id>
+      <activation>
+        <property>
+          <name>messaging</name>
+        </property>
+      </activation>
+      <modules>
+        <module>leaderboard-common</module>
+        <module>leaderboard-sql</module>
+        <module>leaderboard-messaging</module>
       </modules>
     </profile>
     <profile>
