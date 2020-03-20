@@ -41,11 +41,7 @@ public class LeaderBoardAggregator {
   @Inject
   Jsonb jsonb;
 
-  /**
-   * TODO: Topics with pattern not working
-   * 
-   * @return
-   */
+
   @Produces
   public Topology buildLeaderBoard() {
     JsonbSerde<GameMessage> gameMessageSerde =
