@@ -2,6 +2,7 @@ package com.redhat.developers.service;
 
 import java.util.logging.Logger;
 import static java.util.logging.Level.*;
+import java.util.Map;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
@@ -11,6 +12,7 @@ import com.redhat.developers.data.GameStateMessage;
 import com.redhat.developers.sql.GameQueries;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import io.vertx.axle.pgclient.PgPool;
+import io.vertx.core.json.JsonObject;
 
 /**
  * GamePersistenceService
@@ -21,19 +23,16 @@ public class GamePersistenceService {
   Logger logger = Logger.getLogger(GamePersistenceService.class.getName());
 
   @Inject
-  Jsonb jsonb;
-
-  @Inject
   PgPool client;
 
   @Inject
   GameQueries gameQueries;
 
   @Incoming("game-state")
-  public void saveGame(String payload) {
-    logger.log(FINE, "Received Game State Payload  {0} ", payload);
-    GameStateMessage gameState =
-        jsonb.fromJson(payload, GameStateMessage.class);
+  public void saveGame(Map<String, Object> map) {
+    JsonObject raw = new JsonObject(map);
+    logger.log(FINE, "Received Game State Payload  {0} ", raw.encode());
+    GameStateMessage gameState = raw.mapTo(GameStateMessage.class);
     GameStateBody body = gameState.getBody();
     Game game = body.getGame();
     logger.log(FINE, "Saving game {0} ", game.getId());
