@@ -17,7 +17,7 @@
     </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>leaderboard-messaging</artifactId>
+      <artifactId>leaderboard-sql</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
