@@ -1,8 +1,11 @@
 package com.redhat.developers.data;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 /**
  * GameMessage
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class GameMessage {
 
   private Player player;
