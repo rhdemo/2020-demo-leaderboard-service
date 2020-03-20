@@ -90,9 +90,9 @@ public class LeaderBoardAggregator {
         .scoringServer(player.getScoringServer())
         .id(player.getId())
         .username(player.getUsername())
-        .right(player.getRight() + aggregatedPlayer.getRight())
-        .wrong(player.getWrong() + aggregatedPlayer.getWrong())
-        .score(player.getScore() + aggregatedPlayer.getScore());
+        .right(player.getRight())
+        .wrong(player.getWrong())
+        .score(player.getScore());
     logger.log(Level.FINER,
         "Aggregated score for player Player {0} is {1} ",
         new Object[] {aggregatedPlayer.getId(), aggregatedPlayer.getScore()});
