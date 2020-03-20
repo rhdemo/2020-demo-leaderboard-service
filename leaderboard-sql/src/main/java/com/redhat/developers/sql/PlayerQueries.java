@@ -56,7 +56,7 @@ public class PlayerQueries {
   public CompletionStage<List<Player>> rankPlayers(PgPool client,
       int rowCount) {
     return client
-        .preparedQuery("SELECT * FROM players p"
+        .preparedQuery("SELECT p.* FROM players p"
             + " WHERE p.game_id=(SELECT g.game_id from games g WHERE g.game_state='active' ORDER BY game_date DESC)"
             + " ORDER BY p.guess_score DESC,"
             + " p.guess_right DESC,"
