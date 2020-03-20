@@ -17,14 +17,6 @@
     <quarkus.platform.version>1.3.0.Final</quarkus.platform.version>
     <surefire-plugin.version>2.22.1</surefire-plugin.version>
   </properties>
-  <modules>
-    <module>leaderboard-common</module>
-    <module>leaderboard-sql</module>
-    <module>leaderboard-api</module>
-    <module>leaderboard-messaging</module>
-    <module>leaderboard-broadcast</module>
-    <module>leaderboard-aggregator</module>
-  </modules>
   <dependencyManagement>
     <dependencies>
       <dependency>
@@ -75,6 +67,22 @@
     </pluginManagement>
   </build>
   <profiles>
+    <profile>
+      <id>all</id>
+      <activation>
+        <property>
+          <name>all</name>
+        </property>
+      </activation>
+      <modules>
+        <module>leaderboard-common</module>
+        <module>leaderboard-sql</module>
+        <module>leaderboard-api</module>
+        <module>leaderboard-messaging</module>
+        <module>leaderboard-broadcast</module>
+        <module>leaderboard-aggregator</module>
+      </modules>
+    </profile>
     <profile>
       <id>api</id>
       <activation>
