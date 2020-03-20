@@ -2,10 +2,12 @@ package com.redhat.developers.data;
 
 import java.time.OffsetDateTime;
 import javax.enterprise.inject.Produces;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 /**
  * Game
  */
+@JsonIgnoreProperties({"date"})
 public class Game {
   public String id;
   public GameState state;
@@ -54,11 +56,6 @@ public class Game {
 
   public Game date(OffsetDateTime date) {
     this.date = date;
-    return this;
-  }
-
-  public Game date(String date) {
-    // just ignore string dates
     return this;
   }
 
