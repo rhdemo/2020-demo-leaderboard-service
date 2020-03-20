@@ -33,16 +33,20 @@ public class GamePersistenceService {
     JsonObject raw = new JsonObject(map);
     logger.log(FINE, "Received Game State Payload  {0} ", raw.encode());
     GameMessage gameMessage = raw.mapTo(GameMessage.class);
-    Game game = gameMessage.getGame();
-    logger.log(FINE, "Saving game {0} ", game.getId());
-    gameQueries.upsert(client, game)
-        .whenComplete((v, e) -> {
-          if (e != null) {
-            logger.log(SEVERE, "Error while saving game ", e);
-          } else {
-            logger.log(INFO, "Game {0} saved successfully", game.id);
-          }
-        });
+    if (gameMessage.getType() != null
+        && ("reset-game".equals(gameMessage.getType())
+            || "game".equals(gameMessage.getType()))) {
+      Game game = gameMessage.getGame();
+      logger.log(FINE, "Saving game {0} ", game.getId());
+      gameQueries.upsert(client, game)
+          .whenComplete((v, e) -> {
+            if (e != null) {
+              logger.log(SEVERE, "Error while saving game ", e);
+            } else {
+              logger.log(INFO, "Game {0} saved successfully", game.id);
+            }
+          });
+    }
   }
 
 }

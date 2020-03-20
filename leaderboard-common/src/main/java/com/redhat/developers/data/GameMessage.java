@@ -10,6 +10,7 @@ public class GameMessage {
 
   private Player player;
   private Game game;
+  private String type;
   private Transaction transaction;
 
   public Player getPlayer() {
@@ -34,6 +35,14 @@ public class GameMessage {
 
   public void setGame(Game game) {
     this.game = game;
+  }
+
+  public String getType() {
+    return type;
+  }
+
+  public void setType(String type) {
+    this.type = type;
   }
 
 }
