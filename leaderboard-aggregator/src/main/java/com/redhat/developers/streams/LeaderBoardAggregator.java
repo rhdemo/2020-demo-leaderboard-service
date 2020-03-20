@@ -57,8 +57,8 @@ public class LeaderBoardAggregator {
     KStream<String, Player> playerStream = builder
         .stream(topic,
             (Consumed.with(Serdes.String(), gameMessageSerde)))
-        .selectKey(
-            (k, v) -> v.getPlayer().getGameId() + "~" + v.getPlayer().getId())
+        // .selectKey(
+        // (k, v) -> v.getPlayer().getGameId() + "~" + v.getPlayer().getId())
         .groupByKey()
         .aggregate(() -> Player.newPlayer(), this::aggregatePlayerScore,
             Materialized.<String, Player>as(storeSupplier)
