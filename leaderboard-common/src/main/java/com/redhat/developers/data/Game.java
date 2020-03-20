@@ -57,6 +57,11 @@ public class Game {
     return this;
   }
 
+  public Game date(String date) {
+    // just ignore string dates
+    return this;
+  }
+
   public Game config(String config) {
     this.config = config;
     return this;
