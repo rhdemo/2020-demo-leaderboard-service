@@ -26,6 +26,9 @@ public class LeaderboardSqlConfigSource implements ConfigSource {
       properties
           .load(this.getClass()
               .getResourceAsStream("/leaderboard-sql.properties"));
+      logger.log(FINEST,
+          "Loaded properties form 'leaderboard-sql.properties' {0}",
+          properties);
       for (String key : properties.stringPropertyNames()) {
         String value = properties.getProperty(key);
         DS_MAP.put(key, value);
