@@ -4,11 +4,14 @@
   <parent>
     <groupId>com.redhat.developers.demo</groupId>
     <artifactId>leaderboard-parent</artifactId>
-    <version>0.0.1</version>
+    <version>0.0.2</version>
   </parent>
   <artifactId>leaderboard-messaging</artifactId>
   <name>Leaderboard Reactive Messaging</name>
   <description>The Leaderboard Messaging</description>
+  <properties>
+    <quarkus.package.type>native</quarkus.package.type>
+  </properties>
   <dependencies>
     <dependency>
       <groupId>${project.groupId}</groupId>
@@ -39,6 +42,23 @@
   </dependencies>
   <build>
     <plugins>
+      <plugin>
+        <artifactId>maven-failsafe-plugin</artifactId>
+        <version>${surefire-plugin.version}</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>integration-test</goal>
+              <goal>verify</goal>
+            </goals>
+            <configuration>
+              <systemProperties>
+                <native.image.path>${project.build.directory}/${project.build.finalName}-runner</native.image.path>
+              </systemProperties>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
       <plugin>
         <groupId>io.quarkus</groupId>
         <artifactId>quarkus-maven-plugin</artifactId>

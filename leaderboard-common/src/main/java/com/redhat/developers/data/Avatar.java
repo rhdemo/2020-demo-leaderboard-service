@@ -1,10 +1,12 @@
 package com.redhat.developers.data;
 
 import javax.enterprise.inject.Produces;
+import io.quarkus.runtime.annotations.RegisterForReflection;
 
 /**
  * Avatar
  */
+@RegisterForReflection
 public class Avatar {
   public int body;
   public int eyes;

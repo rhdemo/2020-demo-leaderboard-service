@@ -1,8 +1,11 @@
 package com.redhat.developers.data;
 
+import io.quarkus.runtime.annotations.RegisterForReflection;
+
 /**
  * Player
  */
+@RegisterForReflection
 public class Player {
 
   public String id;

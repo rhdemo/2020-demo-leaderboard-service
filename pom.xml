@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.redhat.developers.demo</groupId>
   <artifactId>leaderboard-parent</artifactId>
-  <version>0.0.1</version>
+  <version>0.0.2</version>
   <packaging>pom</packaging>
   <properties>
     <compiler-plugin.version>3.8.1</compiler-plugin.version>
@@ -105,7 +105,6 @@
       </activation>
       <modules>
         <module>leaderboard-common</module>
-        <module>leaderboard-sql</module>
         <module>leaderboard-aggregator</module>
       </modules>
     </profile>
@@ -144,50 +143,13 @@
       </activation>
       <modules>
         <module>leaderboard-common</module>
-        <module>leaderboard-api</module>
         <module>leaderboard-sql</module>
         <module>leaderboard-messaging</module>
         <module>leaderboard-broadcast</module>
         <module>leaderboard-aggregator</module>
+        <module>leaderboard-api</module>
         <module>leaderboard-test</module>
       </modules>
-    </profile>
-    <profile>
-      <id>native</id>
-      <activation>
-        <property>
-          <name>native</name>
-        </property>
-      </activation>
-      <modules>
-        <module>leaderboard-common</module>
-        <module>leaderboard-api</module>
-        <module>leaderboard-aggregator</module>
-      </modules>
-      <build>
-        <plugins>
-          <plugin>
-            <artifactId>maven-failsafe-plugin</artifactId>
-            <version>${surefire-plugin.version}</version>
-            <executions>
-              <execution>
-                <goals>
-                  <goal>integration-test</goal>
-                  <goal>verify</goal>
-                </goals>
-                <configuration>
-                  <systemProperties>
-                    <native.image.path>${project.build.directory}/${project.build.finalName}-runner</native.image.path>
-                  </systemProperties>
-                </configuration>
-              </execution>
-            </executions>
-          </plugin>
-        </plugins>
-      </build>
-      <properties>
-        <quarkus.package.type>native</quarkus.package.type>
-      </properties>
     </profile>
   </profiles>
 </project>

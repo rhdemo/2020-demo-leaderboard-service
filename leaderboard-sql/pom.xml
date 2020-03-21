@@ -4,7 +4,7 @@
   <parent>
     <groupId>com.redhat.developers.demo</groupId>
     <artifactId>leaderboard-parent</artifactId>
-    <version>0.0.1</version>
+    <version>0.0.2</version>
   </parent>
   <artifactId>leaderboard-sql</artifactId>
   <name>Leaderboard SQL</name>

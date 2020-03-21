@@ -3,10 +3,12 @@ package com.redhat.developers.data;
 import java.time.OffsetDateTime;
 import javax.enterprise.inject.Produces;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.quarkus.runtime.annotations.RegisterForReflection;
 
 /**
  * Game
  */
+@RegisterForReflection
 @JsonIgnoreProperties({"date", "configuration"})
 public class Game {
   public String id;

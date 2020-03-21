@@ -1,10 +1,12 @@
 package com.redhat.developers.data;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.quarkus.runtime.annotations.RegisterForReflection;
 
 /**
  * GameMessage
  */
+@RegisterForReflection
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class GameMessage {
 
