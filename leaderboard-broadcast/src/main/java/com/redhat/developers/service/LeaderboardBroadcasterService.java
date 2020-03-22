@@ -15,6 +15,8 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.reactive.messaging.Outgoing;
 import io.smallrye.mutiny.Multi;
 import io.vertx.axle.pgclient.PgPool;
+import io.vertx.core.json.Json;
+import io.vertx.core.json.JsonArray;
 
 /**
  * LeaderboardBroadcasterService
@@ -24,9 +26,6 @@ public class LeaderboardBroadcasterService {
 
   Logger logger =
       Logger.getLogger(LeaderboardBroadcasterService.class.getName());
-
-  @Inject
-  Jsonb jsonb;
 
   @Inject
   PgPool client;
@@ -41,7 +40,7 @@ public class LeaderboardBroadcasterService {
   int tickInterval;
 
   @Outgoing("leaderboard-broadcast")
-  public Multi<String> broadcastLeaderboard() {
+  public Multi<JsonArray> broadcastLeaderboard() {
     return Multi.createFrom()
         .ticks().every(Duration.ofSeconds(tickInterval))
         .on().overflow().drop()
@@ -53,27 +52,24 @@ public class LeaderboardBroadcasterService {
    * @param tick
    * @return
    */
-  public CompletionStage<String> rankedPlayerList(long tick) {
+  public CompletionStage<JsonArray> rankedPlayerList(long tick) {
     logger.log(FINE, "Sending message for tick {0} ", tick);
-    String playersList = jsonb.toJson(Collections.<String>emptyList());
-    AtomicReference<String> playersJson = new AtomicReference<>();
-    playersJson.set(playersList);
+    AtomicReference<JsonArray> players = new AtomicReference<>();
     return playerQueries
         .rankPlayers(client, rowCount)
         .thenApply(p -> {
           try {
-            String strJson = jsonb.toJson(p);
-            playersJson.set(strJson);
+            players.set(new JsonArray(p));
             logger.log(FINE, "Broadcast Leaderboard data {0} ",
-                strJson);
+                Json.encode(players));
           } catch (Exception e) {
             logger.log(SEVERE, "Error building players json", e);
           }
-          return playersJson.get();
+          return players.get();
         })
         .exceptionally(e -> {
           logger.log(SEVERE, "Error retreiving player ranks ", e);
-          return playersJson.get();
+          return players.get();
         });
   }
 }
