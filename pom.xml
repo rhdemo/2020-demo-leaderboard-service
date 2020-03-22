@@ -83,7 +83,9 @@
             </execution>
           </executions>
           <configuration>
-            <excludes />
+            <excludes>
+              <exclude>**/target</exclude>
+            </excludes>
           </configuration>
         </plugin>
         <plugin>
@@ -104,7 +106,6 @@
                   <exclude>**/*.yaml</exclude>
                   <exclude>**/*.json</exclude>
                   <exclude>**/Makefile</exclude>
-                  <exclude>**/*.xml</exclude>
                   <exclude>**/*.xml</exclude>
                 </excludes>
                 <roots>
