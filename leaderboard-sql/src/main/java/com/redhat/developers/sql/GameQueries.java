@@ -19,23 +19,20 @@
  */
 package com.redhat.developers.sql;
 
-import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.CompletionStage;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.enterprise.context.ApplicationScoped;
 import com.redhat.developers.data.Game;
-import io.vertx.axle.pgclient.PgPool;
-import io.vertx.axle.sqlclient.Row;
-import io.vertx.axle.sqlclient.RowIterator;
-import io.vertx.axle.sqlclient.RowSet;
-import io.vertx.axle.sqlclient.Tuple;
+import com.redhat.developers.data.GameState;
+import io.smallrye.mutiny.Uni;
+import io.vertx.mutiny.pgclient.PgPool;
+import io.vertx.mutiny.sqlclient.Row;
+import io.vertx.mutiny.sqlclient.RowIterator;
+import io.vertx.mutiny.sqlclient.RowSet;
+import io.vertx.mutiny.sqlclient.Tuple;
 
 /**
  * GameQueries
@@ -45,44 +42,42 @@ public class GameQueries {
 
   static Logger logger = Logger.getLogger(GameQueries.class.getName());
 
-
   /**
    * 
    * @param client
    * @return
    */
-  public CompletionStage<List<Game>> findAll(PgPool client) {
+  public Uni<List<Game>> findAll(PgPool client) {
+    logger.info("Find All");
     return client
         .preparedQuery("SELECT * from games ORDER BY game_date DESC")
-        .thenApply(this::games)
-        .exceptionally(e -> {
-          logger.log(Level.SEVERE, "Error retriving all games ",
-              e);
-          return null;
-        });
+        .onFailure()
+        .invoke(e -> logger.log(Level.SEVERE, "Error retriving all games ",
+            e))
+        .onItem().apply(this::games);
   }
 
   /**
    * 
    * @param client
-   * @param gameId
+   * @param id
    * @return
    */
-  public CompletionStage<Optional<Game>> findById(PgPool client,
-      String gameId) {
+  public Uni<Optional<Game>> findById(PgPool client,
+      int id) {
+    logger.info("Finding game with id " + id);
     return client
-        .preparedQuery("SELECT * from games where game_id=$1"
+        .preparedQuery("SELECT * from games where id=$1"
             + "ORDER BY game_date DESC",
-            Tuple.of(gameId))
-        .thenApply(RowSet::iterator)
-        .thenApply(
-            iterator -> iterator.hasNext() ? from(iterator.next()) : null)
-        .thenApply(o -> Optional.ofNullable(o))
-        .exceptionally(e -> {
-          logger.log(Level.SEVERE, "Error Finding game with id " + gameId,
-              e);
-          return null;
-        });
+            Tuple.of(id))
+        .onFailure().invoke(e -> {
+          logger.log(Level.SEVERE,
+              "Error Finding game with id " + id, e);
+        })
+        .onItem().apply(RowSet::iterator)
+        .onItem()
+        .apply(iterator -> iterator.hasNext() ? from(iterator.next()) : null)
+        .onItem().apply(g -> Optional.ofNullable(g));
   }
 
   /**
@@ -90,40 +85,32 @@ public class GameQueries {
    * @param client
    * @return
    */
-  public CompletionStage<Optional<Game>> findActiveGame(PgPool client) {
+  public Uni<Optional<Game>> findActiveGame(PgPool client) {
+    logger.info("Finding Acive game");
     return client
         .preparedQuery("SELECT * from games where game_state='active'"
             + " ORDER BY game_date DESC"
             + " FETCH FIRST 1 ROW ONLY")
-        .thenApply(RowSet::iterator)
-        .thenApply(
-            iterator -> iterator.hasNext() ? from(iterator.next()) : null)
-        .thenApply(o -> Optional.ofNullable(o))
-        .exceptionally(e -> {
+        .onFailure().invoke(e -> {
           logger.log(Level.SEVERE,
-              "Error Finding active game", e);
-          return null;
-        });
+              "Error Finding active game ", e);
+        })
+        .onItem().apply(RowSet::iterator)
+        .onItem()
+        .apply(iterator -> iterator.hasNext() ? from(iterator.next()) : null)
+        .onItem().apply(g -> Optional.ofNullable(g));
   }
 
-  /**
-   * 
-   * @param client
-   * @param state
-   * @return
-   */
-  public CompletionStage<List<Game>> gamesByState(PgPool client,
-      String state) {
-    return client
-        .preparedQuery("SELECT * from games where game_state=$1"
-            + "ORDER BY game_date ASC",
-            Tuple.of(state))
-        .thenApply(this::games)
-        .exceptionally(e -> {
-          logger.log(Level.SEVERE,
-              "Error games by state " + state, e);
-          return null;
-        });
+  public Uni<Boolean> delete(PgPool client, int id) {
+    logger.info("Deleting game with id " + id);
+    return client.preparedQuery(
+        "DELETE FROM games WHERE id=$1",
+        Tuple.of(id))
+        .onFailure().invoke(e -> {
+          logger.log(Level.SEVERE, "Error deleting game with id " + id,
+              e);
+        })
+        .onItem().apply(rs -> rs.rowCount() == 1);
   }
 
   /**
@@ -132,36 +119,21 @@ public class GameQueries {
    * @param game
    * @return
    */
-  public CompletionStage<Boolean> upsert(PgPool client, Game game) {
-    CompletionStage<Boolean> gameExist =
-        gameExists(client, game.getId());
-    setGameDateTimestamp(game);
-    return gameExist
-        .thenCompose(b -> b ? update(client, game) : insert(client, game))
-        .exceptionally(e -> {
-          logger.log(Level.SEVERE, e.getMessage(), e);
-          return false;
-        });
+  public Uni<Boolean> upsert(PgPool client, Game game) {
+    logger.info("Upserting game with id " + game.getId());
+    return client
+        .preparedQuery("INSERT INTO games(game_id,game_config,game_state)"
+            + " VALUES ($1,$2,$3)"
+            + " ON CONFLICT (game_id)"
+            + " DO"
+            + "   UPDATE set "
+            + "     game_config=$2,"
+            + "     game_state=$3",
+            gameTuple(game))
+        .onFailure().invoke(e -> logger.log(Level.SEVERE,
+            "Error Upserting Game with id " + game.getId(), e))
+        .onItem().apply(rs -> rs.rowCount() == 1 ? true : false);
   }
-
-  /**
-   * 
-   * @param client
-   * @param playerId
-   * @return
-   */
-  public CompletionStage<Boolean> delete(PgPool client, String gameId) {
-    return client.preparedQuery(
-        "DELETE FROM games WHERE game_id=$1",
-        Tuple.of(gameId))
-        .thenApply(pgRowset -> pgRowset.rowCount() == 1)
-        .exceptionally(e -> {
-          logger.log(Level.SEVERE, "Error deleting game with id " + gameId,
-              e);
-          return false;
-        });
-  }
-
 
   /**
    * 
@@ -170,10 +142,11 @@ public class GameQueries {
    */
   private Game from(Row row) {
     return Game.newGame()
-        .id(row.getString("game_id"))
+        .id(row.getLong("id"))
+        .gameId(row.getString("game_id"))
         .configuration(row.getString("game_config"))
         .date(row.getOffsetDateTime("game_date"))
-        .state(row.getString("game_state"));
+        .state(GameState.byCode(row.getInteger("game_state")));
   }
 
   /**
@@ -192,91 +165,13 @@ public class GameQueries {
 
   /**
    * 
-   * @param client
-   * @param gameId
-   * @return
-   */
-  private CompletionStage<Boolean> gameExists(PgPool client, String gameId) {
-    return client
-        .preparedQuery(
-            "SELECT game_state from games where game_id=$1",
-            Tuple.of(gameId))
-        .thenApply(RowSet::iterator)
-        .thenApply(iterator -> iterator.hasNext() ? true : false)
-        .exceptionally(e -> {
-          logger.log(Level.SEVERE,
-              "Error checking if game exists " + gameId, e);
-          return null;
-        });
-  }
-
-  /**
-   * 
-   * @param client
    * @param game
    * @return
    */
-  private CompletionStage<Boolean> insert(PgPool client, Game game) {
-    logger.info("Inserting game with id " + game.getId());
-    return client.preparedQuery("INSERT INTO games"
-        + "(game_id,game_config,game_date,game_state)"
-        + " VALUES ($1,$2,$3,$4)", gameParams(game))
-        .thenApply(pgRowset -> pgRowset.rowCount() == 1 ? true : false)
-        .exceptionally(e -> {
-          logger.log(Level.SEVERE,
-              "Error Inserting Game with id " + game.getId(), e);
-          return false;
-        });
-  }
-
-  /**
-   * 
-   * @param client
-   * @param game
-   * @return
-   */
-  private CompletionStage<Boolean> update(PgPool client, Game game) {
-    logger.info("Updating Game with id " + game.getId());
-    return client.preparedQuery("UPDATE games set "
-        + "game_config=$2,game_date=$3,"
-        + "game_state=$4"
-        + "WHERE game_id=$1", gameParams(game))
-        .thenApply(pgRowset -> pgRowset.rowCount() == 1 ? true : false)
-        .exceptionally(e -> {
-          logger.log(Level.SEVERE,
-              "Error Updating game with id " + game.getId(), e);
-          return false;
-        });
-  }
-
-  /**
-   * 
-   * @param game
-   * @return
-   */
-  private Tuple gameParams(Game game) {
+  private Tuple gameTuple(Game game) {
     return Tuple.tuple()
-        .addString(game.getId())// Param Order 1
+        .addString(game.getGameId())// Param Order 1
         .addString(game.getConfiguration()) // Param Order 2
-        .addOffsetDateTime(now()) // Param Order 3
-        .addString(game.getState().toString()); // Param Order 4
-  }
-
-
-  private void setGameDateTimestamp(Game game) {
-    game.date(now());
-  }
-
-  private OffsetDateTime now() {
-    Calendar calendar = Calendar.getInstance();
-    return OffsetDateTime.of(
-        LocalDateTime.of(
-            calendar.get(Calendar.YEAR),
-            calendar.get(Calendar.MONTH),
-            calendar.get(Calendar.DAY_OF_MONTH),
-            calendar.get(Calendar.HOUR_OF_DAY),
-            calendar.get(Calendar.MINUTE),
-            calendar.get(Calendar.SECOND)),
-        ZoneOffset.ofHoursMinutes(0, 0));
+        .addInteger(GameState.byCodeString(game.getState())); // Param Order 3
   }
 }

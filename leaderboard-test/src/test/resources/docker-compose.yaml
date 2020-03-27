@@ -1,13 +1,16 @@
 version: "3.1"
 services:
   postgresql:
-    image: registry.access.redhat.com/rhscl/postgresql-96-rhel7
+    image: quay.io/redhatdemo/openshift-pgsql11-primary-centos7
     ports:
       - "5432:5432"
     environment:
-      POSTGRESQL_PASSWORD: password!
-      POSTGRESQL_USER: demo
-      POSTGRESQL_DATABASE: gamedb
+      PG_USER_PASSWORD: password!
+      PG_USER_NAME: demo
+      PG_DATABASE: gamedb
+      PG_REPLICATION_NAME: rhevelopers
+      PG_REPLICATION_PASSWORD: password!!
+      PG_NETWORK_MASK: all
   zookeeper:
     image: strimzi/kafka:0.16.2-kafka-2.4.0
     command:

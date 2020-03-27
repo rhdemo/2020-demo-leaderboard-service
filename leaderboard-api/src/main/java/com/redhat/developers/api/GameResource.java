@@ -85,9 +85,9 @@ public class GameResource {
 
   @GET
   @Path("/game/{id}")
-  public CompletionStage<Response> find(@PathParam("id") String gameId) {
-    logger.log(Level.FINE, "Finding game by id {0} ", gameId);
-    return gameQueries.findById(client, gameId)
+  public CompletionStage<Response> find(@PathParam("id") Integer id) {
+    logger.log(Level.FINE, "Finding game by id {0} ", id);
+    return gameQueries.findById(client, id)
         .thenApply(oPlayer -> oPlayer.isPresent() ? Response.ok(oPlayer.get())
             : Response.status(Status.NOT_FOUND))
         .thenApply(ResponseBuilder::build);
@@ -105,9 +105,9 @@ public class GameResource {
 
   @DELETE
   @Path("/game/{id}")
-  public CompletionStage<Response> delete(@PathParam("id") String gameId) {
-    logger.log(Level.FINE, "Deleting game with id {0} ", gameId);
-    return gameQueries.delete(client, gameId)
+  public CompletionStage<Response> delete(@PathParam("id") Integer id) {
+    logger.log(Level.FINE, "Deleting game with id {0} ", id);
+    return gameQueries.delete(client, id)
         .thenApply(b -> b ? Response.status(Status.NO_CONTENT)
             : Response.status(Status.NOT_FOUND))
         .thenApply(ResponseBuilder::build);

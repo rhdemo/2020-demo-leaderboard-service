@@ -98,7 +98,7 @@
               <goals>
                 <goal>update-file-header</goal>
               </goals>
-              <phase>process-sources</phase>
+              <phase>verify</phase>
               <configuration>
                 <addJavaLicenseAfterPackage>false</addJavaLicenseAfterPackage>
                 <excludes>
@@ -215,8 +215,14 @@
         <module>leaderboard-broadcast</module>
         <module>leaderboard-aggregator</module>
         <module>leaderboard-api</module>
-        <module>leaderboard-test</module>
       </modules>
+      <properties>
+        <skipTests>false</skipTests>
+        <quarkus.package.type>jar</quarkus.package.type>
+        <failIfNoTests>false</failIfNoTests>
+        <kafka.version>2.4.0</kafka.version>
+        <debezium.version>1.0.0.Final</debezium.version>
+      </properties>
       <build>
         <plugins>
           <plugin>

@@ -62,9 +62,12 @@ public class GamePersistenceService {
             if (e != null) {
               logger.log(SEVERE, "Error while saving game ", e);
             } else {
-              logger.log(INFO, "Game {0} saved successfully", game.id);
+              logger.log(INFO, "Game {0} saved successfully", game.getId());
             }
           });
+    } else {
+      logger.log(INFO,
+          "Game is not of type 'game' or 'reset-game', save skipped");
     }
   }
 

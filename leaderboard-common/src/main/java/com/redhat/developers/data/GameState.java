@@ -19,14 +19,44 @@
  */
 package com.redhat.developers.data;
 
-public enum GameState {
-  // GAME_STATES = {
-  // LOBBY: "lobby",
-  // STOPPED: "stopped",
-  // PAUSED: "paused",
-  // LOADING: "loading",
-  // ACTIVE: "active",
-  // BONUS: "bonus"
-  // };
-  active, lobby, bonus, paused, stopped, loading
+public class GameState {
+
+  public static int byCodeString(String state) {
+    switch (state) {
+      case "invalid":
+        return -1;
+      case "active":
+        return 1;
+      case "lobby":
+        return 2;
+      case "bonus":
+        return 3;
+      case "paused":
+        return 4;
+      case "stopped":
+        return 5;
+      default:
+        return -1;
+    }
+  }
+
+  public static String byCode(int code) {
+    switch (code) {
+      case -1:
+        return "invalid";
+      case 0:
+        return "loading";
+      case 1:
+        return "active";
+      case 2:
+        return "lobby";
+      case 3:
+        return "bonus";
+      case 4:
+        return "paused";
+      default:
+        return "invalid";
+    }
+  }
+
 }

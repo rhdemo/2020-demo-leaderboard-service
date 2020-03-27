@@ -49,6 +49,12 @@ public class QdrouterContainer extends GenericContainer<QdrouterContainer> {
   }
 
   @Override
+  public void start() {
+    addFixedExposedPort(5671, 5671);
+    super.start();
+  }
+
+  @Override
   protected WaitStrategy getWaitStrategy() {
     return Wait.forListeningPort();
   }

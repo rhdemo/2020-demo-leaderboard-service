@@ -22,6 +22,7 @@ package com.redhat.developers.util;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.net.URL;
 import java.time.LocalDateTime;
 import java.time.Month;
 import java.time.OffsetDateTime;
@@ -81,7 +82,7 @@ public class Scorer {
         .gameServer(gamingSource)
         .gameId(playerName)
         .avatar(avatar())
-        .gameId(newGame().getId());
+        .gameId(newGame().getGameId());
 
     GameMessage scoringMessage = new GameMessage();
     scoringMessage.setGame(game);
@@ -91,7 +92,7 @@ public class Scorer {
 
   private Game newGame() {
     return Game.newGame()
-        .id(GAME_ID)
+        .gameId(GAME_ID)
         .state("active")
         .date(someGMTDateTime);
   }
@@ -115,7 +116,6 @@ public class Scorer {
   }
 
   public static void main(String[] args) {
-    Scorer scorer = new Scorer();
     List<GameMessage> messages = new ArrayList<>();
     // Flowable.range(1, 100)
     // .forEach(tick -> {
@@ -124,9 +124,8 @@ public class Scorer {
     Jsonb jsonb = JsonbBuilder.newBuilder().build();
     // System.out.println(jsonb.toJson(messages));
     try {
-      FileInputStream fin = new FileInputStream(
-          "/Users/kameshs/git/rhdemo/2020-demo-leaderboard-service/leaderboard-aggregator/src/test/resources/data.json");
-      messages = scorer.fromFile(fin);
+      URL dataFileUrl = Scorer.class.getResource("/data.json");
+      messages = fromFile(dataFileUrl.openStream());
       System.out.println(messages.size());
       List<GameMessage> sgMessages = messages.stream()
           .filter(skm -> {
@@ -135,7 +134,7 @@ public class Scorer {
             return player.getCreationServer().equals("sg");
           })
           .collect(Collectors.toList());
-      System.out.println(sgMessages.size());
+      // System.out.println(sgMessages.size());
       sgMessages.forEach(
           s -> System.out.println(jsonb.toJson(s.getPlayer(), Player.class)));
     } catch (FileNotFoundException e) {

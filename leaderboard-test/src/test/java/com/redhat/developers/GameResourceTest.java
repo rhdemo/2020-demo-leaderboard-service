@@ -21,7 +21,6 @@ package com.redhat.developers;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import java.time.LocalDateTime;
 import java.time.Month;
@@ -69,7 +68,8 @@ public class GameResourceTest {
   @Order(1)
   public void testGameAdd() {
     Game game = Game.newGame()
-        .id("id0001").state(GameState.active)
+        .gameId("id0001")
+        .state(GameState.byCode(1))
         .configuration("{}")
         .date(someGMTDateTime);
     given()
@@ -92,7 +92,8 @@ public class GameResourceTest {
   @Order(2)
   public void testGameUpdate() {
     Game game = Game.newGame()
-        .id("id0001").state(GameState.paused)
+        .gameId("id0001")
+        .state(GameState.byCode(4))
         .configuration("{}")
         .date(someGMTDateTime);
 
@@ -116,7 +117,8 @@ public class GameResourceTest {
   @Order(3)
   public void testGameFind() {
     Game game = Game.newGame()
-        .id("id0001").state(GameState.paused)
+        .gameId("id0001")
+        .state(GameState.byCode(4))
         .configuration("{}")
         .date(someGMTDateTime);
 
@@ -134,14 +136,14 @@ public class GameResourceTest {
   public void testGameFindActive() {
 
     Game game2 = Game.newGame()
-        .id("id0002")
-        .state(GameState.active)
+        .gameId("id0002")
+        .state(GameState.byCode(1))
         .configuration("{}")
         .date(someGMTDateTime);
 
     Game game3 = Game.newGame()
-        .id("id0003")
-        .state(GameState.active)
+        .gameId("id0003")
+        .state(GameState.byCode(1))
         .configuration("{}")
         .date(anotherGMTDateTime);
 

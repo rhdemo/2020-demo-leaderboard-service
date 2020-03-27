@@ -20,7 +20,6 @@
 package com.redhat.developers.data;
 
 import java.time.OffsetDateTime;
-import javax.enterprise.inject.Produces;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 
@@ -30,49 +29,73 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
 @RegisterForReflection
 @JsonIgnoreProperties({"date", "configuration"})
 public class Game {
-  public String id;
-  public GameState state;
-  public OffsetDateTime date;
-  public String configuration;
+  private long id;
+  private String gameId;
+  private String state;
+  private OffsetDateTime date;
+  private String configuration;
 
   public Game() {
 
   }
 
-  @Produces
-  public static Game newGame() {
-    return new Game();
-  }
-
-  public String getId() {
+  public long getId() {
     return id;
   }
 
-  public Game id(String id) {
+  public void setId(long id) {
     this.id = id;
-    return this;
+  }
+
+  public String getGameId() {
+    return gameId;
+  }
+
+  public void setGameId(String gameId) {
+    this.gameId = gameId;
+  }
+
+  public String getState() {
+    return state;
+  }
+
+  public void setState(String state) {
+    this.state = state;
+  }
+
+  public OffsetDateTime getDate() {
+    return date;
+  }
+
+  public void setDate(OffsetDateTime date) {
+    this.date = date;
   }
 
   public String getConfiguration() {
     return configuration;
   }
 
-  public GameState getState() {
-    return state;
+  public void setConfiguration(String configuration) {
+    this.configuration = configuration;
   }
 
-  public Game state(GameState state) {
-    this.state = state;
+  public static Game newGame() {
+    return new Game();
+  }
+
+  public Game id(long id) {
+    this.id = id;
+    return this;
+  }
+
+  public Game gameId(String gameId) {
+    this.gameId = gameId;
     return this;
   }
 
   public Game state(String state) {
-    this.state(GameState.valueOf(state));
+    this.state = state;
     return this;
-  }
-
-  public OffsetDateTime getDate() {
-    return date;
   }
 
   public Game date(OffsetDateTime date) {
@@ -84,5 +107,4 @@ public class Game {
     this.configuration = configuration;
     return this;
   }
-
 }

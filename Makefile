@@ -15,3 +15,12 @@ install_jars:
 
 run_it:	start_docker	install_jars	
 	@mvn -Pit -Dquarkus.package.type=jar verify
+
+start_db:	start_docker
+	docker-compose -f leaderboard-test/src/test/resources/postgresql/docker-compose.yaml up -d
+
+start_kafka:	start_docker
+	docker-compose -f leaderboard-test/src/test/resources/kafka/docker-compose.yaml -d up -d 
+
+create_db:
+	psql -U username -f leaderboard-test/src/test/resources/schema.sql database

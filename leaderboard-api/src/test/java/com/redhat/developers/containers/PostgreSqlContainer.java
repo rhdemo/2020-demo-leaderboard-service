@@ -19,21 +19,28 @@
  */
 package com.redhat.developers.containers;
 
-import org.testcontainers.containers.PostgreSQLContainer;
+import java.util.HashMap;
+import java.util.Map;
+import org.testcontainers.containers.JdbcDatabaseContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.containers.wait.strategy.WaitStrategy;
 
 /**
  * PostgreSqlContainer
  */
-public class PostgreSqlContainer
-    extends PostgreSQLContainer<PostgreSqlContainer> {
+public class PostgreSqlContainer<SELF extends PostgreSqlContainer<SELF>>
+    extends JdbcDatabaseContainer<SELF> {
+
+  final private Map<String, String> env = new HashMap<>();
 
   public PostgreSqlContainer() {
-    withInitScript("import.sql");
-    withDatabaseName("gamedb");
-    withUsername("demo");
-    withPassword("password!");
+    super("quay.io/redhatdemo/openshift-pgsql12-centos8");
+    env.put("PG_USER_NAME", "demo");
+    env.put("PG_USER_PASSWORD", "password!");
+    env.put("PG_DATABASE", "gamedb");
+    env.put("PG_NETWORK_MASK", "all");
+    withEnv(env);
+    withInitScript("schema.sql");
     waitingFor(Wait.forListeningPort());
   }
 
@@ -43,10 +50,37 @@ public class PostgreSqlContainer
     super.start();
   }
 
-
   @Override
   protected WaitStrategy getWaitStrategy() {
     return Wait.forListeningPort();
+  }
+
+  @Override
+  public String getDriverClassName() {
+    return "org.postgresql.Driver";
+  }
+
+  @Override
+  public String getJdbcUrl() {
+    return "jdbc:postgresql://" + getContainerIpAddress() + ":"
+        + getMappedPort(5432) + "/" + env.get("PG_DATABASE")
+        + "?loggerLevel=OFF";
+  }
+
+
+  @Override
+  public String getUsername() {
+    return env.get("PG_USER_NAME");
+  }
+
+  @Override
+  public String getPassword() {
+    return env.get("PG_USER_PASSWORD");
+  }
+
+  @Override
+  protected String getTestQueryString() {
+    return "SELECT 1";
   }
 
 }
