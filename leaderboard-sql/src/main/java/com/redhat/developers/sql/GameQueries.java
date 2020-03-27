@@ -101,7 +101,7 @@ public class GameQueries {
         .onItem().apply(g -> Optional.ofNullable(g));
   }
 
-  public Uni<Boolean> delete(PgPool client, int id) {
+  public Uni<Boolean> delete(PgPool client, long id) {
     logger.info("Deleting game with id " + id);
     return client.preparedQuery(
         "DELETE FROM games WHERE id=$1",

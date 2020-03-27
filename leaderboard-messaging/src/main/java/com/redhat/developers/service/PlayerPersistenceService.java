@@ -29,7 +29,8 @@ import javax.json.bind.Jsonb;
 import com.redhat.developers.data.Player;
 import com.redhat.developers.sql.PlayerQueries;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
-import io.vertx.axle.pgclient.PgPool;
+import io.smallrye.mutiny.Uni;
+import io.vertx.mutiny.pgclient.PgPool;
 
 /**
  * PlayerPersistenceService
@@ -64,7 +65,7 @@ public class PlayerPersistenceService {
    * @param gameId
    * @return
    */
-  public CompletionStage<List<Player>> rankedPlayerList(int rowCount) {
+  public Uni<List<Player>> rankedPlayerList(int rowCount) {
     return playerQueries.rankPlayers(client, rowCount);
   }
 }

@@ -30,8 +30,8 @@ import com.redhat.developers.data.Game;
 import com.redhat.developers.data.GameMessage;
 import com.redhat.developers.sql.GameQueries;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
-import io.vertx.axle.pgclient.PgPool;
 import io.vertx.core.json.JsonObject;
+import io.vertx.mutiny.pgclient.PgPool;
 
 /**
  * GamePersistenceService
@@ -58,10 +58,11 @@ public class GamePersistenceService {
       Game game = gameMessage.getGame();
       logger.log(FINE, "Saving game {0} ", game.getId());
       gameQueries.upsert(client, game)
-          .whenComplete((v, e) -> {
-            if (e != null) {
-              logger.log(SEVERE, "Error while saving game ", e);
-            } else {
+          .onFailure().invoke(e -> {
+            logger.log(SEVERE, "Error while saving game ", e);
+          })
+          .onItem().invoke(b -> {
+            if (b) {
               logger.log(INFO, "Game {0} saved successfully", game.getId());
             }
           });

@@ -121,6 +121,33 @@
   </build>
   <profiles>
     <profile>
+      <id>common</id>
+      <activation>
+        <property>
+          <name>common</name>
+        </property>
+      </activation>
+      <modules>
+        <module>leaderboard-common</module>
+        <module>leaderboard-sql</module>
+      </modules>
+      <properties>
+        <skipTests>true</skipTests>
+      </properties>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.ec4j.maven</groupId>
+            <artifactId>editorconfig-maven-plugin</artifactId>
+          </plugin>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>license-maven-plugin</artifactId>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
       <id>all</id>
       <activation>
         <property>

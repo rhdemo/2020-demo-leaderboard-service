@@ -22,7 +22,7 @@ CREATE TABLE "public"."games" (
     "id" SERIAL,
     "game_id" character varying(50) NOT NULL,
     "game_config" jsonb,
-    "game_date" timestamptz NOT NULL,
+    "game_date" timestamptz NOT NULL default now(),
     "game_state" smallint NOT NULL
 ) WITH (oids = false);
 
@@ -49,6 +49,8 @@ ALTER TABLE "public"."games" ADD CONSTRAINT "games_pkey"  PRIMARY KEY (id);
 ALTER TABLE "public"."games" ADD CONSTRAINT "game_id_unique" UNIQUE (game_id);
 
 ALTER TABLE "public"."players" ADD CONSTRAINT "player_pkey"  PRIMARY KEY (id);
+
+ALTER TABLE "public"."players" ADD CONSTRAINT "player_id_unqiue"  UNIQUE (player_id);
 
 ALTER TABLE "public"."players" ADD CONSTRAINT "players_game_id_fkey" FOREIGN KEY (game_id) REFERENCES games(game_id) NOT DEFERRABLE;
 

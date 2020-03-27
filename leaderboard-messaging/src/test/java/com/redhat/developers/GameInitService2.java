@@ -41,7 +41,7 @@ import io.vertx.mutiny.pgclient.PgPool;
  * GameInitService
  */
 @ApplicationScoped
-public class GameInitService {
+public class GameInitService2 {
 
   @Inject
   GameQueries gameQueries;
@@ -68,16 +68,13 @@ public class GameInitService {
     return Optional.ofNullable(games.get().get(0));
   }
 
-  public List<Player> seedPlayers()
+  public List<GameMessage> seedPlayers()
       throws Exception {
     URL dataFileUrl = this.getClass().getResource("/data.json");
     Jsonb jsonb = JsonbBuilder.newBuilder().build();
-    List<GameMessage> gameMessages = jsonb.fromJson(dataFileUrl.openStream(),
+    return jsonb.fromJson(dataFileUrl.openStream(),
         new ArrayList<GameMessage>() {}.getClass()
             .getGenericSuperclass());
-    return gameMessages.stream()
-        .map(g -> g.getPlayer())
-        .collect(Collectors.toList());
   }
 
 }

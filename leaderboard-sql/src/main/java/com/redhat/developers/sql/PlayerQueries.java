@@ -53,7 +53,7 @@ public class PlayerQueries {
    * @param id
    * @return
    */
-  public Uni<Optional<Player>> findById(PgPool client, int id) {
+  public Uni<Optional<Player>> findById(PgPool client, long id) {
     return client
         .preparedQuery(
             "SELECT * from players where id=$1",
@@ -126,7 +126,7 @@ public class PlayerQueries {
    * @param id
    * @return
    */
-  public Uni<Boolean> delete(PgPool client, int id) {
+  public Uni<Boolean> delete(PgPool client, long id) {
     return client.preparedQuery(
         "DELETE FROM players WHERE id=$1",
         Tuple.of(id))

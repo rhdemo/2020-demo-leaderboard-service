@@ -23,15 +23,16 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.fail;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.Month;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.inject.Inject;
-import javax.json.bind.Jsonb;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.redhat.developers.data.Game;
 import com.redhat.developers.data.GameMessage;
@@ -45,7 +46,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
-import io.restassured.RestAssured;
 import io.vertx.amqp.AmqpClientOptions;
 import io.vertx.axle.amqp.AmqpClient;
 import io.vertx.axle.amqp.AmqpConnection;
@@ -53,6 +53,7 @@ import io.vertx.axle.amqp.AmqpMessage;
 import io.vertx.axle.amqp.AmqpSender;
 import io.vertx.core.net.PemKeyCertOptions;
 import io.vertx.core.net.PemTrustOptions;
+import io.vertx.mutiny.pgclient.PgPool;
 import io.vertx.reactivex.core.Vertx;
 
 /**
@@ -79,10 +80,12 @@ public class GamePersistenceServiceTest {
 
   private final Vertx vertx = Vertx.vertx();
 
-  // Some GMT time
-  OffsetDateTime someGMTDateTime = OffsetDateTime.of(
-      LocalDateTime.of(2020, Month.MARCH, 9, 18, 01, 00),
-      ZoneOffset.ofHoursMinutes(0, 0));
+  @Inject
+  GameQueries gameQueries;
+
+  @Inject
+  PgPool jdbcClient;
+
 
   @BeforeEach
   public void chekEnv() {
@@ -98,8 +101,7 @@ public class GamePersistenceServiceTest {
     Game game = Game.newGame()
         .gameId("saveTest001")
         .state(GameState.byCode(1))
-        .configuration("{}")
-        .date(someGMTDateTime);
+        .configuration("{}");
     gameMessage.setType("game");
     gameMessage.setGame(game);
 
@@ -136,16 +138,9 @@ public class GamePersistenceServiceTest {
               .sendWithAck(message)
               .whenComplete((m, e) -> {
                 if (e == null) {
-                  try {
-                    given()
-                        .when()
-                        .get("/api/game/saveTest001")
-                        .then()
-                        .statusCode(200)
-                        .body(is(objectMapper.writeValueAsString(game)));
-                  } catch (JsonProcessingException e1) {
-                    fail(e1.getMessage());
-                  }
+                  Optional<List<Game>> games = gameQueries
+                      .findAll(jdbcClient)
+                      .await().asOptional().atMost(Duration.ofSeconds(10));
                 } else {
                   e.printStackTrace();
                   fail("Error sending message", e);
@@ -157,12 +152,10 @@ public class GamePersistenceServiceTest {
   @Test
   @Order(2)
   public void testGameDelete() throws Exception {
-    given()
-        .when()
-        .delete("/api/game/saveTest001")
-        .then()
-        .statusCode(204)
-        .body(is(""));
+    Optional<List<Game>> games = gameQueries
+        .findAll(jdbcClient)
+        .await().asOptional().atMost(Duration.ofSeconds(10));
+    games.get().forEach(g -> gameQueries.delete(jdbcClient, g.getId()));
   }
 
 

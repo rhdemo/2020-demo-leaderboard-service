@@ -19,7 +19,6 @@
  */
 package com.redhat.developers.util;
 
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.net.URL;
@@ -72,7 +71,7 @@ public class Scorer {
     int wrongs = RandomUtils.nextInt(5, 10);
     int totalScore = RandomUtils.nextInt(10, 50);
     Player player = Player.newPlayer()
-        .id(playerName)
+        .playerId(playerName)
         .username(playerName)
         .right(rights)
         .wrong(wrongs)

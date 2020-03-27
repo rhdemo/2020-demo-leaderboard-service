@@ -11,6 +11,8 @@
   <description>The Leaderboard Messaging</description>
   <properties>
     <quarkus.package.type>native</quarkus.package.type>
+    <skipTests>false</skipTests>
+    <kafka.version>2.4.1</kafka.version>
   </properties>
   <dependencies>
     <dependency>
@@ -21,6 +23,11 @@
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>leaderboard-sql</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>leaderboard-aggregator</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
@@ -42,6 +49,42 @@
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-smallrye-health</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-junit5</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.rest-assured</groupId>
+      <artifactId>rest-assured</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>testcontainers</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>postgresql</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-jdbc-postgresql</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.kafka</groupId>
+      <artifactId>kafka-streams-test-utils</artifactId>
+      <version>2.4.1</version>
+      <scope>test</scope>
     </dependency>
   </dependencies>
   <build>
@@ -77,4 +120,25 @@
       </plugin>
     </plugins>
   </build>
+  <profiles>
+    <profile>
+      <id>test</id>
+      <activation>
+        <property>
+          <name>test</name>
+        </property>
+      </activation>
+      <properties>
+        <skipTests>false</skipTests>
+        <quarkus.package.type>jar</quarkus.package.type>
+        <failIfNoTests>false</failIfNoTests>
+        <skipTests>false</skipTests>
+        <kafka.version>2.4.0</kafka.version>
+        <debezium.version>1.0.0.Final</debezium.version>
+      </properties>
+      <build>
+        <defaultGoal>clean test</defaultGoal>
+      </build>
+    </profile>
+  </profiles>
 </project>
