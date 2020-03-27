@@ -4,27 +4,6 @@
       "gameId": "new-game-1583157438",
       "playerId": "tom",
       "username": "tom",
-      "score": 95,
-      "right": 3,
-      "wrong": 1,
-      "avatar": {
-        "body": 1,
-        "eyes": 3,
-        "mouth": 0,
-        "ears": 2,
-        "nose": 1,
-        "color": 3
-      },
-      "creationServer": "SG",
-      "gameServer": "NY",
-      "scoringServer": "NY"
-    }
-  },
-  {
-    "player": {
-      "gameId": "new-game-1583157438",
-      "playerId": "tom",
-      "username": "tom",
       "score": 100,
       "right": 4,
       "wrong": 1,

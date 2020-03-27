@@ -27,16 +27,17 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
 @RegisterForReflection
 public class Player {
 
-  public String id;
-  public String username;
-  public int right;
-  public int wrong;
-  public int score;
-  public String creationServer;
-  public String gameServer;
-  public String scoringServer;
-  public Avatar avatar;
-  public String gameId;
+  private long id;
+  private String playerId;
+  private String username;
+  private int right;
+  private int wrong;
+  private int score;
+  private String creationServer;
+  private String gameServer;
+  private String scoringServer;
+  private Avatar avatar;
+  private String gameId;
 
   public Player() {
 
@@ -46,17 +47,14 @@ public class Player {
     return new Player();
   }
 
-  public String getId() {
-    return id;
-  }
-
-  public Player id(String id) {
+  public Player id(long id) {
     this.id = id;
     return this;
   }
 
-  public String getUsername() {
-    return username;
+  public Player playerId(String playerId) {
+    this.playerId = playerId;
+    return this;
   }
 
   public Player username(String username) {
@@ -64,17 +62,9 @@ public class Player {
     return this;
   }
 
-  public int getRight() {
-    return right;
-  }
-
   public Player right(int right) {
     this.right = right;
     return this;
-  }
-
-  public int getWrong() {
-    return wrong;
   }
 
   public Player wrong(int wrong) {
@@ -82,17 +72,9 @@ public class Player {
     return this;
   }
 
-  public int getScore() {
-    return score;
-  }
-
   public Player score(int score) {
     this.score = score;
     return this;
-  }
-
-  public String getCreationServer() {
-    return creationServer;
   }
 
   public Player creationServer(String creationServer) {
@@ -100,17 +82,9 @@ public class Player {
     return this;
   }
 
-  public String getGameServer() {
-    return gameServer;
-  }
-
   public Player gameServer(String gameServer) {
     this.gameServer = gameServer;
     return this;
-  }
-
-  public String getScoringServer() {
-    return scoringServer;
   }
 
   public Player scoringServer(String scoringServer) {
@@ -118,17 +92,9 @@ public class Player {
     return this;
   }
 
-  public Avatar getAvatar() {
-    return avatar;
-  }
-
   public Player avatar(Avatar avatar) {
     this.avatar = avatar;
     return this;
-  }
-
-  public String getGameId() {
-    return gameId;
   }
 
   public Player gameId(String gameId) {
@@ -136,41 +102,112 @@ public class Player {
     return this;
   }
 
-  @Override
-  public int hashCode() {
-    final int prime = 31;
-    int result = 1;
-    result = prime * result + ((gameId == null) ? 0 : gameId.hashCode());
-    result = prime * result + ((id == null) ? 0 : id.hashCode());
-    return result;
+  public long getId() {
+    return id;
   }
 
-  @Override
-  public boolean equals(Object obj) {
-    if (this == obj)
-      return true;
-    if (obj == null)
-      return false;
-    if (getClass() != obj.getClass())
-      return false;
-    Player other = (Player) obj;
-    if (gameId == null) {
-      if (other.gameId != null)
-        return false;
-    } else if (!gameId.equals(other.gameId))
-      return false;
-    if (id == null) {
-      if (other.id != null)
-        return false;
-    } else if (!id.equals(other.id))
-      return false;
-    return true;
+
+  public void setId(long id) {
+    this.id = id;
   }
 
-  @Override
-  public String toString() {
-    return String.format("Player [gameId=%s, id=%s, username=%s]", gameId, id,
-        username);
+
+  public String getPlayerId() {
+    return playerId;
   }
 
+
+  public void setPlayerId(String playerId) {
+    this.playerId = playerId;
+  }
+
+
+  public String getUsername() {
+    return username;
+  }
+
+
+  public void setUsername(String username) {
+    this.username = username;
+  }
+
+
+  public int getRight() {
+    return right;
+  }
+
+
+  public void setRight(int right) {
+    this.right = right;
+  }
+
+
+  public int getWrong() {
+    return wrong;
+  }
+
+
+  public void setWrong(int wrong) {
+    this.wrong = wrong;
+  }
+
+
+  public int getScore() {
+    return score;
+  }
+
+
+  public void setScore(int score) {
+    this.score = score;
+  }
+
+
+  public String getCreationServer() {
+    return creationServer;
+  }
+
+
+  public void setCreationServer(String creationServer) {
+    this.creationServer = creationServer;
+  }
+
+
+  public String getGameServer() {
+    return gameServer;
+  }
+
+
+  public void setGameServer(String gameServer) {
+    this.gameServer = gameServer;
+  }
+
+
+  public String getScoringServer() {
+    return scoringServer;
+  }
+
+
+  public void setScoringServer(String scoringServer) {
+    this.scoringServer = scoringServer;
+  }
+
+
+  public Avatar getAvatar() {
+    return avatar;
+  }
+
+
+  public void setAvatar(Avatar avatar) {
+    this.avatar = avatar;
+  }
+
+
+  public String getGameId() {
+    return gameId;
+  }
+
+
+  public void setGameId(String gameId) {
+    this.gameId = gameId;
+  }
 }
