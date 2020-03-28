@@ -1,8 +1,34 @@
+# Using multi stage docker build
+# Stage - 1  Prepare the native image 
+
+FROM quay.io/quarkus/centos-quarkus-maven:20.0.0-java8 as build
+
+ARG MAVEN_MIRROR_URL
+
+USER root
+
+RUN mkdir -p /usr/src/app && \
+    chown -R quarkus /usr/src/app
+
+USER quarkus
+
+# Set the maven mirrors in the maven settings if available
+
+COPY src /usr/src/app/src
+COPY pom.xml /usr/src/app
+
+WORKDIR /usr/src/app
+
+RUN /usr/local/bin/entrypoint-run.sh \
+  mvn clean package -Pnative
+
+# Stage - 2 Prepare the final container image
+
 FROM registry.access.redhat.com/ubi8/ubi-minimal
 
 WORKDIR /work/
 
-COPY ./target/*-runner /work/application
+COPY --from=build /usr/src/app/target/*-runner /work/application
 
 RUN chmod 775 /work
 

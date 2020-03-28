@@ -20,7 +20,7 @@
 DROP TABLE IF EXISTS "public"."games" CASCADE ;
 CREATE TABLE "public"."games" (
     "id" SERIAL,
-    "game_id" character varying(75) NOT NULL,
+    "game_id" character varying(50) NOT NULL,
     "game_config" jsonb,
     "game_date" timestamptz NOT NULL default now(),
     "game_state" smallint NOT NULL
@@ -35,11 +35,11 @@ CREATE TABLE "public"."players" (
     "guess_right" smallint NOT NULL,
     "guess_wrong" smallint NOT NULL,
     "guess_score" smallint NOT NULL,
-    "creation_server" character varying(50) NOT NULL,
-    "game_server" character varying(50) NOT NULL,
-    "scoring_server" character varying(50) NOT NULL,
+    "creation_server" character varying(10) NOT NULL,
+    "game_server" character varying(10) NOT NULL,
+    "scoring_server" character varying(10) NOT NULL,
     "player_avatar" jsonb NOT NULL,
-    "game_id" character varying(75) NOT NULL
+    "game_id" character varying(50) NOT NULL
 ) WITH (oids = false);
 
 -- Create Constraints

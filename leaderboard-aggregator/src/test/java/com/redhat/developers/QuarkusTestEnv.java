@@ -23,14 +23,19 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
 import com.redhat.developers.containers.PostgreSqlContainer;
-import com.redhat.developers.containers.QdrouterContainer;
+import com.redhat.developers.containers.StrimziKafkaContainer;
+import com.redhat.developers.containers.StrimziZookeeperContainer;
+import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.containers.KafkaContainer;
 import org.testcontainers.containers.Network;
+import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.junit.jupiter.Container;
 import io.quarkus.test.common.QuarkusTestResourceLifecycleManager;
 
 /**
  * QuarkusTestEnv
  */
+@SuppressWarnings("all")
 public class QuarkusTestEnv implements QuarkusTestResourceLifecycleManager {
 
   Logger logger = Logger.getLogger(QuarkusTestEnv.class.getName());
@@ -38,42 +43,32 @@ public class QuarkusTestEnv implements QuarkusTestResourceLifecycleManager {
   public final static String JDBC_URL =
       "vertx-reactive:postgresql://%s:%d/gamedb";
 
-  final static Network net = Network.newNetwork();
+  public static final PostgreSqlContainer postgreSQL =
+      new PostgreSqlContainer();
 
+  public static StrimziZookeeperContainer zookeeper =
+      new StrimziZookeeperContainer()
+          .waitingFor(Wait.forListeningPort());
 
-  @Container
-  public static PostgreSqlContainer postgreSQL = new PostgreSqlContainer();
-
-  @Container
-  public static QdrouterContainer amqpContainer = new QdrouterContainer();
+  public static final StrimziKafkaContainer kafka =
+      new StrimziKafkaContainer()
+          .dependsOn(zookeeper)
+          .waitingFor(Wait.forListeningPort());
 
   @Override
   public Map<String, String> start() {
-
-    amqpContainer.start();
+    kafka.start();
     postgreSQL.start();
     Map<String, String> sysProps = new HashMap<>();
     // Quarkus
     sysProps.put("quarkus.http.test-port", "8085");
     // Kafka and Kafka Streams
-    sysProps.put("quarkus.kafka-streams.application-id", "demo2.my-topic");
-    sysProps.put("rhdemo.leaderboard.kvstore.name", "messaging-test");
-    sysProps.put("rhdemo.leaderboard.aggregator.stream", "transactions");
-    sysProps.put("quarkus.kafka-streams.topics", "demo2.my-topic");
-    sysProps.put("kafka-streams.default.key.serde",
-        "org.apache.kafka.common.serialization.Serdes$StringSerde");
-    sysProps.put("kafka-streams.default.value.serde",
-        "org.apache.kafka.common.serialization.Serdes$StringSerde");
-    sysProps.put("kafka-streams.default.deserialization.exception.handler",
-        "org.apache.kafka.streams.errors.LogAndContinueExceptionHandler");
-    sysProps.put("quarkus.kafka-streams.bootstrap-servers", "localhost:9092");
-    sysProps.put("kafka.bootstrap.servers", "localhost:9092");
-    sysProps.put("kafka-streams.cache.max.bytes.buffering", "10240");
-    sysProps.put("kafka-streams.commit.interval.ms", "500");
-    sysProps.put("kafka-streams.metadata.max.age.ms", "500");
-    sysProps.put("kafka-streams.auto.offset.reset", "earliest");
-    sysProps.put("acks", "all");
-    sysProps.put("bootstrap.servers", "localhost:9092");
+    sysProps.put("bootstrap.servers", kafka.getBootstrapServers());
+    sysProps.put("acks", "1");
+    sysProps.put("kafka.bootstrap.servers", kafka.getBootstrapServers());
+    sysProps.put(
+        "mp.messaging.incoming.leaderboard-persist-to-db.bootstrap.servers",
+        kafka.getBootstrapServers());
     sysProps.put("key.serializer",
         "org.apache.kafka.common.serialization.StringSerializer");
     sysProps.put("value.serializer",
@@ -84,23 +79,13 @@ public class QuarkusTestEnv implements QuarkusTestResourceLifecycleManager {
     sysProps.put("quarkus.datasource.url", String.format(JDBC_URL,
         postgreSQL.getContainerIpAddress(), postgreSQL.getMappedPort(5432)));
 
-    // AMQP
-    sysProps.put("amqp-host", amqpContainer.getContainerIpAddress());
-    sysProps.put("amqp-port",
-        String.valueOf(amqpContainer.getMappedPort(5671)));
-    sysProps.put("skupper.messaging.ca.cert.path",
-        "src/test/resources/ssl/ca.crt");
-    sysProps.put("skupper.messaging.cert.path",
-        "src/test/resources/ssl/tls.crt");
-    sysProps.put("skupper.messaging.key.path",
-        "src/test/resources/ssl/tls.key");
     return sysProps;
   }
 
   @Override
   public void stop() {
     try {
-      amqpContainer.stop();
+      kafka.stop();
       postgreSQL.stop();
     } catch (Exception e) {
 

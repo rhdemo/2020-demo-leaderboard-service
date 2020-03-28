@@ -19,17 +19,17 @@
  */
 package com.redhat.developers.service;
 
-import java.util.List;
-import java.util.concurrent.CompletionStage;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
+import com.redhat.developers.data.GameMessage;
 import com.redhat.developers.data.Player;
 import com.redhat.developers.sql.PlayerQueries;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
-import io.smallrye.mutiny.Uni;
+import org.eclipse.microprofile.reactive.messaging.Outgoing;
+import io.smallrye.reactive.messaging.annotations.Broadcast;
 import io.vertx.mutiny.pgclient.PgPool;
 
 /**
@@ -50,22 +50,16 @@ public class PlayerPersistenceService {
   PlayerQueries playerQueries;
 
   @Incoming("leaderboard-persist-to-db")
-  public void saveToDB(String playerJson) {
+  public void handleScores(GameMessage gameMessage) {
+    Player player = gameMessage.getPlayer();
+    logger.log(Level.FINE,
+        "Saving Player  {0} ", player.getPlayerId());
     try {
-      logger.log(Level.FINE, "Saving Player {0} ", playerJson);
-      Player player = jsonb.fromJson(playerJson, Player.class);
-      playerQueries.upsert(client, player);
+      playerQueries
+          .upsert(client, player)
+          .onItem().ignore();
     } catch (Exception e) {
-      logger.log(Level.SEVERE, "Error saving player info " + playerJson, e);
+      logger.log(Level.SEVERE, "Error saving player info " + player.getId(), e);
     }
-  }
-
-  /**
-   * 
-   * @param gameId
-   * @return
-   */
-  public Uni<List<Player>> rankedPlayerList(int rowCount) {
-    return playerQueries.rankPlayers(client, rowCount);
   }
 }

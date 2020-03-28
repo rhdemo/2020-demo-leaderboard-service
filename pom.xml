@@ -27,7 +27,7 @@
     <dependencies>
       <dependency>
         <groupId>io.quarkus</groupId>
-        <artifactId>quarkus-bom</artifactId>
+        <artifactId>quarkus-universe-bom</artifactId>
         <version>${quarkus.platform.version}</version>
         <type>pom</type>
         <scope>import</scope>
@@ -107,6 +107,7 @@
                   <exclude>**/*.json</exclude>
                   <exclude>**/Makefile</exclude>
                   <exclude>**/*.xml</exclude>
+                  <exclude>**/*.sql</exclude>
                 </excludes>
                 <roots>
                   <root>src/main/java</root>
@@ -157,10 +158,10 @@
       <modules>
         <module>leaderboard-common</module>
         <module>leaderboard-sql</module>
-        <module>leaderboard-api</module>
         <module>leaderboard-messaging</module>
         <module>leaderboard-broadcast</module>
         <module>leaderboard-aggregator</module>
+        <module>leaderboard-api</module>
       </modules>
       <build>
         <plugins>

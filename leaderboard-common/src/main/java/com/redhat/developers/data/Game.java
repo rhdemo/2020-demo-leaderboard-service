@@ -20,19 +20,20 @@
 package com.redhat.developers.data;
 
 import java.time.OffsetDateTime;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import javax.json.bind.annotation.JsonbTransient;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 
 /**
  * Game
  */
 @RegisterForReflection
-@JsonIgnoreProperties({"date", "configuration"})
 public class Game {
   private long id;
   private String gameId;
   private String state;
+  @JsonbTransient
   private OffsetDateTime date;
+  @JsonbTransient
   private String configuration;
 
   public Game() {
