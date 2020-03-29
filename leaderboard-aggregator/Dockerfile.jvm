@@ -1,32 +1,5 @@
-# Using multi stage docker build
-# Stage - 1  Prepare the build artifacts 
-
-FROM quay.io/quarkus/centos-quarkus-maven:20.0.0-java8 as build
-
-ARG MAVEN_MIRROR_URL
-
-USER root
-
-RUN mkdir -p /usr/src/app && \
-    chown -R quarkus /usr/src/app
-
-USER quarkus
-
-# Set the maven mirrors in the maven settings if available
-
-RUN /usr/local/bin/entrypoint-run.sh
-
-COPY src /usr/src/app/src
-COPY pom.xml /usr/src/app
-
-WORKDIR /usr/src/app
-
-RUN mvn clean package
-
-# Stage - 2 Prepare the final container image
-
 FROM registry.access.redhat.com/redhat-openjdk-18/openjdk18-openshift
 ENV JAVA_OPTIONS="-Dquarkus.http.host=0.0.0.0 -Djava.util.logging.manager=org.jboss.logmanager.LogManager"
 ENV S2I_SOURCE_DEPLOYMENTS_FILTER=*-runner.jar
-COPY --from=build /usr/src/app/target/lib/* /deployments/lib/
-COPY --from=build /usr/src/app/target/*-runner.jar /deployments/app.jar
+COPY target/lib/* /deployments/lib/
+COPY target/*-runner.jar /deployments/app.jar

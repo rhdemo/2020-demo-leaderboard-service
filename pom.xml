@@ -229,40 +229,5 @@
       </modules>
       <build></build>
     </profile>
-    <profile>
-      <id>it</id>
-      <activation>
-        <property>
-          <name>it</name>
-        </property>
-      </activation>
-      <modules>
-        <module>leaderboard-common</module>
-        <module>leaderboard-sql</module>
-        <module>leaderboard-messaging</module>
-        <module>leaderboard-broadcast</module>
-        <module>leaderboard-aggregator</module>
-        <module>leaderboard-api</module>
-      </modules>
-      <properties>
-        <skipTests>false</skipTests>
-        <quarkus.package.type>jar</quarkus.package.type>
-        <failIfNoTests>false</failIfNoTests>
-        <kafka.version>2.4.0</kafka.version>
-        <debezium.version>1.0.0.Final</debezium.version>
-      </properties>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.ec4j.maven</groupId>
-            <artifactId>editorconfig-maven-plugin</artifactId>
-          </plugin>
-          <plugin>
-            <groupId>org.codehaus.mojo</groupId>
-            <artifactId>license-maven-plugin</artifactId>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
   </profiles>
 </project>
