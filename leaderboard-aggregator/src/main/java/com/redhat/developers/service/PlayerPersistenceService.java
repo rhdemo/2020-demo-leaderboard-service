@@ -19,6 +19,7 @@
  */
 package com.redhat.developers.service;
 
+import java.util.concurrent.CompletionStage;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.enterprise.context.ApplicationScoped;
@@ -29,7 +30,7 @@ import com.redhat.developers.data.Player;
 import com.redhat.developers.sql.PlayerQueries;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.eclipse.microprofile.reactive.messaging.Outgoing;
-import io.smallrye.reactive.messaging.annotations.Broadcast;
+import io.smallrye.mutiny.groups.UniSubscribe;
 import io.vertx.mutiny.pgclient.PgPool;
 
 /**
@@ -50,16 +51,11 @@ public class PlayerPersistenceService {
   PlayerQueries playerQueries;
 
   @Incoming("leaderboard-persist-to-db")
-  public void handleScores(GameMessage gameMessage) {
+  public CompletionStage<Boolean> handleScores(GameMessage gameMessage) {
     Player player = gameMessage.getPlayer();
     logger.log(Level.FINE,
         "Saving Player  {0} ", player.getPlayerId());
-    try {
-      playerQueries
-          .upsert(client, player)
-          .onItem().ignore();
-    } catch (Exception e) {
-      logger.log(Level.SEVERE, "Error saving player info " + player.getId(), e);
-    }
+    return playerQueries
+        .upsert(client, player).subscribe().asCompletionStage();
   }
 }

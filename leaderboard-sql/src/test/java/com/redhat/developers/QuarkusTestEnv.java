@@ -34,7 +34,7 @@ public class QuarkusTestEnv implements QuarkusTestResourceLifecycleManager {
   Logger logger = Logger.getLogger(QuarkusTestEnv.class.getName());
 
   public final static String JDBC_URL =
-      "vertx-reactive:postgresql://%s:%d/gamedb";
+      "postgresql://%s:%d/gamedb";
 
 
   @Container
@@ -46,8 +46,9 @@ public class QuarkusTestEnv implements QuarkusTestResourceLifecycleManager {
     Map<String, String> sysProps = new HashMap<>();
     sysProps.put("quarkus.http.test-port", "8085");
     // quarkus.datasource.url=vertx-reactive:postgresql://localhost:5432/gamedb
-    sysProps.put("quarkus.datasource.url", String.format(JDBC_URL,
-        postgreSQL.getContainerIpAddress(), postgreSQL.getMappedPort(5432)));
+    sysProps.put("quarkus.datasource.db-kind", "postgresql");
+    sysProps.put("quarkus.datasource.reactive.url", String.format(JDBC_URL,
+        "localhost", postgreSQL.getMappedPort(5432)));
     return sysProps;
   }
 

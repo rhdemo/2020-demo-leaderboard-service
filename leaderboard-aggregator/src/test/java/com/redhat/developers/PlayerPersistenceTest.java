@@ -21,20 +21,16 @@ package com.redhat.developers;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.fail;
-import java.net.URL;
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Properties;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
-import com.redhat.developers.data.GameMessage;
 import com.redhat.developers.data.Player;
 import com.redhat.developers.sql.PlayerQueries;
 import org.awaitility.Awaitility;
@@ -51,8 +47,7 @@ import org.junit.jupiter.api.TestMethodOrder;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 import io.vertx.core.Vertx;
-import io.vertx.kafka.client.producer.KafkaProducer;
-import io.vertx.kafka.client.producer.KafkaProducerRecord;
+import io.vertx.kafka.client.consumer.KafkaConsumer;
 import io.vertx.mutiny.pgclient.PgPool;
 
 /**
@@ -60,7 +55,7 @@ import io.vertx.mutiny.pgclient.PgPool;
  */
 @QuarkusTest
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-@QuarkusTestResource(QuarkusTestEnv.class)
+@QuarkusTestResource(AggreatorQuarkusTestEnv.class)
 @TestInstance(Lifecycle.PER_CLASS)
 public class PlayerPersistenceTest {
 
@@ -79,100 +74,88 @@ public class PlayerPersistenceTest {
   @Inject
   GameInitializer gameInitializer;
 
-  List<GameMessage> gameMessages;
+  Vertx vertx = Vertx.vertx();
 
   AtomicInteger testRecordCount = new AtomicInteger();
-
-  Vertx vertx = Vertx.vertx();
-  KafkaProducer<String, String> kafkaProducer;
 
   @BeforeAll
   @SuppressWarnings("all")
   public void setupData() throws Exception {
-
     assertTrue(gameInitializer.gameExist().isPresent());
+    Properties config = new Properties();
+    config.put("bootstrap.servers", System.getProperty("bootstrap.servers"));
+    config.put("group.id", getClass().getCanonicalName());
+    config.put("key.deserializer",
+        "org.apache.kafka.common.serialization.StringDeserializer");
+    config.put("value.deserializer",
+        "org.apache.kafka.common.serialization.StringDeserializer");
+    config.put("auto.offset.reset", "earliest");
+    config.put("enable.auto.commit", "false");
 
-    kafkaProducer =
-        KafkaProducer.create(vertx, System.getProperties());
-    assertNotNull(kafkaProducer);
-
-    URL dataFileUrl = this.getClass().getResource("/data.json");
-    gameMessages = jsonb.fromJson(dataFileUrl.openStream(),
-        new ArrayList<GameMessage>() {}.getClass()
-            .getGenericSuperclass());
-
-    assertNotNull(gameMessages);
-    assertFalse(gameMessages.isEmpty());
-
-    gameMessages.forEach(m -> {
-      KafkaProducerRecord gameRecord =
-          KafkaProducerRecord.create("my-topic", m.getPlayer().getPlayerId(),
-              jsonb.toJson(m));
-      kafkaProducer.send(gameRecord, rm -> {
-        if (rm.succeeded()) {
-          int i = testRecordCount.incrementAndGet();
-          logger.log(Level.FINE, "Inserted {0} records to {1} at {2}",
-              new Object[] {i - 1, rm.result().getTopic(),
-                  rm.result().getTimestamp()});
-        } else {
-          fail(rm.cause());
-        }
-      });
+    KafkaConsumer<String, String> kafkaConsumer =
+        KafkaConsumer.<String, String>create(vertx, config)
+            .subscribe("my-topic");
+    kafkaConsumer.handler(record -> {
+      int i = testRecordCount.incrementAndGet();
+      logger.log(Level.FINER, "Received Record {0} Key:{1} Value:{2} ",
+          new Object[] {i, record.key(), record.value()});
     });
   }
 
   @Test
   @Order(1)
-  @SuppressWarnings("all")
   public void testPlayerPersistence() throws Exception {
 
-    Awaitility.await().untilAtomic(testRecordCount,
-        Is.is(Matchers.greaterThan(3)));
+    nap();
 
-    kafkaProducer.flush(x -> {
-
-      Optional<List<Player>> optPlayers = playerQ
-          .rankPlayers(client, 3)
-          .await().asOptional().atMost(Duration.ofSeconds(10));
-
-      assertTrue(optPlayers.isPresent());
-
-      List<Player> players = optPlayers.get();
-      assertNotNull(players);
-      assertEquals(3, players.size());
-      Player aPlayer = players.get(0);
-      assertNotNull(aPlayer);
-      assertEquals("tom", aPlayer.getId());
-      assertEquals("tom", aPlayer.getUsername());
-      assertEquals(7, aPlayer.getRight());
-      assertEquals(2, aPlayer.getWrong());
-      assertEquals(100, aPlayer.getScore());
-
-      aPlayer = players.get(1);
-      assertNotNull(aPlayer);
-      assertNotNull(aPlayer);
-      assertEquals("jerry", aPlayer.getId());
-      assertEquals("jerry", aPlayer.getUsername());
-      assertEquals(4, aPlayer.getRight());
-      assertEquals(1, aPlayer.getWrong());
-      assertEquals(95, aPlayer.getScore());
-
-      aPlayer = players.get(2);
-      assertEquals("Winne", aPlayer.getId());
-      assertEquals("Winne", aPlayer.getUsername());
-      assertEquals(3, aPlayer.getRight());
-      assertEquals(1, aPlayer.getWrong());
-      assertEquals(95, aPlayer.getScore());
-
-    });
-  }
-
-  // @Test
-  // @Order(3)
-  public void testPlayerPersistenceWithRowCount() throws Exception {
+    // Just to make sure the records are sent to Kafka
+    Awaitility.await()
+        .atMost(Duration.ofSeconds(10))
+        .untilAtomic(this.testRecordCount,
+            Is.is(Matchers.greaterThanOrEqualTo(3)));
 
     Optional<List<Player>> optPlayers = playerQ
         .rankPlayers(client, 3)
+        .await().asOptional().atMost(Duration.ofSeconds(10));
+
+    List<Player> players = optPlayers.get();
+    assertNotNull(players);
+    assertEquals(3, players.size());
+    Player aPlayer = players.get(0);
+    assertNotNull(aPlayer);
+    assertEquals(1, aPlayer.getId());
+    assertEquals("tom", aPlayer.getPlayerId());
+    assertEquals("tom", aPlayer.getUsername());
+    assertEquals(4, aPlayer.getRight());
+    assertEquals(1, aPlayer.getWrong());
+    assertEquals(100, aPlayer.getScore());
+
+    aPlayer = players.get(1);
+    assertNotNull(aPlayer);
+    assertNotNull(aPlayer);
+    assertEquals(3, aPlayer.getId());
+    assertEquals("jerry", aPlayer.getPlayerId());
+    assertEquals("jerry", aPlayer.getUsername());
+    assertEquals(4, aPlayer.getRight());
+    assertEquals(1, aPlayer.getWrong());
+    assertEquals(95, aPlayer.getScore());
+
+    aPlayer = players.get(2);
+    assertEquals(4, aPlayer.getId());
+    assertEquals("Winne", aPlayer.getPlayerId());
+    assertEquals("Winne", aPlayer.getUsername());
+    assertEquals(3, aPlayer.getRight());
+    assertEquals(1, aPlayer.getWrong());
+    assertEquals(95, aPlayer.getScore());
+
+  }
+
+  @Test
+  @Order(2)
+  public void testPlayerPersistenceWithRowCount() throws Exception {
+
+    Optional<List<Player>> optPlayers = playerQ
+        .rankPlayers(client, 1)
         .await().asOptional().atMost(Duration.ofSeconds(10));
 
     assertTrue(optPlayers.isPresent());
@@ -184,10 +167,11 @@ public class PlayerPersistenceTest {
 
     Player aPlayer = players.get(0);
     assertNotNull(aPlayer);
-    assertEquals("tom", aPlayer.getId());
+    assertEquals(1, aPlayer.getId());
+    assertEquals("tom", aPlayer.getPlayerId());
     assertEquals("tom", aPlayer.getUsername());
-    assertEquals(7, aPlayer.getRight());
-    assertEquals(2, aPlayer.getWrong());
+    assertEquals(4, aPlayer.getRight());
+    assertEquals(1, aPlayer.getWrong());
     assertEquals(100, aPlayer.getScore());
 
   }
@@ -200,4 +184,8 @@ public class PlayerPersistenceTest {
     playerQ.delete(client, 3);
   }
 
+
+  private void nap() throws Exception {
+    Thread.sleep(2000);
+  }
 }

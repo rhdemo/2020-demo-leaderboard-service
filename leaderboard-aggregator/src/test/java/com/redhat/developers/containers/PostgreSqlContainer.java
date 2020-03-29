@@ -24,8 +24,6 @@ import java.util.Map;
 import org.testcontainers.containers.JdbcDatabaseContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.containers.wait.strategy.WaitStrategy;
-import org.testcontainers.images.ImagePullPolicy;
-import org.testcontainers.utility.DockerImageName;
 
 /**
  * PostgreSqlContainer
@@ -41,13 +39,6 @@ public class PostgreSqlContainer<SELF extends PostgreSqlContainer<SELF>>
     env.put("PG_USER_PASSWORD", "password!");
     env.put("PG_DATABASE", "gamedb");
     env.put("PG_NETWORK_MASK", "all");
-    withImagePullPolicy(new ImagePullPolicy() {
-
-      @Override
-      public boolean shouldPull(DockerImageName imageName) {
-        return false;
-      }
-    });
     withEnv(env);
     withInitScript("schema.sql");
     waitingFor(Wait.forListeningPort());

@@ -50,11 +50,6 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.testcontainers</groupId>
-      <artifactId>kafka</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-jdbc-postgresql</artifactId>
       <scope>test</scope>
@@ -105,8 +100,6 @@
         <skipTests>false</skipTests>
         <quarkus.package.type>jar</quarkus.package.type>
         <failIfNoTests>false</failIfNoTests>
-        <kafka.version>2.4.0</kafka.version>
-        <debezium.version>1.0.0.Final</debezium.version>
       </properties>
       <build>
         <defaultGoal>clean test</defaultGoal>

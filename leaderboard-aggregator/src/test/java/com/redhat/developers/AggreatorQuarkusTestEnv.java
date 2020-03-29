@@ -25,23 +25,20 @@ import java.util.logging.Logger;
 import com.redhat.developers.containers.PostgreSqlContainer;
 import com.redhat.developers.containers.StrimziKafkaContainer;
 import com.redhat.developers.containers.StrimziZookeeperContainer;
-import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.containers.KafkaContainer;
-import org.testcontainers.containers.Network;
 import org.testcontainers.containers.wait.strategy.Wait;
-import org.testcontainers.junit.jupiter.Container;
 import io.quarkus.test.common.QuarkusTestResourceLifecycleManager;
 
 /**
  * QuarkusTestEnv
  */
 @SuppressWarnings("all")
-public class QuarkusTestEnv implements QuarkusTestResourceLifecycleManager {
+public class AggreatorQuarkusTestEnv
+    implements QuarkusTestResourceLifecycleManager {
 
-  Logger logger = Logger.getLogger(QuarkusTestEnv.class.getName());
+  Logger logger = Logger.getLogger(AggreatorQuarkusTestEnv.class.getName());
 
   public final static String JDBC_URL =
-      "vertx-reactive:postgresql://%s:%d/gamedb";
+      "postgresql://%s:%d/gamedb";
 
   public static final PostgreSqlContainer postgreSQL =
       new PostgreSqlContainer();
@@ -59,25 +56,42 @@ public class QuarkusTestEnv implements QuarkusTestResourceLifecycleManager {
   public Map<String, String> start() {
     kafka.start();
     postgreSQL.start();
+
+    while (!kafka.isRunning()) {
+      try {
+        logger.info("Waiting for Kafka to be started..");
+        Thread.sleep(3000);
+      } catch (InterruptedException e) {
+      }
+    }
+
     Map<String, String> sysProps = new HashMap<>();
-    // Quarkus
-    sysProps.put("quarkus.http.test-port", "8085");
-    // Kafka and Kafka Streams
+
+    sysProps.put("bootstrap.servers", System.getProperty("bootstrap.servers"));
+    sysProps.put("group.id", getClass().getCanonicalName());
+    sysProps.put("key.deserializer",
+        "org.apache.kafka.common.serialization.StringDeserializer");
+    sysProps.put("value.deserializer",
+        "org.apache.kafka.common.serialization.StringDeserializer");
+    sysProps.put("auto.offset.reset", "earliest");
+    sysProps.put("enable.auto.commit", "false");
+
     sysProps.put("bootstrap.servers", kafka.getBootstrapServers());
-    sysProps.put("acks", "1");
-    sysProps.put("kafka.bootstrap.servers", kafka.getBootstrapServers());
-    sysProps.put(
-        "mp.messaging.incoming.leaderboard-persist-to-db.bootstrap.servers",
-        kafka.getBootstrapServers());
+    sysProps.put("acks", "all");
     sysProps.put("key.serializer",
         "org.apache.kafka.common.serialization.StringSerializer");
     sysProps.put("value.serializer",
         "org.apache.kafka.common.serialization.StringSerializer");
 
-    // Database
-    // quarkus.datasource.url=vertx-reactive:postgresql://localhost:5432/gamedb
-    sysProps.put("quarkus.datasource.url", String.format(JDBC_URL,
-        postgreSQL.getContainerIpAddress(), postgreSQL.getMappedPort(5432)));
+
+    // Quarkus
+    sysProps.put("quarkus.http.test-port", "8085"); // Kafka
+
+    sysProps.put("kafka.bootstrap.servers", kafka.getBootstrapServers());
+
+    sysProps.put("quarkus.datasource.db-kind", "postgresql");
+    sysProps.put("quarkus.datasource.reactive.url", String.format(JDBC_URL,
+        "localhost", postgreSQL.getMappedPort(5432)));
 
     return sysProps;
   }

@@ -19,47 +19,54 @@
  */
 package com.redhat.developers;
 
-import java.net.URL;
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
+import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
-import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import javax.inject.Singleton;
 import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
 import com.redhat.developers.data.Game;
 import com.redhat.developers.data.GameMessage;
 import com.redhat.developers.data.GameState;
-import com.redhat.developers.data.Player;
 import com.redhat.developers.sql.GameQueries;
+import io.vertx.core.Vertx;
 import io.vertx.mutiny.pgclient.PgPool;
 
 /**
  * GameInitService
  */
-@ApplicationScoped
+@Singleton
 public class GameInitializer {
+
+  Logger logger = Logger.getLogger("GameInitializer");
+
+  @Inject
+  Jsonb jsonb;
 
   @Inject
   GameQueries gameQueries;
 
   @Inject
   PgPool client;
-
   Game game;
 
+  Vertx vertx = Vertx.vertx();
+
+  List<GameMessage> gameMessages;
+
   @PostConstruct
-  void init() {
+  void init() throws Exception {
     Game g = Game.newGame()
         .gameId("new-game-1583157438")
         .state(GameState.byCode(1))
         .configuration("{}");
+
     gameQueries
         .upsert(client, g)
         .await().atMost(Duration.ofSeconds(10));
+
   }
 
   public Optional<Game> gameExist() {
