@@ -13,7 +13,7 @@ public class StrimziZookeeperContainer
   private int ZOOKEEPER_PORT = 2181;
 
   public StrimziZookeeperContainer() {
-    super("strimzi/kafka:0.16.2-kafka-2.4.0");
+    super("strimzi/kafka:0.17.0-kafka-2.4.0");
     withEnv("LOG_DIR", "/tmp/logs");
     withExposedPorts(ZOOKEEPER_PORT);
     super.withNetwork(Network.SHARED);
