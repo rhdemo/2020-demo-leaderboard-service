@@ -19,7 +19,6 @@
  */
 package com.redhat.developers.api;
 
-import java.util.concurrent.CompletionStage;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.inject.Inject;
@@ -36,7 +35,8 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
 import com.redhat.developers.data.Game;
 import com.redhat.developers.sql.GameQueries;
-import io.vertx.axle.pgclient.PgPool;
+import io.smallrye.mutiny.Uni;
+import io.vertx.mutiny.pgclient.PgPool;
 
 /**
  * GameResource
@@ -56,62 +56,49 @@ public class GameResource {
 
   @Path("/game/all")
   @GET
-  public CompletionStage<Response> all() {
+  public Uni<Response> all() {
     logger.info("Finding active game");
     return gameQueries.findAll(client)
-        .thenApply(players -> Response.ok(players))
-        .thenApply(ResponseBuilder::build);
+        .map(players -> Response.ok(players))
+        .map(ResponseBuilder::build);
   }
 
   @Path("/game/active")
   @GET
-  public CompletionStage<Response> activeGame() {
+  public Uni<Response> activeGame() {
     logger.info("Finding active game");
     return gameQueries.findActiveGame(client)
-        .thenApply(oPlayer -> oPlayer.isPresent() ? Response.ok(oPlayer.get())
+        .map(oPlayer -> oPlayer.isPresent() ? Response.ok(oPlayer.get())
             : Response.status(Status.NOT_FOUND))
-        .thenApply(ResponseBuilder::build);
-  }
-
-  @Path("/game/state/{state}")
-  @GET
-  public CompletionStage<Response> gamesByState(
-      @PathParam("state") String state) {
-    logger.log(Level.FINE, "Finding games by state {0} ", state);
-    return gameQueries.gamesByState(client, state)
-        .thenApply(games -> Response.ok(games))
-        .thenApply(ResponseBuilder::build);
+        .map(ResponseBuilder::build);
   }
 
   @GET
   @Path("/game/{id}")
-  public CompletionStage<Response> find(@PathParam("id") Integer id) {
+  public Uni<Response> find(@PathParam("id") Integer id) {
     logger.log(Level.FINE, "Finding game by id {0} ", id);
     return gameQueries.findById(client, id)
-        .thenApply(oPlayer -> oPlayer.isPresent() ? Response.ok(oPlayer.get())
+        .map(oPlayer -> oPlayer.isPresent() ? Response.ok(oPlayer.get())
             : Response.status(Status.NOT_FOUND))
-        .thenApply(ResponseBuilder::build);
+        .map(ResponseBuilder::build);
   }
 
   @POST
   @Path("/game/save")
-  public CompletionStage<Response> add(Game game) {
+  public Uni<Response> save(Game game) {
     logger.log(Level.FINE, "Saving game {0} ", game.getId());
     return gameQueries.upsert(client, game)
-        .thenApply(b -> b ? Response.status(Status.ACCEPTED)
-            : Response.status(Status.INTERNAL_SERVER_ERROR))
-        .thenApply(ResponseBuilder::build);
+        .map(b -> b ? Response.accepted() : Response.noContent())
+        .map(ResponseBuilder::build);
   }
 
   @DELETE
   @Path("/game/{id}")
-  public CompletionStage<Response> delete(@PathParam("id") Integer id) {
+  public Uni<Response> delete(@PathParam("id") Integer id) {
     logger.log(Level.FINE, "Deleting game with id {0} ", id);
     return gameQueries.delete(client, id)
-        .thenApply(b -> b ? Response.status(Status.NO_CONTENT)
-            : Response.status(Status.NOT_FOUND))
-        .thenApply(ResponseBuilder::build);
+        .map(b -> b ? Status.OK : Status.NOT_FOUND)
+        .map(status -> Response.status(status).build());
   }
-
 
 }

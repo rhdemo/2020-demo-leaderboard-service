@@ -17,10 +17,10 @@ install_jars:
 	@mvn -Pall -DskipTests -Dquarkus.package.type=jar clean install
 
 test:
-	@mvn -P$(PROFILES) -DskipTests=false -Dquarkus.package.type=jar clean test $(TEST_FILTER)
+	mvn -P$(PROFILES) -DfailIfNoTests=false -DskipTests=false -Dquarkus.package.type=jar clean test -Dtest=$(TEST_FILTER)
 
 native_test:
-	@mvn -P$(PROFILES) -Dquarkus.native.native-image-xmx=6G  -DskipTests=false -Dquarkus.package.type=native verify $(TEST_FILTER)
+	mvn -P$(PROFILES) -DfailIfNoTests=false -Dquarkus.native.native-image-xmx=6G  -DskipTests=false -Dquarkus.package.type=native verify -Dtest=$(TEST_FILTER)
 
 clean:
 	@mvn -Pall clean 

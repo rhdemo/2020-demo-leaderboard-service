@@ -2,7 +2,7 @@
   {
     "player": {
       "gameId": "new-game-1583157438",
-      "id": "tom",
+      "playerId": "tom",
       "username": "tom",
       "score": 95,
       "right": 3,
@@ -23,7 +23,7 @@
   {
     "player": {
       "gameId": "new-game-1583157438",
-      "id": "tom",
+      "playerId": "tom",
       "username": "tom",
       "score": 100,
       "right": 4,
@@ -44,7 +44,7 @@
   {
     "player": {
       "gameId": "new-game-1583157438",
-      "id": "jerry",
+      "playerId": "jerry",
       "username": "jerry",
       "score": 95,
       "right": 4,
@@ -65,7 +65,7 @@
   {
     "player": {
       "gameId": "new-game-1583157438",
-      "id": "Winne",
+      "playerId": "Winne",
       "username": "Winne",
       "score": 95,
       "right": 3,
