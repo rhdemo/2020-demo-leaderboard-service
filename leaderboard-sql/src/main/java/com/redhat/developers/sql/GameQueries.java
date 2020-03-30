@@ -268,6 +268,17 @@ public class GameQueries {
   }
 
   private OffsetDateTime now() {
-    return OffsetDateTime.now();
+    logger.info("Trying DATE +1 ");
+    Calendar calendar = Calendar.getInstance();
+    return OffsetDateTime.of(
+        LocalDateTime.of(
+            calendar.get(Calendar.YEAR),
+            calendar.get(Calendar.MONTH + 1),
+            calendar.get(Calendar.DAY_OF_MONTH),
+            calendar.get(Calendar.HOUR_OF_DAY),
+            calendar.get(Calendar.MINUTE),
+            calendar.get(Calendar.SECOND)),
+        ZoneOffset.ofHoursMinutes(0, 0));
   }
+
 }
