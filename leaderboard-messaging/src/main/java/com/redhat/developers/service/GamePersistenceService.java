@@ -23,6 +23,7 @@ import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.SEVERE;
 import java.util.Map;
+import java.util.concurrent.CompletionStage;
 import java.util.logging.Logger;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -48,7 +49,7 @@ public class GamePersistenceService {
   GameQueries gameQueries;
 
   @Incoming("game-state")
-  public void saveGame(Map<String, Object> map) {
+  public CompletionStage<Boolean> saveGame(Map<String, Object> map) {
     JsonObject raw = new JsonObject(map);
     logger.log(FINE, "Received Game State Payload  {0} ", raw.encode());
     GameMessage gameMessage = raw.mapTo(GameMessage.class);
@@ -57,19 +58,13 @@ public class GamePersistenceService {
             || "game".equals(gameMessage.getType()))) {
       Game game = gameMessage.getGame();
       logger.log(FINE, "Saving game {0} ", game.getId());
-      gameQueries.upsert(client, game)
-          .onFailure().invoke(e -> {
-            logger.log(SEVERE, "Error while saving game ", e);
-          })
-          .onItem().invoke(b -> {
-            if (b) {
-              logger.log(INFO, "Game {0} saved successfully", game.getId());
-            }
-          });
+      return gameQueries.upsert(client, game)
+          .subscribe().asCompletionStage();
     } else {
       logger.log(INFO,
           "Game is not of type 'game' or 'reset-game', save skipped");
     }
+    return null;
   }
 
 }

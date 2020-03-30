@@ -198,6 +198,7 @@
       </activation>
       <modules>
         <module>leaderboard-common</module>
+        <module>leaderboard-sql</module>
         <module>leaderboard-aggregator</module>
       </modules>
     </profile>
@@ -227,7 +228,6 @@
         <module>leaderboard-sql</module>
         <module>leaderboard-messaging</module>
       </modules>
-      <build></build>
     </profile>
   </profiles>
 </project>

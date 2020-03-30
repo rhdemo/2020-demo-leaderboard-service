@@ -19,18 +19,15 @@
  */
 package com.redhat.developers;
 
-import static io.restassured.RestAssured.given;
-import static org.hamcrest.CoreMatchers.is;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import java.time.Duration;
-import java.time.LocalDateTime;
-import java.time.Month;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.inject.Inject;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -38,8 +35,8 @@ import com.redhat.developers.data.Game;
 import com.redhat.developers.data.GameMessage;
 import com.redhat.developers.data.GameState;
 import com.redhat.developers.sql.GameQueries;
+import org.awaitility.Awaitility;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -60,7 +57,7 @@ import io.vertx.reactivex.core.Vertx;
  * GameResourceTest
  */
 @QuarkusTest
-@QuarkusTestResource(QuarkusTestEnv.class)
+@QuarkusTestResource(QuarkusMessagingTestEnv.class)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class GamePersistenceServiceTest {
 
@@ -84,22 +81,14 @@ public class GamePersistenceServiceTest {
   GameQueries gameQueries;
 
   @Inject
-  PgPool jdbcClient;
-
-
-  @BeforeEach
-  public void chekEnv() {
-    assertNotNull("quarkus.datasource.url");
-    assertNotNull("amqp-host");
-    assertNotNull("amqp-port");
-  }
+  PgPool pgClient;
 
   @Test
   @Order(1)
   public void testGameAdd() throws Exception {
     GameMessage gameMessage = new GameMessage();
     Game game = Game.newGame()
-        .gameId("saveTest001")
+        .gameId("new-game-1583157439")
         .state(GameState.byCode(1))
         .configuration("{}");
     gameMessage.setType("game");
@@ -115,7 +104,6 @@ public class GamePersistenceServiceTest {
     AmqpClient client = AmqpClient
         .create(new io.vertx.axle.core.Vertx(vertx.getDelegate()), options);
 
-
     final io.vertx.amqp.AmqpMessage delegate =
         io.vertx.amqp.AmqpMessage.create()
             .address(MC_GAME)
@@ -125,6 +113,7 @@ public class GamePersistenceServiceTest {
 
     AmqpMessage message = AmqpMessage.newInstance(delegate);
 
+    AtomicBoolean messageSent = new AtomicBoolean();
     AtomicReference<AmqpSender> sender = new AtomicReference<>();
 
     client.connect()
@@ -138,24 +127,104 @@ public class GamePersistenceServiceTest {
               .sendWithAck(message)
               .whenComplete((m, e) -> {
                 if (e == null) {
-                  Optional<List<Game>> games = gameQueries
-                      .findAll(jdbcClient)
-                      .await().asOptional().atMost(Duration.ofSeconds(10));
+                  messageSent.set(true);
                 } else {
+                  messageSent.set(false);
                   e.printStackTrace();
                   fail("Error sending message", e);
                 }
               });
         });
+
+    Awaitility.await().atMost(Duration.ofSeconds(10)).untilTrue(messageSent);
+    Optional<Optional<Game>> optGame = gameQueries
+        .findById(pgClient, 1)
+        .await().asOptional().atMost(Duration.ofSeconds(10));
+    assertTrue(optGame.isPresent());
+    assertTrue(optGame.get().isPresent());
+    Game g = optGame.get().get();
+    assertNotNull(g);
+    assertEquals(1, g.getId());
+    assertEquals(game.getGameId(), g.getGameId());
+    assertEquals(game.getState(), g.getState());
+    assertEquals(game.getConfiguration(), g.getConfiguration());
   }
 
   @Test
-  @Order(2)
+  @Order(3)
+  public void testGameUpdate() throws Exception {
+    GameMessage gameMessage = new GameMessage();
+    Game game = Game.newGame()
+        .gameId("new-game-1583157439")
+        .state(GameState.byCode(2))
+        .configuration("{}");
+    gameMessage.setType("game");
+    gameMessage.setGame(game);
+
+    Map gmap =
+        objectMapper.readValue(objectMapper.writeValueAsString(gameMessage),
+            Map.class);
+
+    // Use AMQP Client to send the message
+    AmqpClientOptions options = clientOptions();
+
+    AmqpClient client = AmqpClient
+        .create(new io.vertx.axle.core.Vertx(vertx.getDelegate()), options);
+
+    final io.vertx.amqp.AmqpMessage delegate =
+        io.vertx.amqp.AmqpMessage.create()
+            .address(MC_GAME)
+            .durable(false)
+            .withMapAsBody(gmap)
+            .build();
+
+    AmqpMessage message = AmqpMessage.newInstance(delegate);
+
+
+    AtomicBoolean messageSent = new AtomicBoolean();
+    AtomicReference<AmqpSender> sender = new AtomicReference<>();
+
+    client.connect()
+        .thenCompose(AmqpConnection::createAnonymousSender)
+        .thenApply(s -> {
+          sender.set(s);
+          return s;
+        })
+        .thenCompose(s -> {
+          return s
+              .sendWithAck(message)
+              .whenComplete((m, e) -> {
+                if (e == null) {
+                  messageSent.set(true);
+                } else {
+                  messageSent.set(false);
+                  e.printStackTrace();
+                  fail("Error sending message", e);
+                }
+              });
+        });
+
+    Awaitility.await().atMost(Duration.ofSeconds(10)).untilTrue(messageSent);
+    Optional<Optional<Game>> optGame = gameQueries
+        .findById(pgClient, 1)
+        .await().asOptional().atMost(Duration.ofSeconds(10));
+    assertTrue(optGame.isPresent());
+    assertTrue(optGame.get().isPresent());
+    Game g = optGame.get().get();
+    assertNotNull(g);
+    assertEquals(1, g.getId());
+    assertEquals(game.getGameId(), g.getGameId());
+    assertEquals(game.getState(), g.getState());
+    assertEquals(game.getConfiguration(), g.getConfiguration());
+  }
+
+  @Test
+  @Order(3)
   public void testGameDelete() throws Exception {
     Optional<List<Game>> games = gameQueries
-        .findAll(jdbcClient)
+        .findAll(pgClient)
         .await().asOptional().atMost(Duration.ofSeconds(10));
-    games.get().forEach(g -> gameQueries.delete(jdbcClient, g.getId()));
+    games.get().forEach(g -> gameQueries.delete(pgClient, g.getId()));
   }
 
 
@@ -172,8 +241,6 @@ public class GamePersistenceServiceTest {
 
     options
         .setSsl(true)
-        .setConnectTimeout(30000)
-        .setReconnectInterval(5000)
         .addEnabledSaslMechanism("EXTERNAL") // SASL EXTERNAL
         .setPemTrustOptions(pTrustOptions) // Trust options use ca.crt
         .setPemKeyCertOptions(pCertOptions)// Cert options use tls.crt/tls.key

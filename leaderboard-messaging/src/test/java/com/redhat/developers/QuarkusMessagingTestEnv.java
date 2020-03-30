@@ -24,63 +24,31 @@ import java.util.Map;
 import java.util.logging.Logger;
 import com.redhat.developers.containers.PostgreSqlContainer;
 import com.redhat.developers.containers.QdrouterContainer;
-import org.testcontainers.containers.Network;
-import org.testcontainers.junit.jupiter.Container;
 import io.quarkus.test.common.QuarkusTestResourceLifecycleManager;
 
 /**
- * QuarkusTestEnv
+ * QuarkusMessagingTestEnv
  */
-public class QuarkusTestEnv implements QuarkusTestResourceLifecycleManager {
+public class QuarkusMessagingTestEnv
+    implements QuarkusTestResourceLifecycleManager {
 
-  Logger logger = Logger.getLogger(QuarkusTestEnv.class.getName());
+  Logger logger = Logger.getLogger(QuarkusMessagingTestEnv.class.getName());
 
   public final static String JDBC_URL =
-      "vertx-reactive:postgresql://%s:%d/gamedb";
+      "postgresql://%s:%d/gamedb";
 
-  final static Network net = Network.newNetwork();
-
-
-  @Container
   public static PostgreSqlContainer postgreSQL = new PostgreSqlContainer();
 
-  @Container
   public static QdrouterContainer amqpContainer = new QdrouterContainer();
 
   @Override
   public Map<String, String> start() {
-
     amqpContainer.start();
     postgreSQL.start();
     Map<String, String> sysProps = new HashMap<>();
     // Quarkus
     sysProps.put("quarkus.http.test-port", "8085");
-    // Kafka and Kafka Streams
-    sysProps.put("quarkus.kafka-streams.application-id", "demo2.my-topic");
-    sysProps.put("rhdemo.leaderboard.kvstore.name", "messaging-test");
-    sysProps.put("rhdemo.leaderboard.aggregator.stream", "transactions");
-    sysProps.put("quarkus.kafka-streams.topics", "demo2.my-topic");
-    sysProps.put("kafka-streams.default.key.serde",
-        "org.apache.kafka.common.serialization.Serdes$StringSerde");
-    sysProps.put("kafka-streams.default.value.serde",
-        "org.apache.kafka.common.serialization.Serdes$StringSerde");
-    sysProps.put("kafka-streams.default.deserialization.exception.handler",
-        "org.apache.kafka.streams.errors.LogAndContinueExceptionHandler");
-    sysProps.put("quarkus.kafka-streams.bootstrap-servers", "localhost:9092");
-    sysProps.put("kafka.bootstrap.servers", "localhost:9092");
-    sysProps.put("kafka-streams.cache.max.bytes.buffering", "10240");
-    sysProps.put("kafka-streams.commit.interval.ms", "500");
-    sysProps.put("kafka-streams.metadata.max.age.ms", "500");
-    sysProps.put("kafka-streams.auto.offset.reset", "earliest");
-    sysProps.put("acks", "all");
-    sysProps.put("bootstrap.servers", "localhost:9092");
-    sysProps.put("key.serializer",
-        "org.apache.kafka.common.serialization.StringSerializer");
-    sysProps.put("value.serializer",
-        "org.apache.kafka.common.serialization.StringSerializer");
-
     // Database
-    // quarkus.datasource.url=vertx-reactive:postgresql://localhost:5432/gamedb
     sysProps.put("quarkus.datasource.url", String.format(JDBC_URL,
         postgreSQL.getContainerIpAddress(), postgreSQL.getMappedPort(5432)));
 
