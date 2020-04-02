@@ -25,7 +25,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import java.time.Duration;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
@@ -48,6 +47,7 @@ import io.vertx.axle.amqp.AmqpClient;
 import io.vertx.axle.amqp.AmqpConnection;
 import io.vertx.axle.amqp.AmqpMessage;
 import io.vertx.axle.amqp.AmqpSender;
+import io.vertx.core.json.Json;
 import io.vertx.core.net.PemKeyCertOptions;
 import io.vertx.core.net.PemTrustOptions;
 import io.vertx.mutiny.pgclient.PgPool;
@@ -94,10 +94,6 @@ public class GamePersistenceServiceTest {
     gameMessage.setType("game");
     gameMessage.setGame(game);
 
-    Map gmap =
-        objectMapper.readValue(objectMapper.writeValueAsString(gameMessage),
-            Map.class);
-
     // Use AMQP Client to send the message
     AmqpClientOptions options = clientOptions();
 
@@ -108,7 +104,8 @@ public class GamePersistenceServiceTest {
         io.vertx.amqp.AmqpMessage.create()
             .address(MC_GAME)
             .durable(false)
-            .withMapAsBody(gmap)
+            .contentType("application/json")
+            .withBody(Json.encode(gameMessage))
             .build();
 
     AmqpMessage message = AmqpMessage.newInstance(delegate);
@@ -161,10 +158,6 @@ public class GamePersistenceServiceTest {
     gameMessage.setType("game");
     gameMessage.setGame(game);
 
-    Map gmap =
-        objectMapper.readValue(objectMapper.writeValueAsString(gameMessage),
-            Map.class);
-
     // Use AMQP Client to send the message
     AmqpClientOptions options = clientOptions();
 
@@ -175,7 +168,8 @@ public class GamePersistenceServiceTest {
         io.vertx.amqp.AmqpMessage.create()
             .address(MC_GAME)
             .durable(false)
-            .withMapAsBody(gmap)
+            .contentType("application/json")
+            .withBody(Json.encode(gameMessage))
             .build();
 
     AmqpMessage message = AmqpMessage.newInstance(delegate);

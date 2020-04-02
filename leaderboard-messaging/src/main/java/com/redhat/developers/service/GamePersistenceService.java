@@ -31,6 +31,7 @@ import com.redhat.developers.data.Game;
 import com.redhat.developers.data.GameMessage;
 import com.redhat.developers.sql.GameQueries;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
+import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import io.vertx.mutiny.pgclient.PgPool;
 
@@ -49,10 +50,11 @@ public class GamePersistenceService {
   GameQueries gameQueries;
 
   @Incoming("game-state")
-  public CompletionStage<Boolean> saveGame(Map<String, Object> map) {
-    JsonObject raw = new JsonObject(map);
-    logger.log(FINE, "Received Game State Payload  {0} ", raw.encode());
-    GameMessage gameMessage = raw.mapTo(GameMessage.class);
+  public CompletionStage<Boolean> saveGame(String payload) {
+    // JsonObject raw = new JsonObject(map);
+    // logger.log(FINE, "Received Game State Payload {0} ", raw.encode());
+    // GameMessage gameMessage = raw.mapTo(GameMessage.class)
+    GameMessage gameMessage = Json.decodeValue(payload, GameMessage.class);
     if (gameMessage.getType() != null
         && ("reset-game".equals(gameMessage.getType())
             || "game".equals(gameMessage.getType()))) {
