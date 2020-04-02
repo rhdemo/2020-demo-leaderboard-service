@@ -97,7 +97,7 @@ public class GameResource {
   public Uni<Response> delete(@PathParam("id") Integer id) {
     logger.log(Level.FINE, "Deleting game with id {0} ", id);
     return gameQueries.delete(client, id)
-        .map(b -> b ? Status.OK : Status.NOT_FOUND)
+        .map(b -> b ? Status.NO_CONTENT : Status.NOT_FOUND)
         .map(status -> Response.status(status).build());
   }
 

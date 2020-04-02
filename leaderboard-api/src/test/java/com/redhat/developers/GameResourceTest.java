@@ -47,7 +47,7 @@ public class GameResourceTest {
 
   @Test
   @Order(1)
-  public void testGameAdd() {
+  public void testGameAdd() throws Exception {
     Game game = Game.newGame()
         .gameId("id0001")
         .state(GameState.byCode(1))
@@ -57,7 +57,7 @@ public class GameResourceTest {
         .body(jsonb.toJson(game))
         .when().post("/api/game/save")
         .then()
-        .statusCode(201)
+        .statusCode(202)
         .body(is(""));
 
     // Check if its properly updated
@@ -65,12 +65,12 @@ public class GameResourceTest {
         .when().get("/api/game/1")
         .then()
         .statusCode(200)
-        .body(is(jsonb.toJson(game)));
+        .body(is(jsonb.toJson(game.id(1))));
   }
 
   @Test
   @Order(2)
-  public void testGameUpdate() {
+  public void testGameUpdate() throws Exception {
     Game game = Game.newGame()
         .gameId("id0001")
         .state(GameState.byCode(4))
@@ -89,14 +89,14 @@ public class GameResourceTest {
         .when().get("/api/game/1")
         .then()
         .statusCode(200)
-        .body(is(jsonb.toJson(game)));
+        .body(is(jsonb.toJson(game.id(1))));
   }
 
   @Test
   @Order(3)
-  public void testGameFind() {
+  public void testGameFind() throws Exception {
     Game game = Game.newGame()
-        .gameId("1")
+        .gameId("id0001")
         .state(GameState.byCode(4))
         .configuration("{}");
 
@@ -106,12 +106,12 @@ public class GameResourceTest {
         .get("/api/game/1")
         .then()
         .statusCode(200)
-        .body(is(jsonb.toJson(game)));
+        .body(is(jsonb.toJson(game.id(1))));
   }
 
   @Test
   @Order(4)
-  public void testGameFindActive() {
+  public void testGameFindActive() throws Exception {
 
     Game game2 = Game.newGame()
         .gameId("id0002")
@@ -142,15 +142,15 @@ public class GameResourceTest {
     // Check we get back active game sorted by time
     given()
         .when()
-        .get("/api/game/2")
+        .get("/api/game/active")
         .then()
         .statusCode(200)
-        .body(is(jsonb.toJson(game2)));
+        .body(is(jsonb.toJson(game3.id(4))));
   }
 
   @Test
   @Order(5)
-  public void testGameFindAll() {
+  public void testGameFindAll() throws Exception {
 
     // Check we get back active game sorted by time
     given()
@@ -159,12 +159,12 @@ public class GameResourceTest {
         .then()
         .assertThat()
         .contentType(ContentType.JSON)
-        .body("size()", is(6));
+        .body("size()", is(3));
   }
 
   @Test
   @Order(6)
-  public void testGameDelete() {
+  public void testGameDelete() throws Exception {
     given()
         .when()
         .delete("/api/game/1")
@@ -175,7 +175,7 @@ public class GameResourceTest {
 
   @Test
   @Order(7)
-  public void testNoGame() {
+  public void testNoGame() throws Exception {
     given()
         .when()
         .get("/api/game/1")

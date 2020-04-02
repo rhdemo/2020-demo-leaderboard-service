@@ -30,6 +30,7 @@ import javax.inject.Inject;
 import com.redhat.developers.data.Game;
 import com.redhat.developers.data.GameState;
 import com.redhat.developers.sql.GameQueries;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -146,6 +147,48 @@ public class GameQueriesTest {
 
   @Order(5)
   @Test
+  public void testActiveGame() throws Exception {
+    Game game3 = Game.newGame()
+        .id(3)
+        .gameId("saveTest003")
+        .state(GameState.byCode(1))
+        .configuration("{}");
+
+    Game game4 = Game.newGame()
+        .id(4)
+        .gameId("saveTest004")
+        .state(GameState.byCode(1))
+        .configuration("{}");
+
+    Optional<Boolean> isUpserted = gameQueries
+        .upsert(client, game3)
+        .await().asOptional().atMost(Duration.ofSeconds(10));
+
+    assertTrue(isUpserted.isPresent());
+    assertTrue(isUpserted.get());
+
+    isUpserted = gameQueries
+        .upsert(client, game4)
+        .await().asOptional().atMost(Duration.ofSeconds(10));
+
+    assertTrue(isUpserted.isPresent());
+    assertTrue(isUpserted.get());
+
+    // Query
+    Optional<Optional<Game>> og = gameQueries.findActiveGame(client)
+        .await().asOptional().atMost(Duration.ofSeconds(10));
+    assertTrue(og.isPresent());
+    Optional<Game> optGame = og.get();
+    assertTrue(optGame.isPresent());
+    Game actualGame = optGame.get();
+    assertNotNull(actualGame);
+    assertEquals(4, actualGame.getId());
+    assertEquals(GameState.byCode(1), actualGame.getState());
+    assertEquals("saveTest004", actualGame.getGameId());
+  }
+
+  @Order(6)
+  @Test
   public void testDelete() throws Exception {
     Optional<Boolean> og = gameQueries.delete(client, 1)
         .await().asOptional().atMost(Duration.ofSeconds(10));
@@ -153,7 +196,7 @@ public class GameQueriesTest {
     assertTrue(og.get());
   }
 
-  @Order(6)
+  @Order(7)
   @Test
   public void testNotFound() throws Exception {
     Optional<Optional<Game>> og = gameQueries.findById(client, 1)

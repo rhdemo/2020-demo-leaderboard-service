@@ -67,7 +67,8 @@ public class GameQueries {
       int id) {
     logger.info("Finding game with id " + id);
     return client
-        .preparedQuery("SELECT * from games where id=$1"
+        .preparedQuery("SELECT * from games "
+            + " WHERE  id=$1"
             + "ORDER BY game_date DESC",
             Tuple.of(id))
         .onFailure().invoke(e -> {
@@ -88,7 +89,8 @@ public class GameQueries {
   public Uni<Optional<Game>> findActiveGame(PgPool client) {
     logger.info("Finding Acive game");
     return client
-        .preparedQuery("SELECT * from games where game_state='active'"
+        .preparedQuery("SELECT * from games "
+            + " WHERE game_state=1"
             + " ORDER BY game_date DESC"
             + " FETCH FIRST 1 ROW ONLY")
         .onFailure().invoke(e -> {
