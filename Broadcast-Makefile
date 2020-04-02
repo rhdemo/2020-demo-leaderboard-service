@@ -1,0 +1,54 @@
+ENV_FILE := .env
+include ${ENV_FILE}
+export $(shell sed 's/=.*//' ${ENV_FILE})
+CURRENT_DIR = $(shell pwd)
+IMAGE_REPO := 'quay.io/redhatdemo'
+APP_VERSION := $(shell bash -c "xml sel -N ns='http://maven.apache.org/POM/4.0.0' -t -v '//ns:project/ns:version/text()' $(CURRENT_DIR)/pom.xml")
+NATIVE_BULID_ARGS = -DskipTests -Dquarkus.native.native-image-xmx=6G -Dquarkus.native.container-build=true -Dquarkus.package.type=native package
+
+.PHONY: start_docker
+start_docker:
+	@./bin/start-docker.sh
+
+format:	
+	@mvn -Pall editorconfig:format
+
+install_jars:
+	@mvn -Pall -DskipTests -Dquarkus.package.type=jar clean install
+
+test:
+	mvn -P$(PROFILES) -DfailIfNoTests=false -DskipTests=false -Dquarkus.package.type=jar clean test -Dtest=$(TEST_FILTER)
+
+native_test:
+	mvn -P$(PROFILES) -DfailIfNoTests=false -Dquarkus.native.native-image-xmx=6G  -DskipTests=false -Dquarkus.package.type=native verify -Dtest=$(TEST_FILTER)
+
+clean:
+	@mvn -Pall clean 
+
+common:	start_docker
+	@mvn -Pcommon -Dquarkus.package.type=jar clean install
+
+##################################################################
+### Leaderboard Broadcast
+##################################################################
+leaderboard-broadcast/target/*-runner.jar:	
+	@mvn -Pbroadcast -DskipTests clean install
+
+build:	leaderboard-broadcast/target/*-runner.jar
+
+leaderboard-broadcast/target/*-runner:	build
+	@mvn -Pbroadcast,native $(NATIVE_BULID_ARGS)
+
+jvm_image_build_push:	start_docker	build	
+	@docker build -t $(IMAGE_REPO)/2020-leaderboard-broadcast:"$(APP_VERSION)-jar" -f leaderboard-broadcast/Dockerfile.jvm leaderboard-broadcast
+	@docker push $(IMAGE_REPO)/2020-leaderboard-broadcast:"$(APP_VERSION)-jar"
+
+native:	leaderboard-broadcast/target/*-runner
+
+native_image_build_push:	start_docker	native	
+	@docker build -t $(IMAGE_REPO)/2020-leaderboard-broadcast:"$(APP_VERSION)-native" -f leaderboard-broadcast/Dockerfile.native leaderboard-broadcast
+	@docker tag $(IMAGE_REPO)/2020-leaderboard-broadcast:"$(APP_VERSION)-native" $(IMAGE_REPO)/2020-leaderboard-broadcast
+	@docker push $(IMAGE_REPO)/2020-leaderboard-broadcast:"$(APP_VERSION)-native"	
+	@docker push $(IMAGE_REPO)/2020-leaderboard-broadcast
+
+all:	clean	common	start_docker	jvm_image_build_push	native_image_build_push

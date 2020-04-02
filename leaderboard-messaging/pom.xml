@@ -9,16 +9,15 @@
   <artifactId>leaderboard-messaging</artifactId>
   <name>Leaderboard Reactive Messaging</name>
   <description>The Leaderboard Messaging</description>
-  <properties>
-    <quarkus.package.type>native</quarkus.package.type>
-    <skipTests>false</skipTests>
-    <kafka.version>2.4.1</kafka.version>
-  </properties>
   <dependencies>
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>leaderboard-sql</artifactId>
       <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-resteasy</artifactId>
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
@@ -105,11 +104,41 @@
         <skipTests>false</skipTests>
         <quarkus.package.type>jar</quarkus.package.type>
         <failIfNoTests>false</failIfNoTests>
-        <skipTests>false</skipTests>
       </properties>
       <build>
         <defaultGoal>clean test</defaultGoal>
       </build>
+    </profile>
+    <profile>
+      <id>native</id>
+      <activation>
+        <property>
+          <name>native</name>
+        </property>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-failsafe-plugin</artifactId>
+            <executions>
+              <execution>
+                <goals>
+                  <goal>integration-test</goal>
+                  <goal>verify</goal>
+                </goals>
+                <configuration>
+                  <systemProperties>
+                    <native.image.path>${project.build.directory}/${project.build.finalName}-runner</native.image.path>
+                  </systemProperties>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+      <properties>
+        <quarkus.package.type>native</quarkus.package.type>
+      </properties>
     </profile>
   </profiles>
 </project>

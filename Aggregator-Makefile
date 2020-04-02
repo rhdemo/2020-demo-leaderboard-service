@@ -2,7 +2,7 @@ ENV_FILE := .env
 include ${ENV_FILE}
 export $(shell sed 's/=.*//' ${ENV_FILE})
 CURRENT_DIR = $(shell pwd)
-IMAGE_REPO := 'quay.io/rhdevelopers'
+IMAGE_REPO := 'quay.io/redhatdemo'
 APP_VERSION := $(shell bash -c "xml sel -N ns='http://maven.apache.org/POM/4.0.0' -t -v '//ns:project/ns:version/text()' $(CURRENT_DIR)/pom.xml")
 NATIVE_BULID_ARGS = -DskipTests -Dquarkus.native.native-image-xmx=6G -Dquarkus.native.container-build=true -Dquarkus.package.type=native package
 
@@ -28,33 +28,27 @@ clean:
 common:	start_docker
 	@mvn -Pcommon -Dquarkus.package.type=jar clean install
 
+##################################################################
+### Leaderboard  Aggregator build
+##################################################################
 leaderboard-aggregator/target/*-runner.jar:	
 	@mvn -Paggregator -DskipTests clean install
 
-aggregator_build:	leaderboard-aggregator/target/*-runner.jar
+build:	leaderboard-aggregator/target/*-runner.jar
 
-leaderboard-aggregator/target/*-runner:	aggregator_build
+leaderboard-aggregator/target/*-runner:	build
 	@mvn -Paggregator,native $(NATIVE_BULID_ARGS)
 
-aggregator_jvm_image_build_push:	start_docker	aggregator_build	
+jvm_image_build_push:	start_docker	build	
 	@docker build -t $(IMAGE_REPO)/2020-leaderboard-aggregator:"$(APP_VERSION)-jar" -f leaderboard-aggregator/Dockerfile.jvm leaderboard-aggregator
 	@docker push $(IMAGE_REPO)/2020-leaderboard-aggregator:"$(APP_VERSION)-jar"
 
-aggregator-native:	leaderboard-aggregator/target/*-runner
+native:	leaderboard-aggregator/target/*-runner
 
-aggregator_native_image_build_push:	start_docker	aggregator-native	
+native_image_build_push:	start_docker	native	
 	@docker build -t $(IMAGE_REPO)/2020-leaderboard-aggregator:"$(APP_VERSION)-native" -f leaderboard-aggregator/Dockerfile.native leaderboard-aggregator
 	@docker tag $(IMAGE_REPO)/2020-leaderboard-aggregator:"$(APP_VERSION)-native" $(IMAGE_REPO)/2020-leaderboard-aggregator
 	@docker push $(IMAGE_REPO)/2020-leaderboard-aggregator:"$(APP_VERSION)-native"	
 	@docker push $(IMAGE_REPO)/2020-leaderboard-aggregator
 
-aggregator_build_all:	aggregator_build	aggregator_native_image_build_push	aggregator_jvm_image_build_push
-
-start_kafka:	start_docker
-	docker-compose -f $(CURRENT_DIR)/kafka/docker-compose.yaml up -d 
-
-start_postgres:	start_docker
-	docker-compose -f $(CURRENT_DIR)/db/docker-compose.yaml up -d 
-
-create_db:
-	psql -f $(CURRENT_DIR)/db/schema.sql gamedb
+all: clean common	start_docker	jvm_image_build_push	native_image_build_push

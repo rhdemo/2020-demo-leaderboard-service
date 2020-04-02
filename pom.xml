@@ -184,8 +184,6 @@
         </property>
       </activation>
       <modules>
-        <module>leaderboard-common</module>
-        <module>leaderboard-sql</module>
         <module>leaderboard-api</module>
       </modules>
     </profile>
@@ -197,8 +195,6 @@
         </property>
       </activation>
       <modules>
-        <module>leaderboard-common</module>
-        <module>leaderboard-sql</module>
         <module>leaderboard-aggregator</module>
       </modules>
     </profile>
@@ -210,8 +206,6 @@
         </property>
       </activation>
       <modules>
-        <module>leaderboard-common</module>
-        <module>leaderboard-sql</module>
         <module>leaderboard-broadcast</module>
       </modules>
       <build></build>
@@ -224,8 +218,6 @@
         </property>
       </activation>
       <modules>
-        <module>leaderboard-common</module>
-        <module>leaderboard-sql</module>
         <module>leaderboard-messaging</module>
       </modules>
     </profile>
