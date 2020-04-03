@@ -29,8 +29,6 @@ import com.redhat.developers.data.GameMessage;
 import com.redhat.developers.data.Player;
 import com.redhat.developers.sql.PlayerQueries;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
-import org.eclipse.microprofile.reactive.messaging.Outgoing;
-import io.smallrye.mutiny.groups.UniSubscribe;
 import io.vertx.mutiny.pgclient.PgPool;
 
 /**
