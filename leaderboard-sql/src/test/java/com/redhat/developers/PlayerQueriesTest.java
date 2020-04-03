@@ -125,7 +125,7 @@ public class PlayerQueriesTest {
   public void testUpsert() throws Exception {
     Game game = gameInitService.game;
     Player player = Player.newPlayer()
-        .id(1)
+        .pk(1)
         .avatar(avatar())
         .playerId("tom")
         .username("Tom and Jerry")
@@ -202,7 +202,7 @@ public class PlayerQueriesTest {
 
   private void assertPlayer(int id, Player player, Player actualPlayer) {
     assertNotNull(actualPlayer);
-    assertEquals(id, actualPlayer.getId(), "id mismatch");
+    assertEquals(id, actualPlayer.getPk(), "id mismatch");
     assertEquals(player.getPlayerId(), actualPlayer.getPlayerId(),
         "Player Id mismatch");
     assertEquals(player.getGameId(), actualPlayer.getGameId(),

@@ -123,7 +123,7 @@ public class PlayerPersistenceTest {
     assertEquals(3, players.size());
     Player aPlayer = players.get(0);
     assertNotNull(aPlayer);
-    assertEquals(1, aPlayer.getId());
+    assertEquals(1, aPlayer.getPk());
     assertEquals("tom", aPlayer.getPlayerId());
     assertEquals("tom", aPlayer.getUsername());
     assertEquals(4, aPlayer.getRight());
@@ -133,7 +133,7 @@ public class PlayerPersistenceTest {
     aPlayer = players.get(1);
     assertNotNull(aPlayer);
     assertNotNull(aPlayer);
-    assertEquals(3, aPlayer.getId());
+    assertEquals(3, aPlayer.getPk());
     assertEquals("jerry", aPlayer.getPlayerId());
     assertEquals("jerry", aPlayer.getUsername());
     assertEquals(4, aPlayer.getRight());
@@ -141,7 +141,7 @@ public class PlayerPersistenceTest {
     assertEquals(95, aPlayer.getScore());
 
     aPlayer = players.get(2);
-    assertEquals(4, aPlayer.getId());
+    assertEquals(4, aPlayer.getPk());
     assertEquals("Winne", aPlayer.getPlayerId());
     assertEquals("Winne", aPlayer.getUsername());
     assertEquals(3, aPlayer.getRight());
@@ -167,7 +167,7 @@ public class PlayerPersistenceTest {
 
     Player aPlayer = players.get(0);
     assertNotNull(aPlayer);
-    assertEquals(1, aPlayer.getId());
+    assertEquals(1, aPlayer.getPk());
     assertEquals("tom", aPlayer.getPlayerId());
     assertEquals("tom", aPlayer.getUsername());
     assertEquals(4, aPlayer.getRight());

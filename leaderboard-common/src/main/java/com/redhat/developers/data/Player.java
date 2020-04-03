@@ -19,6 +19,7 @@
  */
 package com.redhat.developers.data;
 
+import javax.json.bind.annotation.JsonbProperty;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 
 /**
@@ -27,7 +28,8 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
 @RegisterForReflection
 public class Player {
 
-  private long id;
+  private long pk;
+  @JsonbProperty("id")
   private String playerId;
   private String username;
   private int right;
@@ -47,8 +49,8 @@ public class Player {
     return new Player();
   }
 
-  public Player id(long id) {
-    this.id = id;
+  public Player pk(long pk) {
+    this.pk = pk;
     return this;
   }
 
@@ -102,13 +104,13 @@ public class Player {
     return this;
   }
 
-  public long getId() {
-    return id;
+  public long getPk() {
+    return pk;
   }
 
 
-  public void setId(long id) {
-    this.id = id;
+  public void setPk(long pk) {
+    this.pk = pk;
   }
 
 

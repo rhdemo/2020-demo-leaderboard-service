@@ -99,7 +99,7 @@ public class PlayerQueries {
    * @return
    */
   public Uni<Boolean> upsert(PgPool client, Player player) {
-    logger.info("Upserting player with id " + player.getId());
+    logger.info("Upserting player with id " + player.getPk());
     return client.preparedQuery("INSERT INTO players"
         + "(player_id,player_name,guess_right,"
         + "guess_wrong,guess_score,creation_server,"
@@ -115,7 +115,7 @@ public class PlayerQueries {
         + "     scoring_server=$8,player_avatar=$9",
         playerParams(player))
         .onFailure().invoke(e -> {
-          logger.log(Level.SEVERE, "Error Inserting " + player.getId(), e);
+          logger.log(Level.SEVERE, "Error Inserting " + player.getPk(), e);
         })
         .onItem().apply(pgRowset -> pgRowset.rowCount() == 1 ? true : false);
   }
@@ -144,7 +144,7 @@ public class PlayerQueries {
    */
   private Player from(Row row) {
     Player player = Player.newPlayer()
-        .id(row.getLong("id"))
+        .pk(row.getLong("id"))
         .playerId(row.getString("player_id"))
         .username(row.getString("player_name"))
         .right(row.getInteger("guess_right"))

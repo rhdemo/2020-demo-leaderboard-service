@@ -1,3 +1,22 @@
+/*-
+ * #%L
+ * Leaderboard API
+ * %%
+ * Copyright (C) 2020 Red Hat Inc.,
+ * %%
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * #L%
+ */
 package com.redhat.developers;
 
 import static io.restassured.RestAssured.given;
@@ -118,7 +137,7 @@ public class LeaderBoardResourceTest {
     assertEquals(3, players.size());
     Player aPlayer = players.get(0);
     assertNotNull(aPlayer);
-    assertEquals(1, aPlayer.getId());
+    assertEquals(1, aPlayer.getPk());
     assertEquals("tom", aPlayer.getPlayerId());
     assertEquals("tom", aPlayer.getUsername());
     assertEquals(4, aPlayer.getRight());
@@ -128,7 +147,7 @@ public class LeaderBoardResourceTest {
     aPlayer = players.get(1);
     assertNotNull(aPlayer);
     assertNotNull(aPlayer);
-    assertEquals(3, aPlayer.getId());
+    assertEquals(3, aPlayer.getPk());
     assertEquals("jerry", aPlayer.getPlayerId());
     assertEquals("jerry", aPlayer.getUsername());
     assertEquals(4, aPlayer.getRight());
@@ -136,7 +155,7 @@ public class LeaderBoardResourceTest {
     assertEquals(95, aPlayer.getScore());
 
     aPlayer = players.get(2);
-    assertEquals(4, aPlayer.getId());
+    assertEquals(4, aPlayer.getPk());
     assertEquals("Winne", aPlayer.getPlayerId());
     assertEquals("Winne", aPlayer.getUsername());
     assertEquals(3, aPlayer.getRight());
@@ -170,7 +189,7 @@ public class LeaderBoardResourceTest {
 
     Player aPlayer = players.get(0);
     assertNotNull(aPlayer);
-    assertEquals(1, aPlayer.getId());
+    assertEquals(1, aPlayer.getPk());
     assertEquals("tom", aPlayer.getPlayerId());
     assertEquals("tom", aPlayer.getUsername());
     assertEquals(4, aPlayer.getRight());
