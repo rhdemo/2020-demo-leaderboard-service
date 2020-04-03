@@ -49,11 +49,22 @@ public class PlayerPersistenceService {
   PlayerQueries playerQueries;
 
   @Incoming("leaderboard-persist-to-db")
-  public CompletionStage<Boolean> handleScores(GameMessage gameMessage) {
+  public void handleScores(GameMessage gameMessage) {
     Player player = gameMessage.getPlayer();
-    logger.log(Level.FINE,
+    logger.log(Level.INFO,
         "Saving Player  {0} ", player.getPlayerId());
-    return playerQueries
-        .upsert(client, player).subscribe().asCompletionStage();
+    playerQueries
+        .upsert(client, player).subscribe().with(b -> {
+          if (b) {
+            logger.log(Level.INFO,
+                "Saved Player {0} sucessfully ", player.getPlayerId());
+          } else {
+            logger.log(Level.INFO,
+                "Unable to save Player {0} ", player.getPlayerId());
+          }
+        }, e -> {
+          logger.log(Level.SEVERE, "Error saving Player {0}",
+              player.getPlayerId());
+        });
   }
 }

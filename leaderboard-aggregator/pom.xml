@@ -12,7 +12,7 @@
   <dependencies>
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>leaderboard-sql</artifactId>
+      <artifactId>leaderboard-common</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
@@ -22,10 +22,6 @@
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-kafka-streams</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-smallrye-reactive-messaging-kafka</artifactId>
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>

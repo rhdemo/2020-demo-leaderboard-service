@@ -22,6 +22,7 @@ package com.redhat.developers.service;
 import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.INFO;
 import java.util.concurrent.CompletionStage;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -50,23 +51,30 @@ public class GamePersistenceService {
   GameQueries gameQueries;
 
   @Incoming("game-state")
-  public CompletionStage<Boolean> saveGame(String payload) {
-    // JsonObject raw = new JsonObject(map);
-    // logger.log(FINE, "Received Game State Payload {0} ", raw.encode());
-    // GameMessage gameMessage = raw.mapTo(GameMessage.class)
+  public void saveGame(String payload) {
     GameMessage gameMessage = jsonb.fromJson(payload, GameMessage.class);
     if (gameMessage.getType() != null
         && ("reset-game".equals(gameMessage.getType())
             || "game".equals(gameMessage.getType()))) {
       Game game = gameMessage.getGame();
-      logger.log(FINE, "Saving game {0} ", game.getPk());
-      return gameQueries.upsert(client, game)
-          .subscribe().asCompletionStage();
+      logger.log(Level.INFO, "Saving game {0} ", game.getPk());
+      gameQueries.upsert(client, game)
+          .subscribe().with(b -> {
+            if (b) {
+              logger.log(Level.INFO,
+                  "Saved Game {0} sucessfully ", game.getGameId());
+            } else {
+              logger.log(Level.INFO,
+                  "Unable to save Game {0} ", game.getGameId());
+            }
+          }, e -> {
+            logger.log(Level.SEVERE, "Error saving Game {0}",
+                game.getGameId());
+          });
     } else {
       logger.log(INFO,
           "Game is not of type 'game' or 'reset-game', save skipped");
     }
-    return null;
   }
 
 }
