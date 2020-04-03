@@ -20,6 +20,7 @@
 package com.redhat.developers.data;
 
 import java.time.OffsetDateTime;
+import javax.json.bind.annotation.JsonbProperty;
 import javax.json.bind.annotation.JsonbTransient;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 
@@ -28,7 +29,8 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
  */
 @RegisterForReflection
 public class Game {
-  private long id;
+  private long pk;
+  @JsonbProperty("id")
   private String gameId;
   private String state;
   @JsonbTransient
@@ -40,12 +42,12 @@ public class Game {
 
   }
 
-  public long getId() {
-    return id;
+  public long getPk() {
+    return pk;
   }
 
-  public void setId(long id) {
-    this.id = id;
+  public void setPk(long pk) {
+    this.pk = pk;
   }
 
   public String getGameId() {
@@ -84,8 +86,8 @@ public class Game {
     return new Game();
   }
 
-  public Game id(long id) {
-    this.id = id;
+  public Game pk(long pk) {
+    this.pk = pk;
     return this;
   }
 

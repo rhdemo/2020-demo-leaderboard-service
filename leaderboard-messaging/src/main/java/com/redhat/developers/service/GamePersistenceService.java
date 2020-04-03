@@ -21,18 +21,15 @@ package com.redhat.developers.service;
 
 import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.INFO;
-import static java.util.logging.Level.SEVERE;
-import java.util.Map;
 import java.util.concurrent.CompletionStage;
 import java.util.logging.Logger;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import javax.json.bind.Jsonb;
 import com.redhat.developers.data.Game;
 import com.redhat.developers.data.GameMessage;
 import com.redhat.developers.sql.GameQueries;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
-import io.vertx.core.json.Json;
-import io.vertx.core.json.JsonObject;
 import io.vertx.mutiny.pgclient.PgPool;
 
 /**
@@ -42,6 +39,9 @@ import io.vertx.mutiny.pgclient.PgPool;
 public class GamePersistenceService {
 
   Logger logger = Logger.getLogger(GamePersistenceService.class.getName());
+
+  @Inject
+  Jsonb jsonb;
 
   @Inject
   PgPool client;
@@ -54,12 +54,12 @@ public class GamePersistenceService {
     // JsonObject raw = new JsonObject(map);
     // logger.log(FINE, "Received Game State Payload {0} ", raw.encode());
     // GameMessage gameMessage = raw.mapTo(GameMessage.class)
-    GameMessage gameMessage = Json.decodeValue(payload, GameMessage.class);
+    GameMessage gameMessage = jsonb.fromJson(payload, GameMessage.class);
     if (gameMessage.getType() != null
         && ("reset-game".equals(gameMessage.getType())
             || "game".equals(gameMessage.getType()))) {
       Game game = gameMessage.getGame();
-      logger.log(FINE, "Saving game {0} ", game.getId());
+      logger.log(FINE, "Saving game {0} ", game.getPk());
       return gameQueries.upsert(client, game)
           .subscribe().asCompletionStage();
     } else {

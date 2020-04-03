@@ -20,6 +20,7 @@
 package com.redhat.developers.sql;
 
 import static java.util.logging.Level.FINEST;
+import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.SEVERE;
 import java.io.IOException;
 import java.util.HashMap;
@@ -39,7 +40,7 @@ public class LeaderboardSqlConfigSource implements ConfigSource {
   final Map<String, String> DS_MAP = new HashMap<>();
 
   private void init() {
-    logger.log(FINEST, "Loading properties form 'leaderboard-sql.properties'");
+    logger.log(INFO, "Loading properties form 'leaderboard-sql.properties'");
     try {
       Properties properties = new Properties();
       properties
@@ -52,6 +53,7 @@ public class LeaderboardSqlConfigSource implements ConfigSource {
         String value = properties.getProperty(key);
         DS_MAP.put(key, value);
       }
+      logger.log(FINEST, DS_MAP.toString());
     } catch (IOException e) {
       logger.log(SEVERE,
           "Error Loading properties form 'leaderboard-sql.properties'");
@@ -73,6 +75,11 @@ public class LeaderboardSqlConfigSource implements ConfigSource {
   @Override
   public String getName() {
     return "leaderboard-sql-config-source";
+  }
+
+  @Override
+  public int getOrdinal() {
+    return 199;
   }
 
 

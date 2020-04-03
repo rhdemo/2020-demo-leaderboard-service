@@ -122,7 +122,7 @@ public class GameQueries {
    * @return
    */
   public Uni<Boolean> upsert(PgPool client, Game game) {
-    logger.info("Upserting game with id " + game.getId());
+    logger.info("Upserting game with id " + game.getPk());
     return client
         .preparedQuery("INSERT INTO games(game_id,game_config,game_state)"
             + " VALUES ($1,$2,$3)"
@@ -133,7 +133,7 @@ public class GameQueries {
             + "     game_state=$3",
             gameTuple(game))
         .onFailure().invoke(e -> logger.log(Level.SEVERE,
-            "Error Upserting Game with id " + game.getId(), e))
+            "Error Upserting Game with id " + game.getPk(), e))
         .onItem().apply(rs -> rs.rowCount() == 1 ? true : false);
   }
 
@@ -144,7 +144,7 @@ public class GameQueries {
    */
   private Game from(Row row) {
     return Game.newGame()
-        .id(row.getLong("id"))
+        .pk(row.getLong("id"))
         .gameId(row.getString("game_id"))
         .configuration(row.getString("game_config"))
         .date(row.getOffsetDateTime("game_date"))

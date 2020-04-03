@@ -141,7 +141,7 @@ public class GamePersistenceServiceTest {
     assertTrue(optGame.get().isPresent());
     Game g = optGame.get().get();
     assertNotNull(g);
-    assertEquals(1, g.getId());
+    assertEquals(1, g.getPk());
     assertEquals(game.getGameId(), g.getGameId());
     assertEquals(game.getState(), g.getState());
     assertEquals(game.getConfiguration(), g.getConfiguration());
@@ -206,7 +206,7 @@ public class GamePersistenceServiceTest {
     assertTrue(optGame.get().isPresent());
     Game g = optGame.get().get();
     assertNotNull(g);
-    assertEquals(1, g.getId());
+    assertEquals(1, g.getPk());
     assertEquals(game.getGameId(), g.getGameId());
     assertEquals(game.getState(), g.getState());
     assertEquals(game.getConfiguration(), g.getConfiguration());
@@ -218,7 +218,7 @@ public class GamePersistenceServiceTest {
     Optional<List<Game>> games = gameQueries
         .findAll(pgClient)
         .await().asOptional().atMost(Duration.ofSeconds(10));
-    games.get().forEach(g -> gameQueries.delete(pgClient, g.getId()));
+    games.get().forEach(g -> gameQueries.delete(pgClient, g.getPk()));
   }
 
 

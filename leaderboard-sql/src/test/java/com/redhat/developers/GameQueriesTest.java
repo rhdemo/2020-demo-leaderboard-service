@@ -73,7 +73,7 @@ public class GameQueriesTest {
   @Test
   public void testFindAll() throws Exception {
     Game game = Game.newGame()
-        .id(1)
+        .pk(1)
         .gameId("saveTest001")
         .state(GameState.byCode(1))
         .configuration("{}");
@@ -86,7 +86,7 @@ public class GameQueriesTest {
     assertTrue(games.size() == 1);
     Game actualGame = games.get(0);
     assertNotNull(actualGame);
-    assertEquals(game.getId(), actualGame.getId());
+    assertEquals(game.getPk(), actualGame.getPk());
     assertEquals(game.getState(), actualGame.getState());
     assertEquals(game.getGameId(), actualGame.getGameId());
     assertEquals(game.getConfiguration(), actualGame.getConfiguration());
@@ -97,7 +97,7 @@ public class GameQueriesTest {
   @Test
   public void testFindById() throws Exception {
     Game game = Game.newGame()
-        .id(1)
+        .pk(1)
         .gameId("saveTest001")
         .state(GameState.byCode(1))
         .configuration("{}");
@@ -109,7 +109,7 @@ public class GameQueriesTest {
     assertTrue(optGame.isPresent());
     Game actualGame = optGame.get();
     assertNotNull(actualGame);
-    assertEquals(game.getId(), actualGame.getId());
+    assertEquals(game.getPk(), actualGame.getPk());
     assertEquals(game.getState(), actualGame.getState());
     assertEquals(game.getGameId(), actualGame.getGameId());
     assertEquals(game.getConfiguration(), actualGame.getConfiguration());
@@ -120,7 +120,7 @@ public class GameQueriesTest {
   @Test
   public void testUpsert() throws Exception {
     Game game = Game.newGame()
-        .id(1)
+        .pk(1)
         .gameId("saveTest001")
         .state(GameState.byCode(2))
         .configuration("{}");
@@ -140,7 +140,7 @@ public class GameQueriesTest {
     assertTrue(optGame.isPresent());
     Game actualGame = optGame.get();
     assertNotNull(actualGame);
-    assertEquals(1, actualGame.getId());
+    assertEquals(1, actualGame.getPk());
     assertEquals(GameState.byCode(2), actualGame.getState());
     assertEquals("saveTest001", actualGame.getGameId());
   }
@@ -149,13 +149,13 @@ public class GameQueriesTest {
   @Test
   public void testActiveGame() throws Exception {
     Game game3 = Game.newGame()
-        .id(3)
+        .pk(3)
         .gameId("saveTest003")
         .state(GameState.byCode(1))
         .configuration("{}");
 
     Game game4 = Game.newGame()
-        .id(4)
+        .pk(4)
         .gameId("saveTest004")
         .state(GameState.byCode(1))
         .configuration("{}");
@@ -182,7 +182,7 @@ public class GameQueriesTest {
     assertTrue(optGame.isPresent());
     Game actualGame = optGame.get();
     assertNotNull(actualGame);
-    assertEquals(4, actualGame.getId());
+    assertEquals(4, actualGame.getPk());
     assertEquals(GameState.byCode(1), actualGame.getState());
     assertEquals("saveTest004", actualGame.getGameId());
   }
