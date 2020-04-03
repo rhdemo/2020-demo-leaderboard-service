@@ -86,7 +86,7 @@ public class GameResource {
   @POST
   @Path("/game/save")
   public Uni<Response> save(Game game) {
-    logger.log(Level.FINE, "Saving game {0} ", game.getId());
+    logger.log(Level.FINE, "Saving game {0} ", game.getPk());
     return gameQueries.upsert(client, game)
         .map(b -> b ? Response.accepted() : Response.noContent())
         .map(ResponseBuilder::build);

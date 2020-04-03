@@ -65,7 +65,7 @@ public class GameResourceTest {
         .when().get("/api/game/1")
         .then()
         .statusCode(200)
-        .body(is(jsonb.toJson(game.id(1))));
+        .body(is(jsonb.toJson(game.pk(1))));
   }
 
   @Test
@@ -89,7 +89,7 @@ public class GameResourceTest {
         .when().get("/api/game/1")
         .then()
         .statusCode(200)
-        .body(is(jsonb.toJson(game.id(1))));
+        .body(is(jsonb.toJson(game.pk(1))));
   }
 
   @Test
@@ -106,7 +106,7 @@ public class GameResourceTest {
         .get("/api/game/1")
         .then()
         .statusCode(200)
-        .body(is(jsonb.toJson(game.id(1))));
+        .body(is(jsonb.toJson(game.pk(1))));
   }
 
   @Test
@@ -145,7 +145,7 @@ public class GameResourceTest {
         .get("/api/game/active")
         .then()
         .statusCode(200)
-        .body(is(jsonb.toJson(game3.id(4))));
+        .body(is(jsonb.toJson(game3.pk(4))));
   }
 
   @Test

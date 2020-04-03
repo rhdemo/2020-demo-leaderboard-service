@@ -78,6 +78,6 @@ public class GameInitializer {
   }
 
   public void deleteGame() {
-    gameQueries.delete(client, this.game.getId());
+    gameQueries.delete(client, this.game.getPk());
   }
 }
