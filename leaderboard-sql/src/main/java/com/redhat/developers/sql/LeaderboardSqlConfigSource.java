@@ -40,7 +40,7 @@ public class LeaderboardSqlConfigSource implements ConfigSource {
   final Map<String, String> DS_MAP = new HashMap<>();
 
   private void init() {
-    logger.log(INFO, "Loading properties form 'leaderboard-sql.properties'");
+    logger.log(FINEST, "Loading properties form 'leaderboard-sql.properties'");
     try {
       Properties properties = new Properties();
       properties
