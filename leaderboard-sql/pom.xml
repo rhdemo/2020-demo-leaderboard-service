@@ -17,7 +17,11 @@
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-reactive-pg-client</artifactId>
+      <artifactId>quarkus-jdbc-postgresql</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-agroal</artifactId>
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
@@ -42,11 +46,6 @@
     <dependency>
       <groupId>org.testcontainers</groupId>
       <artifactId>postgresql</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-jdbc-postgresql</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -74,14 +73,14 @@
           <name>test</name>
         </property>
       </activation>
-      <properties>
-        <skipTests>false</skipTests>
-        <quarkus.package.type>jar</quarkus.package.type>
-        <failIfNoTests>false</failIfNoTests>
-      </properties>
       <build>
         <defaultGoal>clean test</defaultGoal>
       </build>
+      <properties>
+        <skipTests>false</skipTests>
+        <failIfNoTests>false</failIfNoTests>
+        <quarkus.package.type>jar</quarkus.package.type>
+      </properties>
     </profile>
   </profiles>
 </project>

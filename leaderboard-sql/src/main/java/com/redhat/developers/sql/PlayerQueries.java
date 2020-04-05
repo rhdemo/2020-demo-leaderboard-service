@@ -19,6 +19,10 @@
  */
 package com.redhat.developers.sql;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -30,12 +34,6 @@ import javax.json.bind.Jsonb;
 import com.redhat.developers.data.Avatar;
 import com.redhat.developers.data.GameTotal;
 import com.redhat.developers.data.Player;
-import io.smallrye.mutiny.Uni;
-import io.vertx.mutiny.pgclient.PgPool;
-import io.vertx.mutiny.sqlclient.Row;
-import io.vertx.mutiny.sqlclient.RowIterator;
-import io.vertx.mutiny.sqlclient.RowSet;
-import io.vertx.mutiny.sqlclient.Tuple;
 
 /**
  * PlayerQueries
@@ -48,116 +46,135 @@ public class PlayerQueries {
   @Inject
   Jsonb jsonb;
 
-  /**
-   * 
-   * @param client
-   * @param id
-   * @return
-   */
-  public Uni<Optional<Player>> findById(PgPool client, long id) {
-    return client
-        .preparedQuery(
-            "SELECT * from players where id=$1",
-            Tuple.of(id))
-        .onFailure().invoke(e -> {
-          logger.log(Level.SEVERE, "Error Finding player with id " + id,
-              e);
-        })
-        .onItem().apply(RowSet::iterator)
-        .onItem()
-        .apply(iterator -> iterator.hasNext() ? from(iterator.next()) : null)
-        .onItem().apply(p -> Optional.ofNullable(p));
+
+  public Optional<Player> findById(Connection dbConn, long id) {
+    Player player = null;
+    try {
+      PreparedStatement pst =
+          dbConn.prepareStatement("SELECT * from players where id=?");
+      pst.setLong(1, id);
+      ResultSet rs = pst.executeQuery();
+
+      if (rs.next()) {
+        player = from(rs);
+      } else {
+
+      }
+    } catch (SQLException e) {
+      logger.log(Level.SEVERE, "Error Finding player with id " + id,
+          e);
+    }
+    return Optional.ofNullable(player);
 
   }
 
   /**
    * 
-   * @param client
+   * @param dbConn
    * @param rowCount
    * @return
    */
-  public Uni<List<Player>> rankPlayers(PgPool client,
+  public List<Player> rankPlayers(Connection dbConn,
       int rowCount) {
-    return client
-        .preparedQuery("SELECT p.* FROM players p"
-            + " WHERE p.game_id=(SELECT g.game_id from games g ORDER BY g.game_date DESC FETCH FIRST 1 ROW ONLY)"
-            + " ORDER BY p.guess_score DESC,"
-            + " p.guess_right DESC,"
-            + " p.guess_wrong ASC"
-            + " FETCH FIRST $1 ROW ONLY", Tuple.of(rowCount))
-        .onFailure().invoke(e -> {
-          logger.log(Level.SEVERE,
-              "Error ranking players for game", e);
-        })
-        .onItem().apply(this::playersList);
+    ArrayList<Player> players = new ArrayList<>();
+    try {
+      PreparedStatement pst =
+          dbConn.prepareStatement("SELECT p.* FROM players p"
+              + " WHERE p.game_id=(SELECT g.game_id from games g ORDER BY g.game_date DESC FETCH FIRST 1 ROW ONLY)"
+              + " ORDER BY p.guess_score DESC,"
+              + " p.guess_right DESC,"
+              + " p.guess_wrong ASC"
+              + " FETCH FIRST ? ROW ONLY");
+      pst.setLong(1, rowCount);
+      ResultSet rs = pst.executeQuery();
+      return this.playersList(rs);
+    } catch (SQLException e) {
+      logger.log(Level.SEVERE,
+          "Error ranking players for game", e);
+    }
+    return players;
   }
 
   /**
    * 
-   * @param client
+   * @param dbConn
    * @return
    */
-  public Uni<Optional<GameTotal>> gameTotals(PgPool client) {
-    return client
-        .preparedQuery("SELECT COUNT(*) as total_players,"
-            + " SUM(p.guess_right) as total_rights,"
-            + " SUM(p.guess_wrong) as total_wrongs"
-            + " SUM(p.guess_score) as total_dollar"
-            + " FROM players p"
-            + " WHERE p.game_id=(SELECT g.game_id from games g ORDER BY g.game_date DESC FETCH FIRST 1 ROW ONLY)")
-        .onFailure().invoke(e -> {
-          logger.log(Level.SEVERE,
-              "Error getting game totals for game", e);
-        })
-        .onItem().apply(RowSet::iterator)
-        .onItem()
-        .apply(
-            iterator -> iterator.hasNext() ? gameTotal(iterator.next()) : null)
-        .onItem().apply(p -> Optional.ofNullable(p));
+  public Optional<GameTotal> gameTotals(Connection dbConn) {
+    GameTotal gameTotal = null;
+    try {
+      PreparedStatement pst =
+          dbConn.prepareStatement("SELECT COUNT(*) as total_players,"
+              + " SUM(p.guess_right) as total_rights,"
+              + " SUM(p.guess_wrong) as total_wrongs"
+              + " SUM(p.guess_score) as total_dollar"
+              + " FROM players p"
+              + " WHERE p.game_id=(SELECT g.game_id from games g ORDER BY g.game_date DESC FETCH FIRST 1 ROW ONLY)");
+      ResultSet rs = pst.executeQuery();
+
+      if (rs.next()) {
+        gameTotal = gameTotal(rs);
+      } else {
+
+      }
+    } catch (SQLException e) {
+      logger.log(Level.SEVERE,
+          "Error getting game totals for game", e);
+    }
+    return Optional.ofNullable(gameTotal);
   }
+
 
   /**
    * 
-   * @param client
+   * @param dbConn
    * @param player
    * @return
    */
-  public Uni<Boolean> upsert(PgPool client, Player player) {
+  public Boolean upsert(Connection dbConn, Player player) {
     logger.info("Upserting player with id " + player.getPk());
-    return client.preparedQuery("INSERT INTO players"
-        + "(player_id,player_name,guess_right,"
-        + "guess_wrong,guess_score,creation_server,"
-        + "game_server,scoring_server,"
-        + "player_avatar,game_id)"
-        + " VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)"
-        + " ON CONFLICT (player_id) WHERE game_id=$10"
-        + "  DO "
-        + "   UPDATE  set "
-        + "     player_name=$2,guess_right=$3,"
-        + "     guess_wrong=$4,guess_score=$5,"
-        + "     creation_server=$6,game_server=$7,"
-        + "     scoring_server=$8,player_avatar=$9",
-        playerParams(player))
-        .onFailure().invoke(e -> {
-          logger.log(Level.SEVERE, "Error Inserting " + player.getPk(), e);
-        })
-        .onItem().apply(pgRowset -> pgRowset.rowCount() == 1 ? true : false);
+    try {
+      PreparedStatement pst = dbConn.prepareStatement("INSERT INTO players"
+          + "(player_id,player_name,guess_right,"
+          + "guess_wrong,guess_score,creation_server,"
+          + "game_server,scoring_server,"
+          + "player_avatar,game_id)"
+          + " VALUES (?,?,?,?,?,?,?,?,?::JSON,?)"
+          + " ON CONFLICT (player_id) WHERE game_id=?"
+          + "  DO "
+          + "   UPDATE  set "
+          + "     player_name=?,guess_right=?,"
+          + "     guess_wrong=?,guess_score=?,"
+          + "     creation_server=?,game_server=?,"
+          + "     scoring_server=?,player_avatar=?::JSON");
+      playerParams(pst, player);
+      int rowCount = pst.executeUpdate();
+      return rowCount == 1;
+    } catch (SQLException e) {
+      logger.log(Level.SEVERE, "Error Inserting " + player.getPk(), e);
+    }
+    return false;
   }
 
   /**
    * 
-   * @param client
+   * @param dbConn
    * @param id
    * @return
    */
-  public Uni<Boolean> delete(PgPool client, long id) {
-    return client.preparedQuery(
-        "DELETE FROM players WHERE id=$1",
-        Tuple.of(id))
-        .onFailure().invoke(e -> {
-          logger.log(Level.SEVERE, "Error deleting player with " + id, e);
-        })
-        .onItem().apply(pgRowset -> pgRowset.rowCount() == 1);
+  public Boolean delete(Connection dbConn, long id) {
+
+    try {
+      PreparedStatement pst =
+          dbConn.prepareStatement("DELETE FROM players WHERE id=?");
+      pst.setLong(1, id);
+      int rowCount = pst.executeUpdate();
+      return rowCount == 1;
+    } catch (SQLException e) {
+      logger.log(Level.SEVERE, "Error Finding player with id " + id,
+          e);
+    }
+    return false;
 
   }
 
@@ -166,14 +183,14 @@ public class PlayerQueries {
    * @param row
    * @return
    */
-  private Player from(Row row) {
+  private Player from(ResultSet row) throws SQLException {
     Player player = Player.newPlayer()
         .pk(row.getLong("id"))
         .playerId(row.getString("player_id"))
         .username(row.getString("player_name"))
-        .right(row.getInteger("guess_right"))
-        .wrong(row.getInteger("guess_wrong"))
-        .score(row.getInteger("guess_score"))
+        .right(row.getInt("guess_right"))
+        .wrong(row.getInt("guess_wrong"))
+        .score(row.getInt("guess_score"))
         .creationServer(row.getString("creation_server"))
         .scoringServer(row.getString("scoring_server"))
         .gameServer(row.getString("game_server"))
@@ -187,7 +204,7 @@ public class PlayerQueries {
    * @param row
    * @return
    */
-  private GameTotal gameTotal(Row row) {
+  private GameTotal gameTotal(ResultSet row) throws SQLException {
     GameTotal gameTotal = GameTotal.newGameTotal()
         .totalPlayers(row.getLong("total_players"))
         .totalDollars(row.getLong("total_dollars"))
@@ -197,34 +214,48 @@ public class PlayerQueries {
 
   /**
    * 
-   * @param rowSet
+   * @param rs
    * @return
+   * @throws SQLException
    */
-  private List<Player> playersList(RowSet<Row> rowSet) {
+  private List<Player> playersList(ResultSet rs) throws SQLException {
     List<Player> listOfPlayers = new ArrayList<>();
-    RowIterator<Row> rowItr = rowSet.iterator();
-    while (rowItr.hasNext()) {
-      listOfPlayers.add(from(rowItr.next()));
+    if (rs.next()) {
+      listOfPlayers.add(from(rs));
     }
     return listOfPlayers;
   }
 
   /**
    * 
+   * @param pst
    * @param player
-   * @return
+   * @throws SQLException
    */
-  private Tuple playerParams(Player player) {
-    return Tuple.tuple()
-        .addString(player.getPlayerId())// Param Order 1
-        .addString(player.getUsername()) // Param Order 2
-        .addInteger(player.getRight()) // Param Order 3
-        .addInteger(player.getWrong()) // Param Order 4
-        .addInteger(player.getScore()) // Param Order 5
-        .addString(player.getCreationServer()) // Param Order 6
-        .addString(player.getGameServer()) // Param Order 7
-        .addString(player.getScoringServer()) // Param Order 8
-        .addString(jsonb.toJson(player.getAvatar())) // Param Order 9
-        .addString(player.getGameId()); // Param Order 10
+  private void playerParams(PreparedStatement pst, Player player)
+      throws SQLException {
+    pst.setString(1, player.getPlayerId());// Param Order 1
+    pst.setString(2, player.getUsername()); // Param Order 2
+    pst.setInt(3, player.getRight()); // Param Order 3
+    pst.setInt(4, player.getWrong()); // Param Order 4
+    pst.setInt(5, player.getScore()); // Param Order 5
+    pst.setString(6, player.getCreationServer()); // Param Order 6
+    pst.setString(7, player.getGameServer());// Param Order 7
+    pst.setString(8, player.getScoringServer()); // Param Order 8
+    pst.setString(9, jsonb.toJson(player.getAvatar())); // Param Order 9
+    pst.setString(10, player.getGameId()); // Param Order 10
+
+
+    // TODO better way ?? UPDATE indexes
+    pst.setString(11, player.getGameId()); // Param Order 11
+    pst.setString(12, player.getUsername()); // Param Order 12
+    pst.setInt(13, player.getRight()); // Param Order 13
+    pst.setInt(14, player.getWrong()); // Param Order 14
+    pst.setInt(15, player.getScore()); // Param Order 15
+    pst.setString(16, player.getCreationServer()); // Param Order 16
+    pst.setString(17, player.getGameServer());// Param Order 17
+    pst.setString(18, player.getScoringServer()); // Param Order 18
+    pst.setString(19, jsonb.toJson(player.getAvatar())); // Param Order 19
+
   }
 }

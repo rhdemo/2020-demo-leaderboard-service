@@ -19,6 +19,11 @@
  */
 package com.redhat.developers.sql;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -27,12 +32,6 @@ import java.util.logging.Logger;
 import javax.enterprise.context.ApplicationScoped;
 import com.redhat.developers.data.Game;
 import com.redhat.developers.data.GameState;
-import io.smallrye.mutiny.Uni;
-import io.vertx.mutiny.pgclient.PgPool;
-import io.vertx.mutiny.sqlclient.Row;
-import io.vertx.mutiny.sqlclient.RowIterator;
-import io.vertx.mutiny.sqlclient.RowSet;
-import io.vertx.mutiny.sqlclient.Tuple;
 
 /**
  * GameQueries
@@ -42,19 +41,20 @@ public class GameQueries {
 
   static Logger logger = Logger.getLogger(GameQueries.class.getName());
 
-  /**
-   * 
-   * @param client
-   * @return
-   */
-  public Uni<List<Game>> findAll(PgPool client) {
+
+  public List<Game> findAll(Connection dbConn) {
     logger.info("Find All");
-    return client
-        .preparedQuery("SELECT * from games ORDER BY game_date DESC")
-        .onFailure()
-        .invoke(e -> logger.log(Level.SEVERE, "Error retriving all games ",
-            e))
-        .onItem().apply(this::games);
+    List<Game> games = new ArrayList<>();
+    try {
+      PreparedStatement pst = dbConn
+          .prepareStatement("SELECT * from games ORDER BY game_date DESC");
+      ResultSet resultSet = pst.executeQuery();
+      games = games(resultSet);
+    } catch (SQLException e) {
+      logger.log(Level.SEVERE, "Error retriving all games ",
+          e);
+    }
+    return games;
   }
 
   /**
@@ -63,56 +63,63 @@ public class GameQueries {
    * @param id
    * @return
    */
-  public Uni<Optional<Game>> findById(PgPool client,
+  public Optional<Game> findById(Connection dbConn,
       int id) {
     logger.info("Finding game with id " + id);
-    return client
-        .preparedQuery("SELECT * from games "
-            + " WHERE  id=$1"
-            + "ORDER BY game_date DESC",
-            Tuple.of(id))
-        .onFailure().invoke(e -> {
-          logger.log(Level.SEVERE,
-              "Error Finding game with id " + id, e);
-        })
-        .onItem().apply(RowSet::iterator)
-        .onItem()
-        .apply(iterator -> iterator.hasNext() ? from(iterator.next()) : null)
-        .onItem().apply(g -> Optional.ofNullable(g));
+    Game game = null;
+    try {
+      PreparedStatement pst = dbConn.prepareStatement("SELECT * from games "
+          + " WHERE  id=?"
+          + "ORDER BY game_date DESC");
+      pst.setLong(1, id);
+      ResultSet rs = pst.executeQuery();
+      if (rs.next()) {
+        game = from(rs);
+      }
+    } catch (SQLException e) {
+      logger.log(Level.SEVERE,
+          "Error Finding game with id " + id, e);
+    }
+    return Optional.ofNullable(game);
   }
 
   /**
    * 
-   * @param client
+   * @param dbConn
    * @return
    */
-  public Uni<Optional<Game>> findActiveGame(PgPool client) {
+  public Optional<Game> findActiveGame(Connection dbConn) {
     logger.info("Finding Acive game");
-    return client
-        .preparedQuery("SELECT * from games "
-            + " WHERE game_state=1"
-            + " ORDER BY game_date DESC"
-            + " FETCH FIRST 1 ROW ONLY")
-        .onFailure().invoke(e -> {
-          logger.log(Level.SEVERE,
-              "Error Finding active game ", e);
-        })
-        .onItem().apply(RowSet::iterator)
-        .onItem()
-        .apply(iterator -> iterator.hasNext() ? from(iterator.next()) : null)
-        .onItem().apply(g -> Optional.ofNullable(g));
+    Game game = null;
+    try {
+      PreparedStatement pst = dbConn.prepareStatement("SELECT * from games "
+          + " WHERE game_state=1"
+          + " ORDER BY game_date DESC"
+          + " FETCH FIRST 1 ROW ONLY");
+      ResultSet rs = pst.executeQuery();
+      if (rs.next()) {
+        game = from(rs);
+      }
+    } catch (SQLException e) {
+      logger.log(Level.SEVERE,
+          "Error Finding active game ", e);
+    }
+    return Optional.ofNullable(game);
   }
 
-  public Uni<Boolean> delete(PgPool client, long id) {
+  public Boolean delete(Connection dbConn, long id) {
     logger.info("Deleting game with id " + id);
-    return client.preparedQuery(
-        "DELETE FROM games WHERE id=$1",
-        Tuple.of(id))
-        .onFailure().invoke(e -> {
-          logger.log(Level.SEVERE, "Error deleting game with id " + id,
-              e);
-        })
-        .onItem().apply(rs -> rs.rowCount() == 1);
+    try {
+      PreparedStatement pst = dbConn
+          .prepareStatement("DELETE FROM games WHERE id=?");
+      pst.setLong(1, id);
+      int rowCount = pst.executeUpdate();
+      return rowCount == 1;
+    } catch (SQLException e) {
+      logger.log(Level.SEVERE, "Error deleting game with id " + id,
+          e);
+    }
+    return false;
   }
 
   /**
@@ -121,46 +128,53 @@ public class GameQueries {
    * @param game
    * @return
    */
-  public Uni<Boolean> upsert(PgPool client, Game game) {
+  public Boolean upsert(Connection dbConn, Game game) {
     logger.info("Upserting game with id " + game.getPk());
-    return client
-        .preparedQuery("INSERT INTO games(game_id,game_config,game_state)"
-            + " VALUES ($1,$2,$3)"
-            + " ON CONFLICT (game_id)"
-            + " DO"
-            + "   UPDATE set "
-            + "     game_config=$2,"
-            + "     game_state=$3",
-            gameTuple(game))
-        .onFailure().invoke(e -> logger.log(Level.SEVERE,
-            "Error Upserting Game with id " + game.getPk(), e))
-        .onItem().apply(rs -> rs.rowCount() == 1 ? true : false);
+    try {
+      PreparedStatement pst = dbConn
+          .prepareStatement("INSERT INTO games(game_id,game_config,game_state)"
+              + " VALUES (?,?,?)"
+              + " ON CONFLICT (game_id)"
+              + " DO"
+              + "   UPDATE set "
+              + "     game_config=?,"
+              + "     game_state=?");
+      gameTuple(pst, game);
+      int rowCount = pst.executeUpdate();
+      return rowCount == 1;
+    } catch (SQLException e) {
+      logger.log(Level.SEVERE,
+          "Error Upserting Game with id " + game.getPk(), e);
+    }
+    return false;
   }
 
   /**
    * 
    * @param row
    * @return
+   * @throws SQLException
    */
-  private Game from(Row row) {
+  private Game from(ResultSet row) throws SQLException {
+
     return Game.newGame()
         .pk(row.getLong("id"))
         .gameId(row.getString("game_id"))
         .configuration(row.getString("game_config"))
-        .date(row.getOffsetDateTime("game_date"))
-        .state(GameState.byCode(row.getInteger("game_state")));
+        .date(OffsetDateTime.parse(row.getString("game_date")))
+        .state(GameState.byCode(row.getInt("game_state")));
   }
 
   /**
    * 
-   * @param rowSet
+   * @param resultSet
    * @return
+   * @throws SQLException
    */
-  private List<Game> games(RowSet<Row> rowSet) {
+  private List<Game> games(ResultSet resultSet) throws SQLException {
     List<Game> listOfGames = new ArrayList<>();
-    RowIterator<Row> rowItr = rowSet.iterator();
-    while (rowItr.hasNext()) {
-      listOfGames.add(from(rowItr.next()));
+    while (resultSet.next()) {
+      listOfGames.add(from(resultSet));
     }
     return listOfGames;
   }
@@ -170,10 +184,13 @@ public class GameQueries {
    * @param game
    * @return
    */
-  private Tuple gameTuple(Game game) {
-    return Tuple.tuple()
-        .addString(game.getGameId())// Param Order 1
-        .addString(game.getConfiguration()) // Param Order 2
-        .addInteger(GameState.byCodeString(game.getState())); // Param Order 3
+  private void gameTuple(PreparedStatement pst, Game game) throws SQLException {
+    pst.setString(1, game.getGameId());// Param Order 1
+    pst.setString(2, game.getConfiguration()); // Param Order 2
+    pst.setInt(3, GameState.byCodeString(game.getState())); // Param Order 3
+
+    // TODO update better
+    pst.setString(4, game.getConfiguration()); // Param Order 4
+    pst.setInt(5, GameState.byCodeString(game.getState())); // Param Order 5
   }
 }
