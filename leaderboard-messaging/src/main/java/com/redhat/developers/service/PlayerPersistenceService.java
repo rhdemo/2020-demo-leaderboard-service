@@ -19,13 +19,13 @@
  */
 package com.redhat.developers.service;
 
-import java.util.concurrent.CompletionStage;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
-import com.redhat.developers.data.GameMessage;
 import com.redhat.developers.data.Player;
 import com.redhat.developers.sql.PlayerQueries;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
@@ -49,15 +49,18 @@ public class PlayerPersistenceService {
   PlayerQueries playerQueries;
 
   @Incoming("leaderboard-persist-to-db")
-  public void handleScores(GameMessage gameMessage) {
-    Player player = gameMessage.getPlayer();
+  public void handleScores(Player player) {
+    final Instant startTime = Instant.now();
     logger.log(Level.INFO,
         "Saving Player  {0} ", player.getPlayerId());
     playerQueries
         .upsert(client, player).subscribe().with(b -> {
           if (b) {
+            final Instant endTime = Instant.now();
             logger.log(Level.INFO,
-                "Saved Player {0} sucessfully ", player.getPlayerId());
+                "Player {0} Saved in {1} ms",
+                new Object[] {player.getPlayerId(),
+                    Duration.between(startTime, endTime).toMillis()});
           } else {
             logger.log(Level.INFO,
                 "Unable to save Player {0} ", player.getPlayerId());

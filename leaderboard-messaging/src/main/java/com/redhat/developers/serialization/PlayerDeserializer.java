@@ -19,17 +19,17 @@
  */
 package com.redhat.developers.serialization;
 
-import com.redhat.developers.data.GameMessage;
+import com.redhat.developers.data.Player;
 import io.quarkus.kafka.client.serialization.JsonbDeserializer;
 
 /**
- * GameMessageDeserializer
+ * PlayerDeserializer
  */
-public class GameMessageDeserializer extends JsonbDeserializer<GameMessage> {
+public class PlayerDeserializer extends JsonbDeserializer<Player> {
 
 
-  public GameMessageDeserializer() {
-    super(GameMessage.class);
+  public PlayerDeserializer() {
+    super(Player.class);
   }
 
 }

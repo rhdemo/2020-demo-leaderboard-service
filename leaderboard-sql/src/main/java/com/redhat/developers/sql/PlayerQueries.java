@@ -28,6 +28,7 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import com.redhat.developers.data.Avatar;
+import com.redhat.developers.data.GameTotal;
 import com.redhat.developers.data.Player;
 import io.smallrye.mutiny.Uni;
 import io.vertx.mutiny.pgclient.PgPool;
@@ -91,6 +92,29 @@ public class PlayerQueries {
         .onItem().apply(this::playersList);
   }
 
+  /**
+   * 
+   * @param client
+   * @return
+   */
+  public Uni<Optional<GameTotal>> gameTotals(PgPool client) {
+    return client
+        .preparedQuery("SELECT COUNT(*) as total_players,"
+            + " SUM(p.guess_right) as total_rights,"
+            + " SUM(p.guess_wrong) as total_wrongs"
+            + " SUM(p.guess_score) as total_dollar"
+            + " FROM players p"
+            + " WHERE p.game_id=(SELECT g.game_id from games g ORDER BY g.game_date DESC FETCH FIRST 1 ROW ONLY)")
+        .onFailure().invoke(e -> {
+          logger.log(Level.SEVERE,
+              "Error getting game totals for game", e);
+        })
+        .onItem().apply(RowSet::iterator)
+        .onItem()
+        .apply(
+            iterator -> iterator.hasNext() ? gameTotal(iterator.next()) : null)
+        .onItem().apply(p -> Optional.ofNullable(p));
+  }
 
   /**
    * 
@@ -156,6 +180,19 @@ public class PlayerQueries {
         .avatar(jsonb.fromJson(row.getString("player_avatar"), Avatar.class))
         .gameId(row.getString("game_id"));
     return player;
+  }
+
+  /**
+   * 
+   * @param row
+   * @return
+   */
+  private GameTotal gameTotal(Row row) {
+    GameTotal gameTotal = GameTotal.newGameTotal()
+        .totalPlayers(row.getLong("total_players"))
+        .totalDollars(row.getLong("total_dollars"))
+        .totalGuesses(row.getLong("total_gesses"));
+    return gameTotal;
   }
 
   /**
