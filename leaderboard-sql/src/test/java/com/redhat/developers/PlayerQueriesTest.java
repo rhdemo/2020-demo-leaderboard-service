@@ -19,7 +19,23 @@
  */
 package com.redhat.developers;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import java.sql.Connection;
+import java.util.List;
+import java.util.Optional;
+import javax.inject.Inject;
+import javax.json.bind.Jsonb;
+import com.redhat.developers.data.Avatar;
+import com.redhat.developers.data.Game;
+import com.redhat.developers.data.Player;
+import com.redhat.developers.sql.PlayerQueries;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
@@ -32,210 +48,192 @@ import io.quarkus.test.junit.QuarkusTest;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class PlayerQueriesTest {
 
-  // @Inject
-  // GameInitService gameInitService;
+  @Inject
+  GameInitService gameInitService;
 
-  // @Inject
-  // PlayerQueries playerQueries;
+  @Inject
+  PlayerQueries playerQueries;
 
-  // @Inject
-  // PgPool client;
+  @Inject
+  ConnectionUtil connectionUtil;
 
-  // @Inject
-  // Jsonb jsonb;
+  Connection client;
 
-  // @BeforeEach
-  // public void checkIfGameExist() {
-  // Optional<Game> thisGame = gameInitService.gameExist();
-  // assertTrue(thisGame.isPresent());
-  // }
+  @Inject
+  Jsonb jsonb;
 
-  // @Order(1)
-  // @Test
-  // public void testAdd() throws Exception {
-  // Game game = gameInitService.game;
-  // Player player = Player.newPlayer()
-  // .avatar(avatar())
-  // .playerId("tom")
-  // .username("Tom and Jerry")
-  // .score(10)
-  // .right(5)
-  // .wrong(2)
-  // .gameId(game.getGameId())
-  // .creationServer("BLR")
-  // .gameServer("BLR")
-  // .scoringServer("BLR");
+  @BeforeEach
+  public void checkIfGameExist() throws Exception {
+    Optional<Game> thisGame = gameInitService.gameExist();
+    assertTrue(thisGame.isPresent());
 
-  // Optional<Boolean> isUpserted = playerQueries
-  // .upsert(client, player)
-  // .await().asOptional().atMost(Duration.ofSeconds(10));
+    if (client == null) {
+      this.client = connectionUtil.getConnection();
+    }
+  }
 
-  // assertTrue(isUpserted.isPresent());
-  // assertTrue(isUpserted.get());
-  // }
+  @Order(1)
+  @Test
+  public void testAdd() throws Exception {
+    Game game = gameInitService.game;
+    Player player = Player.newPlayer()
+        .avatar(avatar())
+        .playerId("tom")
+        .username("Tom and Jerry")
+        .score(10)
+        .right(5)
+        .wrong(2)
+        .gameId(game.getGameId())
+        .creationServer("BLR")
+        .gameServer("BLR")
+        .scoringServer("BLR");
 
-  // @Order(2)
-  // @Test
-  // public void testFindAll() throws Exception {
-  // Game game = gameInitService.game;
-  // Player player = Player.newPlayer()
-  // .avatar(avatar())
-  // .playerId("tom")
-  // .username("Tom and Jerry")
-  // .score(10)
-  // .right(5)
-  // .wrong(2)
-  // .gameId(game.getGameId())
-  // .creationServer("BLR")
-  // .gameServer("BLR")
-  // .scoringServer("BLR");
+    Boolean isUpserted = playerQueries
+        .upsert(client, player);
+    assertTrue(isUpserted);
+  }
 
-  // Optional<Optional<Player>> isUpserted = playerQueries
-  // .findById(client, 1)
-  // .await().asOptional().atMost(Duration.ofSeconds(10));
+  @Order(2)
+  @Test
+  public void testFindAll() throws Exception {
+    Game game = gameInitService.game;
+    Player player = Player.newPlayer()
+        .avatar(avatar())
+        .playerId("tom")
+        .username("Tom and Jerry")
+        .score(10)
+        .right(5)
+        .wrong(2)
+        .gameId(game.getGameId())
+        .creationServer("BLR")
+        .gameServer("BLR")
+        .scoringServer("BLR");
 
-  // assertTrue(isUpserted.isPresent());
-  // Optional<Player> optPlayer = isUpserted.get();
-  // assertTrue(optPlayer.isPresent());
-  // Player actualPlayer = optPlayer.get();
-  // assertPlayer(1, player, actualPlayer);
-  // Avatar actualAvatar = actualPlayer.getAvatar();
-  // assertAvatar(actualAvatar);
-  // }
+    Optional<Player> optPlayer = playerQueries
+        .findById(client, 1);
 
-  // @Order(3)
-  // @Test
-  // public void testUpsert() throws Exception {
-  // Game game = gameInitService.game;
-  // Player player = Player.newPlayer()
-  // .pk(1)
-  // .avatar(avatar())
-  // .playerId("tom")
-  // .username("Tom and Jerry")
-  // .score(20)
-  // .right(7)
-  // .wrong(2)
-  // .gameId(game.getGameId())
-  // .creationServer("BLR")
-  // .gameServer("MAA")
-  // .scoringServer("BLR");
+    assertTrue(optPlayer.isPresent());
+    Player actualPlayer = optPlayer.get();
+    assertPlayer(1, player, actualPlayer);
+    Avatar actualAvatar = actualPlayer.getAvatar();
+    assertAvatar(actualAvatar);
+  }
 
-  // Optional<Boolean> isUpserted = playerQueries
-  // .upsert(client, player)
-  // .await().asOptional().atMost(Duration.ofSeconds(10));
+  @Order(3)
+  @Test
+  public void testUpsert() throws Exception {
+    Game game = gameInitService.game;
+    Player player = Player.newPlayer()
+        .pk(1)
+        .avatar(avatar())
+        .playerId("tom")
+        .username("Tom and Jerry")
+        .score(20)
+        .right(7)
+        .wrong(2)
+        .gameId(game.getGameId())
+        .creationServer("BLR")
+        .gameServer("MAA")
+        .scoringServer("BLR");
 
-  // assertTrue(isUpserted.isPresent());
-  // assertTrue(isUpserted.get());
+    Boolean isUpserted = playerQueries
+        .upsert(client, player);
+    assertTrue(isUpserted);
 
-  // // Check by Querying back
-  // Optional<Optional<Player>> upserted = playerQueries
-  // .findById(client, 1)
-  // .await().asOptional().atMost(Duration.ofSeconds(10));
-  // assertTrue(isUpserted.isPresent());
+    // Check by Querying back
+    Optional<Player> optPlayer = playerQueries
+        .findById(client, 1);
+    assertTrue(optPlayer.isPresent());
+    Player actualPlayer = optPlayer.get();
+    assertPlayer(1, player, actualPlayer);
+    Avatar actualAvatar = actualPlayer.getAvatar();
+    assertAvatar(actualAvatar);
+  }
 
-  // Optional<Player> optPlayer = upserted.get();
-  // assertTrue(optPlayer.isPresent());
-  // Player actualPlayer = optPlayer.get();
-  // assertPlayer(1, player, actualPlayer);
-  // Avatar actualAvatar = actualPlayer.getAvatar();
-  // assertAvatar(actualAvatar);
-  // }
+  @Order(4)
+  @Test
+  public void testRankPlayers() throws Exception {
+    List<Player> seededPlayers = seedPlayers();
+    List<Player> players = playerQueries
+        .rankPlayers(client, 3);
+    assertEquals(3, players.size());
+    Player firstPlayer = players.get(0);
+    // Check if tom wins the game
+    assertEquals("tom", firstPlayer.getPlayerId());
+    // Check all the other parameters
+    assertPlayer(1, seededPlayers.get(0), players.get(0));
+    assertPlayer(4, seededPlayers.get(1), players.get(1));
+    assertPlayer(5, seededPlayers.get(2), players.get(2));
+  }
 
-  // @Order(4)
-  // @Test
-  // public void testRankPlayers() throws Exception {
-  // List<Player> seededPlayers = seedPlayers();
-  // Optional<List<Player>> optRankedPlayers = playerQueries
-  // .rankPlayers(client, 3)
-  // .await().asOptional().atMost(Duration.ofSeconds(10));
+  @Order(5)
+  @Test
+  public void testDelete() throws Exception {
+    Boolean isDeleted = playerQueries
+        .delete(client, 1);
+    assertTrue(isDeleted);
+  }
 
-  // assertTrue(optRankedPlayers.isPresent());
-  // List<Player> players = optRankedPlayers.get();
-  // assertEquals(3, players.size());
-  // Player firstPlayer = players.get(0);
-  // // Check if tom wins the game
-  // assertEquals("tom", firstPlayer.getPlayerId());
-  // // Check all the other parameters
-  // assertPlayer(1, seededPlayers.get(0), players.get(0));
-  // assertPlayer(4, seededPlayers.get(1), players.get(1));
-  // assertPlayer(5, seededPlayers.get(2), players.get(2));
-  // }
+  @Order(6)
+  @Test
+  public void testNoPlayer() throws Exception {
+    Optional<Player> player = playerQueries
+        .findById(client, 1);
+    assertFalse(player.isPresent());
+  }
 
-  // @Order(5)
-  // @Test
-  // public void testDelete() throws Exception {
-  // Optional<Boolean> isDeleted = playerQueries
-  // .delete(client, 1)
-  // .await().asOptional().atMost(Duration.ofSeconds(10));
+  private void assertPlayer(int id, Player player, Player actualPlayer) {
+    assertNotNull(actualPlayer);
+    assertEquals(id, actualPlayer.getPk(), "id mismatch");
+    assertEquals(player.getPlayerId(), actualPlayer.getPlayerId(),
+        "Player Id mismatch");
+    assertEquals(player.getGameId(), actualPlayer.getGameId(),
+        "Player Game mismatch");
+    assertEquals(player.getUsername(), actualPlayer.getUsername(),
+        "Player Username mismatch");
+    assertEquals(player.getCreationServer(), actualPlayer.getCreationServer(),
+        "Player Creation Server mismatch");
+    assertEquals(player.getScoringServer(), actualPlayer.getScoringServer(),
+        "Player Scoring Server mismatch");
+    assertEquals(player.getGameServer(), actualPlayer.getGameServer(),
+        "Player Game Server mismatch");
+    assertEquals(player.getScore(), actualPlayer.getScore(),
+        "Player score mismatch");
+    assertEquals(player.getRight(), actualPlayer.getRight(),
+        "Player guess rights mismatch");
+    assertEquals(player.getWrong(), actualPlayer.getWrong(),
+        "Player guess wrong mismatch");
+  }
 
-  // assertTrue(isDeleted.isPresent());
-  // assertTrue(isDeleted.get());
-  // }
+  private void assertAvatar(Avatar actualAvatar) {
+    assertNotNull(actualAvatar);
+    assertEquals(avatar().body, actualAvatar.body);
+    assertEquals(avatar().color, actualAvatar.color);
+    assertEquals(avatar().eyes, actualAvatar.eyes);
+    assertEquals(avatar().ears, actualAvatar.ears);
+    assertEquals(avatar().nose, actualAvatar.nose);
+    assertEquals(avatar().mouth, actualAvatar.mouth);
+  }
 
-  // @Order(6)
-  // @Test
-  // public void testNoPlayer() throws Exception {
-  // Optional<Optional<Player>> player = playerQueries
-  // .findById(client, 1)
-  // .await().asOptional().atMost(Duration.ofSeconds(10));
+  private Avatar avatar() {
+    return Avatar.newAvatar()
+        .body(1)
+        .color(2)
+        .ears(3)
+        .eyes(4)
+        .nose(5)
+        .mouth(6);
+  }
 
-  // assertTrue(player.isPresent());
-  // assertFalse(player.get().isPresent());
-  // }
-
-  // private void assertPlayer(int id, Player player, Player actualPlayer) {
-  // assertNotNull(actualPlayer);
-  // assertEquals(id, actualPlayer.getPk(), "id mismatch");
-  // assertEquals(player.getPlayerId(), actualPlayer.getPlayerId(),
-  // "Player Id mismatch");
-  // assertEquals(player.getGameId(), actualPlayer.getGameId(),
-  // "Player Game mismatch");
-  // assertEquals(player.getUsername(), actualPlayer.getUsername(),
-  // "Player Username mismatch");
-  // assertEquals(player.getCreationServer(), actualPlayer.getCreationServer(),
-  // "Player Creation Server mismatch");
-  // assertEquals(player.getScoringServer(), actualPlayer.getScoringServer(),
-  // "Player Scoring Server mismatch");
-  // assertEquals(player.getGameServer(), actualPlayer.getGameServer(),
-  // "Player Game Server mismatch");
-  // assertEquals(player.getScore(), actualPlayer.getScore(),
-  // "Player score mismatch");
-  // assertEquals(player.getRight(), actualPlayer.getRight(),
-  // "Player guess rights mismatch");
-  // assertEquals(player.getWrong(), actualPlayer.getWrong(),
-  // "Player guess wrong mismatch");
-  // }
-
-  // private void assertAvatar(Avatar actualAvatar) {
-  // assertNotNull(actualAvatar);
-  // assertEquals(avatar().body, actualAvatar.body);
-  // assertEquals(avatar().color, actualAvatar.color);
-  // assertEquals(avatar().eyes, actualAvatar.eyes);
-  // assertEquals(avatar().ears, actualAvatar.ears);
-  // assertEquals(avatar().nose, actualAvatar.nose);
-  // assertEquals(avatar().mouth, actualAvatar.mouth);
-  // }
-
-  // private Avatar avatar() {
-  // return Avatar.newAvatar()
-  // .body(1)
-  // .color(2)
-  // .ears(3)
-  // .eyes(4)
-  // .nose(5)
-  // .mouth(6);
-  // }
-
-  // private List<Player> seedPlayers() throws Exception {
-  // List<Player> players = gameInitService.seedPlayers();
-  // players.stream()
-  // .forEach(p -> {
-  // Optional<Boolean> isUpserted = playerQueries
-  // .upsert(client, p)
-  // .await().asOptional().atMost(Duration.ofSeconds(10));
-  // assertTrue(isUpserted.get());
-  // });
-  // return players;
-  // }
+  private List<Player> seedPlayers() throws Exception {
+    List<Player> players = gameInitService.seedPlayers();
+    players.stream()
+        .forEach(p -> {
+          Boolean isUpserted = playerQueries
+              .upsert(client, p);
+          assertTrue(isUpserted);
+        });
+    return players;
+  }
 
 }

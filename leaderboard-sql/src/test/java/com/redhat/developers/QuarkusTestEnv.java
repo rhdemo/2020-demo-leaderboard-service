@@ -34,8 +34,7 @@ public class QuarkusTestEnv implements QuarkusTestResourceLifecycleManager {
   Logger logger = Logger.getLogger(QuarkusTestEnv.class.getName());
 
   public final static String JDBC_URL =
-      "postgresql://%s:%d/gamedb";
-
+      "jdbc:postgresql://%s:%d/gamedb";
 
   @Container
   public static PostgreSqlContainer postgreSQL = new PostgreSqlContainer();
@@ -45,13 +44,26 @@ public class QuarkusTestEnv implements QuarkusTestResourceLifecycleManager {
     postgreSQL.start();
     Map<String, String> sysProps = new HashMap<>();
     sysProps.put("quarkus.http.test-port", "8085");
-    // quarkus.datasource.url=vertx-reactive:postgresql://localhost:5432/gamedb
-    sysProps.put("quarkus.datasource.db-kind", "postgresql");
-    sysProps.put("quarkus.datasource.reactive.url", String.format(JDBC_URL,
+    sysProps.put("quarkus.datasource.jdbc.transaction-isolation-level",
+        "read-committed");
+    sysProps.put("quarkus.datasource.jdbc.new-connection-sql",
+        "SELECT 1");
+    sysProps.put("quarkus.datasource.jdbc.new-connection-sq",
+        "SELECT 1");
+    sysProps.put("quarkus.datasource.jdbc.new-connection-sq",
+        "SELECT 1");
+    sysProps.put("quarkus.datasource.jdbc.min-size",
+        "1");
+    sysProps.put("quarkus.datasource.jdbc.max-size",
+        "1");
+    sysProps.put("quarkus.datasource.username",
+        "demo");
+    sysProps.put("quarkus.datasource.password",
+        "password!");
+    sysProps.put("quarkus.datasource.jdbc.url", String.format(JDBC_URL,
         "localhost", postgreSQL.getMappedPort(5432)));
     return sysProps;
   }
-
 
   @Override
   public void stop() {

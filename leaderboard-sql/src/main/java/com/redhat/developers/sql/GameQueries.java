@@ -23,7 +23,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -133,11 +132,11 @@ public class GameQueries {
     try {
       PreparedStatement pst = dbConn
           .prepareStatement("INSERT INTO games(game_id,game_config,game_state)"
-              + " VALUES (?,?,?)"
+              + " VALUES (?,?::JSON,?)"
               + " ON CONFLICT (game_id)"
               + " DO"
               + "   UPDATE set "
-              + "     game_config=?,"
+              + "     game_config=?::JSON,"
               + "     game_state=?");
       gameTuple(pst, game);
       int rowCount = pst.executeUpdate();
@@ -161,7 +160,7 @@ public class GameQueries {
         .pk(row.getLong("id"))
         .gameId(row.getString("game_id"))
         .configuration(row.getString("game_config"))
-        .date(OffsetDateTime.parse(row.getString("game_date")))
+        .date(row.getString("game_date"))
         .state(GameState.byCode(row.getInt("game_state")));
   }
 

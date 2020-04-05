@@ -23,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
+import java.sql.Connection;
 import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
@@ -50,7 +51,6 @@ import io.vertx.axle.amqp.AmqpSender;
 import io.vertx.core.json.Json;
 import io.vertx.core.net.PemKeyCertOptions;
 import io.vertx.core.net.PemTrustOptions;
-import io.vertx.mutiny.pgclient.PgPool;
 import io.vertx.reactivex.core.Vertx;
 
 /**
@@ -81,7 +81,7 @@ public class GamePersistenceServiceTest {
   GameQueries gameQueries;
 
   @Inject
-  PgPool pgClient;
+  Connection dbConn;
 
   @Test
   @Order(1)
@@ -134,12 +134,10 @@ public class GamePersistenceServiceTest {
         });
 
     Awaitility.await().atMost(Duration.ofSeconds(10)).untilTrue(messageSent);
-    Optional<Optional<Game>> optGame = gameQueries
-        .findById(pgClient, 1)
-        .await().asOptional().atMost(Duration.ofSeconds(10));
+    Optional<Game> optGame = gameQueries
+        .findById(dbConn, 1);
     assertTrue(optGame.isPresent());
-    assertTrue(optGame.get().isPresent());
-    Game g = optGame.get().get();
+    Game g = optGame.get();
     assertNotNull(g);
     assertEquals(1, g.getPk());
     assertEquals(game.getGameId(), g.getGameId());
@@ -199,12 +197,10 @@ public class GamePersistenceServiceTest {
         });
 
     Awaitility.await().atMost(Duration.ofSeconds(10)).untilTrue(messageSent);
-    Optional<Optional<Game>> optGame = gameQueries
-        .findById(pgClient, 1)
-        .await().asOptional().atMost(Duration.ofSeconds(10));
+    Optional<Game> optGame = gameQueries
+        .findById(dbConn, 1);
     assertTrue(optGame.isPresent());
-    assertTrue(optGame.get().isPresent());
-    Game g = optGame.get().get();
+    Game g = optGame.get();
     assertNotNull(g);
     assertEquals(1, g.getPk());
     assertEquals(game.getGameId(), g.getGameId());
@@ -215,10 +211,9 @@ public class GamePersistenceServiceTest {
   @Test
   @Order(3)
   public void testGameDelete() throws Exception {
-    Optional<List<Game>> games = gameQueries
-        .findAll(pgClient)
-        .await().asOptional().atMost(Duration.ofSeconds(10));
-    games.get().forEach(g -> gameQueries.delete(pgClient, g.getPk()));
+    List<Game> games = gameQueries
+        .findAll(dbConn);
+    games.forEach(g -> gameQueries.delete(dbConn, g.getPk()));
   }
 
 

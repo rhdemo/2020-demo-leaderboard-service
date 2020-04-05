@@ -19,7 +19,6 @@
  */
 package com.redhat.developers.data;
 
-import java.time.OffsetDateTime;
 import javax.json.bind.annotation.JsonbProperty;
 import javax.json.bind.annotation.JsonbTransient;
 import io.quarkus.runtime.annotations.RegisterForReflection;
@@ -34,7 +33,7 @@ public class Game {
   private String gameId;
   private String state;
   @JsonbTransient
-  private OffsetDateTime date;
+  private String date;
   @JsonbTransient
   private String configuration;
 
@@ -66,11 +65,11 @@ public class Game {
     this.state = state;
   }
 
-  public OffsetDateTime getDate() {
+  public String getDate() {
     return date;
   }
 
-  public void setDate(OffsetDateTime date) {
+  public void setDate(String date) {
     this.date = date;
   }
 
@@ -101,7 +100,7 @@ public class Game {
     return this;
   }
 
-  public Game date(OffsetDateTime date) {
+  public Game date(String date) {
     this.date = date;
     return this;
   }

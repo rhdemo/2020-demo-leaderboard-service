@@ -19,19 +19,17 @@
  */
 package com.redhat.developers.service;
 
-import static java.util.logging.Level.FINE;
-import static java.util.logging.Level.INFO;
-import java.util.concurrent.CompletionStage;
+import java.sql.Connection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.json.bind.Jsonb;
 import com.redhat.developers.data.Game;
 import com.redhat.developers.data.GameMessage;
 import com.redhat.developers.sql.GameQueries;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
-import io.vertx.mutiny.pgclient.PgPool;
 
 /**
  * GamePersistenceService
@@ -45,7 +43,8 @@ public class GamePersistenceService {
   Jsonb jsonb;
 
   @Inject
-  PgPool client;
+  @Named("gamedb")
+  Connection dbConn;
 
   @Inject
   GameQueries gameQueries;
@@ -58,22 +57,15 @@ public class GamePersistenceService {
             || "game".equals(gameMessage.getType()))) {
       Game game = gameMessage.getGame();
       logger.log(Level.INFO, "Saving game {0} ", game.getPk());
-      gameQueries.upsert(client, game)
-          .subscribe().with(b -> {
-            if (b) {
-              logger.log(Level.INFO,
-                  "Saved Game {0} sucessfully ", game.getGameId());
-            } else {
-              logger.log(Level.INFO,
-                  "Unable to save Game {0} ", game.getGameId());
-            }
-          }, e -> {
-            logger.log(Level.SEVERE, "Error saving Game {0}",
-                game.getGameId());
-          });
-    } else {
-      logger.log(INFO,
-          "Game is not of type 'game' or 'reset-game', save skipped");
+      boolean isInserted = gameQueries.upsert(dbConn, game);
+
+      if (isInserted) {
+        logger.log(Level.INFO,
+            "Saved Game {0} sucessfully ", game.getGameId());
+      } else {
+        logger.log(Level.INFO,
+            "Unable to save Game {0} ", game.getGameId());
+      }
     }
   }
 

@@ -19,17 +19,18 @@
  */
 package com.redhat.developers.service;
 
+import java.sql.Connection;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.json.bind.Jsonb;
 import com.redhat.developers.data.Player;
 import com.redhat.developers.sql.PlayerQueries;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
-import io.vertx.mutiny.pgclient.PgPool;
 
 /**
  * PlayerPersistenceService
@@ -43,7 +44,8 @@ public class PlayerPersistenceService {
   Jsonb jsonb;
 
   @Inject
-  PgPool client;
+  @Named("gamedb")
+  Connection dbConn;
 
   @Inject
   PlayerQueries playerQueries;
@@ -53,21 +55,18 @@ public class PlayerPersistenceService {
     final Instant startTime = Instant.now();
     logger.log(Level.INFO,
         "Saving Player  {0} ", player.getPlayerId());
-    playerQueries
-        .upsert(client, player).subscribe().with(b -> {
-          if (b) {
-            final Instant endTime = Instant.now();
-            logger.log(Level.INFO,
-                "Player {0} Saved in {1} ms",
-                new Object[] {player.getPlayerId(),
-                    Duration.between(startTime, endTime).toMillis()});
-          } else {
-            logger.log(Level.INFO,
-                "Unable to save Player {0} ", player.getPlayerId());
-          }
-        }, e -> {
-          logger.log(Level.SEVERE, "Error saving Player {0}",
-              player.getPlayerId());
-        });
+    boolean isInserted = playerQueries
+        .upsert(dbConn, player);
+    final Instant endTime = Instant.now();
+    if (isInserted) {
+      logger.log(Level.FINE,
+          "Player {0} Saved in {1} ms",
+          new Object[] {player.getPlayerId(),
+              Duration.between(startTime, endTime).toMillis()});
+    } else {
+      logger.log(Level.FINE,
+          "Unable to save Player {0} ", player.getPlayerId());
+    }
+
   }
 }

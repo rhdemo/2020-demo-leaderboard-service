@@ -22,9 +22,9 @@ package com.redhat.developers;
 import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import java.sql.Connection;
 import java.time.Duration;
 import java.util.List;
-import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
@@ -48,7 +48,6 @@ import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 import io.vertx.core.Vertx;
 import io.vertx.kafka.client.consumer.KafkaConsumer;
-import io.vertx.mutiny.pgclient.PgPool;
 
 /**
  * LeaderBoardStreamTest
@@ -66,7 +65,7 @@ public class PlayerPersistenceTest {
   Jsonb jsonb;
 
   @Inject
-  PgPool client;
+  Connection client;
 
   @Inject
   PlayerQueries playerQ;
@@ -114,11 +113,9 @@ public class PlayerPersistenceTest {
         .untilAtomic(this.testRecordCount,
             Is.is(Matchers.greaterThanOrEqualTo(3)));
 
-    Optional<List<Player>> optPlayers = playerQ
-        .rankPlayers(client, 3)
-        .await().asOptional().atMost(Duration.ofSeconds(10));
+    List<Player> players = playerQ
+        .rankPlayers(client, 3);
 
-    List<Player> players = optPlayers.get();
     assertNotNull(players);
     assertEquals(3, players.size());
     Player aPlayer = players.get(0);
@@ -154,13 +151,8 @@ public class PlayerPersistenceTest {
   @Order(2)
   public void testPlayerPersistenceWithRowCount() throws Exception {
 
-    Optional<List<Player>> optPlayers = playerQ
-        .rankPlayers(client, 1)
-        .await().asOptional().atMost(Duration.ofSeconds(10));
-
-    assertTrue(optPlayers.isPresent());
-
-    List<Player> players = optPlayers.get();
+    List<Player> players = playerQ
+        .rankPlayers(client, 1);
 
     assertNotNull(players);
     assertEquals(1, players.size());

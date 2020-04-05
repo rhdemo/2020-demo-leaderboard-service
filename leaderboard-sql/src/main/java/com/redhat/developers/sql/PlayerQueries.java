@@ -220,7 +220,7 @@ public class PlayerQueries {
    */
   private List<Player> playersList(ResultSet rs) throws SQLException {
     List<Player> listOfPlayers = new ArrayList<>();
-    if (rs.next()) {
+    while (rs.next()) {
       listOfPlayers.add(from(rs));
     }
     return listOfPlayers;

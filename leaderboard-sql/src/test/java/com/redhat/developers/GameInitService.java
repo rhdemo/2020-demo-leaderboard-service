@@ -19,7 +19,23 @@
  */
 package com.redhat.developers;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import java.net.URL;
+import java.sql.Connection;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import javax.json.bind.Jsonb;
+import javax.json.bind.JsonbBuilder;
+import com.redhat.developers.data.Game;
+import com.redhat.developers.data.GameMessage;
+import com.redhat.developers.data.GameState;
+import com.redhat.developers.data.Player;
+import com.redhat.developers.sql.GameQueries;
 
 /**
  * GameInitService
@@ -27,41 +43,45 @@ import javax.enterprise.context.ApplicationScoped;
 @ApplicationScoped
 public class GameInitService {
 
-  // @Inject
-  // GameQueries gameQueries;
+  @Inject
+  ConnectionUtil connectionUtil;
 
-  // @Inject
-  // PgPool client;
+  @Inject
+  GameQueries gameQueries;
+  Connection client;
 
-  // Game game = Game.newGame()
-  // .gameId("new-game-1583157438")
-  // .state(GameState.byCode(1))
-  // .configuration("{}");
+  Game game = Game.newGame()
+      .gameId("new-game-1583157438")
+      .state(GameState.byCode(1))
+      .configuration("{}");
 
-  // @PostConstruct
-  // void init() {
-  // gameQueries
-  // .upsert(client, game)
-  // .await().atMost(Duration.ofSeconds(10));
-  // }
+  @PostConstruct
+  void init() throws Exception {
 
-  // public Optional<Game> gameExist() {
-  // Optional<List<Game>> games = gameQueries
-  // .findAll(client)
-  // .await().asOptional().atMost(Duration.ofSeconds(10));
-  // return Optional.ofNullable(games.get().get(0));
-  // }
+    if (client == null) {
+      this.client = connectionUtil.getConnection();
+    }
+    Boolean isInserted = gameQueries
+        .upsert(client, game);
+    assertTrue(isInserted);
+  }
 
-  // public List<Player> seedPlayers()
-  // throws Exception {
-  // URL dataFileUrl = this.getClass().getResource("/data.json");
-  // Jsonb jsonb = JsonbBuilder.newBuilder().build();
-  // List<GameMessage> gameMessages = jsonb.fromJson(dataFileUrl.openStream(),
-  // new ArrayList<GameMessage>() {}.getClass()
-  // .getGenericSuperclass());
-  // return gameMessages.stream()
-  // .map(g -> g.getPlayer())
-  // .collect(Collectors.toList());
-  // }
+  public Optional<Game> gameExist() {
+    List<Game> games = gameQueries
+        .findAll(client);
+    return Optional.ofNullable(games.get(0));
+  }
+
+  public List<Player> seedPlayers()
+      throws Exception {
+    URL dataFileUrl = this.getClass().getResource("/data.json");
+    Jsonb jsonb = JsonbBuilder.newBuilder().build();
+    List<GameMessage> gameMessages = jsonb.fromJson(dataFileUrl.openStream(),
+        new ArrayList<GameMessage>() {}.getClass()
+            .getGenericSuperclass());
+    return gameMessages.stream()
+        .map(g -> g.getPlayer())
+        .collect(Collectors.toList());
+  }
 
 }

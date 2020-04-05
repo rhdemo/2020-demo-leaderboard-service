@@ -19,7 +19,8 @@
  */
 package com.redhat.developers;
 
-import java.time.Duration;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import java.sql.Connection;
 import java.util.List;
 import java.util.Optional;
 import java.util.logging.Logger;
@@ -31,8 +32,6 @@ import com.redhat.developers.data.Game;
 import com.redhat.developers.data.GameMessage;
 import com.redhat.developers.data.GameState;
 import com.redhat.developers.sql.GameQueries;
-import io.vertx.core.Vertx;
-import io.vertx.mutiny.pgclient.PgPool;
 
 /**
  * GameInitService
@@ -49,10 +48,9 @@ public class GameInitializer {
   GameQueries gameQueries;
 
   @Inject
-  PgPool client;
-  Game game;
+  Connection client;
 
-  Vertx vertx = Vertx.vertx();
+  Game game;
 
   List<GameMessage> gameMessages;
 
@@ -63,18 +61,16 @@ public class GameInitializer {
         .state(GameState.byCode(1))
         .configuration("{}");
 
-    gameQueries
-        .upsert(client, g)
-        .await().atMost(Duration.ofSeconds(10));
+    boolean isInserted = gameQueries
+        .upsert(client, g);
+    assertTrue(isInserted);
 
   }
 
   public Optional<Game> gameExist() {
-    Optional<List<Game>> games = gameQueries
-        .findAll(client)
-        .await().asOptional().atMost(Duration.ofSeconds(10));
-    this.game = games.get().get(0);
-    return Optional.ofNullable(games.get().get(0));
+    List<Game> games = gameQueries
+        .findAll(client);
+    return Optional.ofNullable(games.get(0));
   }
 
   public void deleteGame() {
