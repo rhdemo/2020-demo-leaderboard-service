@@ -32,10 +32,10 @@ import io.quarkus.test.common.QuarkusTestResourceLifecycleManager;
  * QuarkusTestEnv
  */
 @SuppressWarnings("all")
-public class AggreatorQuarkusTestEnv
+public class AggregatorQuarkusTestEnv
     implements QuarkusTestResourceLifecycleManager {
 
-  Logger logger = Logger.getLogger(AggreatorQuarkusTestEnv.class.getName());
+  Logger logger = Logger.getLogger(AggregatorQuarkusTestEnv.class.getName());
 
   public final static String JDBC_URL =
       "jdbc:postgresql://%s:%d/gamedb";
@@ -54,8 +54,14 @@ public class AggreatorQuarkusTestEnv
 
   @Override
   public Map<String, String> start() {
-    kafka.start();
-    postgreSQL.start();
+
+    try {
+      kafka.start();
+      postgreSQL.start();
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+
 
     while (!kafka.isRunning()) {
       try {
@@ -89,9 +95,8 @@ public class AggreatorQuarkusTestEnv
 
     sysProps.put("kafka.bootstrap.servers", kafka.getBootstrapServers());
 
-    sysProps.put("quarkus.datasource.db-kind", "postgresql");
-    sysProps.put("quarkus.datasource.url", String.format(JDBC_URL,
-        "localhost", postgreSQL.getMappedPort(5432)));
+    sysProps.put("quarkus.datasource.jdbc.url", String.format(JDBC_URL,
+        postgreSQL.getContainerIpAddress(), postgreSQL.getMappedPort(5432)));
 
     return sysProps;
   }

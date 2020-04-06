@@ -35,7 +35,7 @@ public class QuarkusMessagingTestEnv
   Logger logger = Logger.getLogger(QuarkusMessagingTestEnv.class.getName());
 
   public final static String JDBC_URL =
-      "postgresql://%s:%d/gamedb";
+      "jdbc:postgresql://%s:%d/gamedb";
 
   public static PostgreSqlContainer postgreSQL = new PostgreSqlContainer();
 
@@ -43,13 +43,18 @@ public class QuarkusMessagingTestEnv
 
   @Override
   public Map<String, String> start() {
-    amqpContainer.start();
-    postgreSQL.start();
+    try {
+      amqpContainer.start();
+      postgreSQL.start();
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+
     Map<String, String> sysProps = new HashMap<>();
     // Quarkus
     sysProps.put("quarkus.http.test-port", "8085");
     // Database
-    sysProps.put("quarkus.datasource.url", String.format(JDBC_URL,
+    sysProps.put("quarkus.datasource.jdbc.url", String.format(JDBC_URL,
         postgreSQL.getContainerIpAddress(), postgreSQL.getMappedPort(5432)));
 
     // AMQP

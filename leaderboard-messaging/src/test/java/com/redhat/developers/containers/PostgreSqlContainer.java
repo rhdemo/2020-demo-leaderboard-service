@@ -46,7 +46,7 @@ public class PostgreSqlContainer<SELF extends PostgreSqlContainer<SELF>>
 
   @Override
   public void start() {
-    addFixedExposedPort(5432, 5432);
+    // addFixedExposedPort(5432, 5432);
     super.start();
   }
 

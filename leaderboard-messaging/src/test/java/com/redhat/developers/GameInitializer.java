@@ -25,8 +25,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
+import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import javax.inject.Singleton;
 import javax.json.bind.Jsonb;
 import com.redhat.developers.data.Game;
 import com.redhat.developers.data.GameMessage;
@@ -36,7 +36,7 @@ import com.redhat.developers.sql.GameQueries;
 /**
  * GameInitService
  */
-@Singleton
+@ApplicationScoped
 public class GameInitializer {
 
   Logger logger = Logger.getLogger("GameInitializer");

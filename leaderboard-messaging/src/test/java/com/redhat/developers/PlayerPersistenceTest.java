@@ -54,7 +54,7 @@ import io.vertx.kafka.client.consumer.KafkaConsumer;
  */
 @QuarkusTest
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-@QuarkusTestResource(AggreatorQuarkusTestEnv.class)
+@QuarkusTestResource(AggregatorQuarkusTestEnv.class)
 @TestInstance(Lifecycle.PER_CLASS)
 public class PlayerPersistenceTest {
 
