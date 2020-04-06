@@ -19,9 +19,13 @@
  */
 package com.redhat.developers.api;
 
+import java.sql.Connection;
+import java.util.List;
+import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -29,10 +33,11 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.ResponseBuilder;
+import com.redhat.developers.data.GameTotal;
+import com.redhat.developers.data.Player;
+import com.redhat.developers.model.Leaderboard;
 import com.redhat.developers.sql.PlayerQueries;
 import io.smallrye.mutiny.Uni;
-import io.vertx.mutiny.pgclient.PgPool;
 
 /**
  * LeaderBoardSource TODO: Auth
@@ -48,7 +53,8 @@ public class LeaderBoardResource {
   PlayerQueries playerQueries;
 
   @Inject
-  PgPool client;
+  @Named("gamedb")
+  Connection dbConn;
 
   @GET
   @Path("leaderboard")
@@ -56,9 +62,17 @@ public class LeaderBoardResource {
       @QueryParam("rowCount") String qRowCount) {
     logger.log(Level.FINE, "Getting Ranked {0} player(s) for game ", qRowCount);
     int rowCount = qRowCount != null ? Integer.parseInt(qRowCount) : 10;
-    return playerQueries.rankPlayers(client, rowCount)
-        .map(results -> Response.ok(results))
-        .map(ResponseBuilder::build);
+    List<Player> leaders = playerQueries.rankPlayers(dbConn, rowCount);
+    Optional<GameTotal> gameTotals = playerQueries.gameTotals(dbConn);
+    Leaderboard leaderboard = new Leaderboard();
+    leaderboard.setLeaders(leaders);
+    if (gameTotals.isPresent()) {
+      GameTotal gameTotal = gameTotals.get();
+      leaderboard.setDollars(gameTotal.getTotalDollars());
+      leaderboard.setGuesses(gameTotal.getTotalGuesses());
+      leaderboard.setPlayers(gameTotal.getTotalPlayers());
+    }
+    return Uni.createFrom().item(Response.ok().entity(leaderboard).build());
   }
 
 }

@@ -38,7 +38,7 @@ public class AggreatorQuarkusTestEnv
   Logger logger = Logger.getLogger(AggreatorQuarkusTestEnv.class.getName());
 
   public final static String JDBC_URL =
-      "postgresql://%s:%d/gamedb";
+      "jdbc:postgresql://%s:%d/gamedb";
 
   public static final PostgreSqlContainer postgreSQL =
       new PostgreSqlContainer();
@@ -90,7 +90,7 @@ public class AggreatorQuarkusTestEnv
     sysProps.put("kafka.bootstrap.servers", kafka.getBootstrapServers());
 
     sysProps.put("quarkus.datasource.db-kind", "postgresql");
-    sysProps.put("quarkus.datasource.reactive.url", String.format(JDBC_URL,
+    sysProps.put("quarkus.datasource.url", String.format(JDBC_URL,
         "localhost", postgreSQL.getMappedPort(5432)));
 
     return sysProps;

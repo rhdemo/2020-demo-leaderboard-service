@@ -35,7 +35,7 @@ public class APIQuarkusTestEnv
   Logger logger = Logger.getLogger(APIQuarkusTestEnv.class.getName());
 
   public final static String JDBC_URL =
-      "postgresql://%s:%d/gamedb";
+      "jdbc:postgresql://%s:%d/gamedb";
 
   public static final PostgreSqlContainer postgreSQL =
       new PostgreSqlContainer();
@@ -47,12 +47,11 @@ public class APIQuarkusTestEnv
 
     Map<String, String> sysProps = new HashMap<>();
 
-
     // Quarkus
-    sysProps.put("quarkus.http.test-port", "8085"); // Kafka
+    sysProps.put("quarkus.http.test-port", "8085");
     sysProps.put("quarkus.datasource.db-kind", "postgresql");
-    sysProps.put("quarkus.datasource.reactive.url", String.format(JDBC_URL,
-        "localhost", postgreSQL.getMappedPort(5432)));
+    sysProps.put("quarkus.datasource.jdbc.url", String.format(JDBC_URL,
+        "postgresql", postgreSQL.getMappedPort(5432)));
 
     return sysProps;
   }

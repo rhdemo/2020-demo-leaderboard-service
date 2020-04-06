@@ -22,38 +22,33 @@ package com.redhat.developers;
 import static io.restassured.RestAssured.given;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.IOException;
 import java.io.InputStream;
-import java.time.Duration;
+import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.json.bind.Jsonb;
 import com.redhat.developers.data.Game;
 import com.redhat.developers.data.GameMessage;
 import com.redhat.developers.data.GameState;
 import com.redhat.developers.data.Player;
+import com.redhat.developers.model.Leaderboard;
 import com.redhat.developers.sql.GameQueries;
 import com.redhat.developers.sql.PlayerQueries;
-import org.awaitility.Awaitility;
-import org.hamcrest.Matchers;
-import org.hamcrest.core.Is;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
-import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.junit.jupiter.api.TestMethodOrder;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.response.Response;
-import io.vertx.core.Vertx;
-import io.vertx.mutiny.pgclient.PgPool;
 
 /**
  * LeaderBoardResourceTest
@@ -61,7 +56,6 @@ import io.vertx.mutiny.pgclient.PgPool;
 @QuarkusTest
 @QuarkusTestResource(APIQuarkusTestEnv.class)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-@TestInstance(Lifecycle.PER_CLASS)
 public class LeaderBoardResourceTest {
 
   static final Logger logger =
@@ -71,7 +65,8 @@ public class LeaderBoardResourceTest {
   Jsonb jsonb;
 
   @Inject
-  PgPool client;
+  @Named("gamedb")
+  Connection client;
 
   @Inject
   PlayerQueries playerQueries;
@@ -79,20 +74,16 @@ public class LeaderBoardResourceTest {
   @Inject
   GameQueries gameQueries;
 
-  Vertx vertx = Vertx.vertx();
-
-  AtomicInteger testRecordCount = new AtomicInteger();
-
-  @BeforeAll
+  @BeforeEach
   public void setupData() {
     Game g = Game.newGame()
         .gameId("new-game-1583157438")
         .state(GameState.byCode(1))
         .configuration("{}");
 
-    gameQueries
-        .upsert(client, g)
-        .await().atMost(Duration.ofSeconds(10));
+    Boolean gameInserted = gameQueries
+        .upsert(client, g);
+    assertTrue(gameInserted);
 
     try (InputStream in = getClass().getResource("/data.json").openStream()) {
       List<GameMessage> gameMessages = jsonb.fromJson(in,
@@ -101,9 +92,7 @@ public class LeaderBoardResourceTest {
           .map(gm -> gm.getPlayer())
           .forEach(p -> {
             playerQueries
-                .upsert(client, p)
-                .onItem()
-                .apply(b -> b ? testRecordCount.incrementAndGet() : 0);
+                .upsert(client, p);
           });
     } catch (IOException e) {
       logger.log(Level.SEVERE, "Error loading data file", e);
@@ -116,12 +105,6 @@ public class LeaderBoardResourceTest {
 
     nap();
 
-    // Just to make sure the records are sent to Kafka
-    Awaitility.await()
-        .atMost(Duration.ofSeconds(10))
-        .untilAtomic(this.testRecordCount,
-            Is.is(Matchers.greaterThanOrEqualTo(3)));
-
     Response response = given()
         .when().get("/api/leaderboard/");
 
@@ -130,8 +113,9 @@ public class LeaderBoardResourceTest {
     String body = response.getBody().asString();
     assertNotNull(body);
 
-    List<Player> players = jsonb.fromJson(body,
-        new ArrayList<Player>() {}.getClass().getGenericSuperclass());
+    Leaderboard leaderboard = jsonb.fromJson(body, Leaderboard.class);
+
+    List<Player> players = leaderboard.getLeaders();
 
     assertNotNull(players);
     assertEquals(3, players.size());
@@ -162,6 +146,10 @@ public class LeaderBoardResourceTest {
     assertEquals(1, aPlayer.getWrong());
     assertEquals(95, aPlayer.getScore());
 
+    assertEquals(290, leaderboard.getDollars());
+    assertEquals(11, leaderboard.getGuesses());
+    assertEquals(3, leaderboard.getPlayers());
+
   }
 
   @Test
@@ -169,12 +157,6 @@ public class LeaderBoardResourceTest {
   public void testPlayerPersistenceWithRowCount() throws Exception {
 
     nap();
-
-    // Just to make sure the records are sent to Kafka
-    Awaitility.await()
-        .atMost(Duration.ofSeconds(10))
-        .untilAtomic(this.testRecordCount,
-            Is.is(Matchers.greaterThanOrEqualTo(3)));
 
     Response response = given()
         .when().get("/api/leaderboard/?rowCount=1");
@@ -184,27 +166,32 @@ public class LeaderBoardResourceTest {
     String body = response.getBody().asString();
     assertNotNull(body);
 
-    List<Player> players = jsonb.fromJson(body,
-        new ArrayList<Player>() {}.getClass().getGenericSuperclass());
+    Leaderboard leaderboard = jsonb.fromJson(body, Leaderboard.class);
 
+    List<Player> players = leaderboard.getLeaders();
     Player aPlayer = players.get(0);
     assertNotNull(aPlayer);
-    assertEquals(1, aPlayer.getPk());
+    assertEquals(5, aPlayer.getPk());
     assertEquals("tom", aPlayer.getPlayerId());
     assertEquals("tom", aPlayer.getUsername());
     assertEquals(4, aPlayer.getRight());
     assertEquals(1, aPlayer.getWrong());
     assertEquals(100, aPlayer.getScore());
 
+
+    assertEquals(290, leaderboard.getDollars());
+    assertEquals(11, leaderboard.getGuesses());
+    assertEquals(3, leaderboard.getPlayers());
+
   }
 
-  @AfterAll
+  @AfterEach
   public void clearRecords() {
-    gameQueries.delete(client, 1);
     playerQueries.delete(client, 1);
     playerQueries.delete(client, 2);
     playerQueries.delete(client, 3);
     playerQueries.delete(client, 4);
+    gameQueries.delete(client, 1);
   }
 
 

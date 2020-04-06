@@ -105,9 +105,8 @@ public class PlayerQueries {
     try {
       PreparedStatement pst =
           dbConn.prepareStatement("SELECT COUNT(*) as total_players,"
-              + " SUM(p.guess_right) as total_rights,"
-              + " SUM(p.guess_wrong) as total_wrongs"
-              + " SUM(p.guess_score) as total_dollar"
+              + " SUM(p.guess_right) as total_guesses,"
+              + " SUM(p.guess_score) as total_dollars"
               + " FROM players p"
               + " WHERE p.game_id=(SELECT g.game_id from games g ORDER BY g.game_date DESC FETCH FIRST 1 ROW ONLY)");
       ResultSet rs = pst.executeQuery();
@@ -208,7 +207,7 @@ public class PlayerQueries {
     GameTotal gameTotal = GameTotal.newGameTotal()
         .totalPlayers(row.getLong("total_players"))
         .totalDollars(row.getLong("total_dollars"))
-        .totalGuesses(row.getLong("total_gesses"));
+        .totalGuesses(row.getLong("total_guesses"));
     return gameTotal;
   }
 
