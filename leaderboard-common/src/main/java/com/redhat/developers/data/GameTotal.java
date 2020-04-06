@@ -19,6 +19,9 @@
  */
 package com.redhat.developers.data;
 
+import io.quarkus.runtime.annotations.RegisterForReflection;
+
+@RegisterForReflection
 public class GameTotal {
 
   private long totalPlayers;

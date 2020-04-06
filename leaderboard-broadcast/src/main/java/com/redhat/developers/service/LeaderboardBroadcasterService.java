@@ -20,16 +20,21 @@
 package com.redhat.developers.service;
 
 import static java.util.logging.Level.FINE;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.time.Duration;
+import java.util.List;
 import java.util.logging.Logger;
+import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import javax.json.bind.Jsonb;
+import com.redhat.developers.data.Player;
 import com.redhat.developers.sql.PlayerQueries;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.reactive.messaging.Outgoing;
+import io.agroal.api.AgroalDataSource;
 import io.smallrye.mutiny.Multi;
-import io.vertx.core.json.JsonArray;
-import io.vertx.mutiny.pgclient.PgPool;
 
 /**
  * LeaderboardBroadcasterService
@@ -41,7 +46,10 @@ public class LeaderboardBroadcasterService {
       Logger.getLogger(LeaderboardBroadcasterService.class.getName());
 
   @Inject
-  PgPool client;
+  AgroalDataSource dataSource;
+
+  @Inject
+  Jsonb jsonb;
 
   @Inject
   PlayerQueries playerQueries;
@@ -52,12 +60,20 @@ public class LeaderboardBroadcasterService {
   @ConfigProperty(name = "rhdemo.leaderboard-broadcast.tickInterval")
   int tickInterval;
 
+  Connection dbConn;
+
+  @PostConstruct
+  void init() throws SQLException {
+    this.dbConn = dataSource.getConnection();
+  }
+
   @Outgoing("leaderboard-broadcast")
-  public Multi<JsonArray> broadcastLeaderboard() {
+  public Multi<String> broadcastLeaderboard() {
     return Multi.createFrom()
         .ticks().every(Duration.ofSeconds(tickInterval))
         .on().overflow().drop()
-        .onItem().produceMulti(this::rankedPlayerList).concatenate();
+        .onItem()
+        .apply(this::rankedPlayerList);
   }
 
   /**
@@ -65,14 +81,10 @@ public class LeaderboardBroadcasterService {
    * @param tick
    * @return
    */
-  public Multi<JsonArray> rankedPlayerList(long tick) {
+  public String rankedPlayerList(long tick) {
     logger.log(FINE, "Sending message for tick {0} ", tick);
-    return playerQueries
-        .rankPlayers(client, rowCount)
-        .onItem()
-        .produceMulti(p -> {
-          return Multi.createFrom().item(new JsonArray(p));
-        })
-        .onFailure().recoverWithItem(new JsonArray());
+    List<Player> players = playerQueries
+        .rankPlayers(dbConn, rowCount);
+    return jsonb.toJson(players);
   }
 }

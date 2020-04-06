@@ -26,6 +26,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.json.bind.Jsonb;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -37,7 +38,6 @@ import com.redhat.developers.data.GameTotal;
 import com.redhat.developers.data.Player;
 import com.redhat.developers.model.Leaderboard;
 import com.redhat.developers.sql.PlayerQueries;
-import io.smallrye.mutiny.Uni;
 
 /**
  * LeaderBoardSource TODO: Auth
@@ -50,6 +50,9 @@ public class LeaderBoardResource {
   private Logger logger = Logger.getLogger(LeaderBoardResource.class.getName());
 
   @Inject
+  Jsonb jsonb;
+
+  @Inject
   PlayerQueries playerQueries;
 
   @Inject
@@ -58,12 +61,16 @@ public class LeaderBoardResource {
 
   @GET
   @Path("leaderboard")
-  public Uni<Response> getLeaderBoard(
+  public Response getLeaderBoard(
       @QueryParam("rowCount") String qRowCount) {
-    logger.log(Level.FINE, "Getting Ranked {0} player(s) for game ", qRowCount);
+    logger.log(Level.INFO, "Getting Ranked {0} player(s) for game ", qRowCount);
     int rowCount = qRowCount != null ? Integer.parseInt(qRowCount) : 10;
     List<Player> leaders = playerQueries.rankPlayers(dbConn, rowCount);
+    logger.log(Level.INFO, "Got Ranked {0} player(s) for game ",
+        leaders.size());
     Optional<GameTotal> gameTotals = playerQueries.gameTotals(dbConn);
+    logger.log(Level.INFO, "Game Totals ",
+        gameTotals.isPresent());
     Leaderboard leaderboard = new Leaderboard();
     leaderboard.setLeaders(leaders);
     if (gameTotals.isPresent()) {
@@ -72,7 +79,9 @@ public class LeaderBoardResource {
       leaderboard.setGuesses(gameTotal.getTotalGuesses());
       leaderboard.setPlayers(gameTotal.getTotalPlayers());
     }
-    return Uni.createFrom().item(Response.ok().entity(leaderboard).build());
+    logger.log(Level.INFO, "Leaderboard",
+        jsonb.toJson(leaderboard));
+    return Response.ok().entity(leaderboard).build();
   }
 
 }

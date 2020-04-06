@@ -2,7 +2,9 @@ package com.redhat.developers.model;
 
 import java.util.List;
 import com.redhat.developers.data.Player;
+import io.quarkus.runtime.annotations.RegisterForReflection;
 
+@RegisterForReflection
 public class Leaderboard {
 
   private List<Player> leaders;

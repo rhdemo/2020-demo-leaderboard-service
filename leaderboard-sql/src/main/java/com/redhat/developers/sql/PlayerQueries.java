@@ -113,13 +113,12 @@ public class PlayerQueries {
 
       if (rs.next()) {
         gameTotal = gameTotal(rs);
-      } else {
-
       }
     } catch (SQLException e) {
       logger.log(Level.SEVERE,
           "Error getting game totals for game", e);
     }
+    logger.info("Game Total :" + gameTotal);
     return Optional.ofNullable(gameTotal);
   }
 
