@@ -53,7 +53,7 @@ public class PlayerPersistenceService {
   @Incoming("leaderboard-persist-to-db")
   public void handleScores(Player player) {
     final Instant startTime = Instant.now();
-    logger.log(Level.INFO,
+    logger.log(Level.FINE,
         "Saving Player  {0} ", player.getPlayerId());
     boolean isInserted = playerQueries
         .upsert(dbConn, player);
