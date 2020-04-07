@@ -42,6 +42,8 @@ leaderboard-messaging/target/*-runner:	build
 jvm_image_build_push:	start_docker	build	
 	@docker build -t $(IMAGE_REPO)/2020-leaderboard-messaging:"$(APP_VERSION)-jar" -f leaderboard-messaging/Dockerfile.jvm leaderboard-messaging
 	@docker push $(IMAGE_REPO)/2020-leaderboard-messaging:"$(APP_VERSION)-jar"
+	@docker tag $(IMAGE_REPO)/2020-leaderboard-messaging:"$(APP_VERSION)-jar" $(IMAGE_REPO)/2020-leaderboard-messaging
+	@docker push $(IMAGE_REPO)/2020-leaderboard-messaging
 
 native:	leaderboard-messaging/target/*-runner
 
@@ -51,4 +53,4 @@ native_image_build_push:	start_docker	native
 	@docker push $(IMAGE_REPO)/2020-leaderboard-messaging:"$(APP_VERSION)-native"	
 	@docker push $(IMAGE_REPO)/2020-leaderboard-messaging
 
-all:	clean	common	start_docker	jvm_image_build_push	native_image_build_push
+all:	clean	common	start_docker	jvm_image_build_push
