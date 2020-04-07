@@ -41,7 +41,9 @@ leaderboard-broadcast/target/*-runner:	build
 
 jvm_image_build_push:	start_docker	build	
 	@docker build -t $(IMAGE_REPO)/2020-leaderboard-broadcast:"$(APP_VERSION)-jar" -f leaderboard-broadcast/Dockerfile.jvm leaderboard-broadcast
+	@docker tag $(IMAGE_REPO)/2020-leaderboard-broadcast:"$(APP_VERSION)-jar" $(IMAGE_REPO)/2020-leaderboard-broadcast
 	@docker push $(IMAGE_REPO)/2020-leaderboard-broadcast:"$(APP_VERSION)-jar"
+	@docker push $(IMAGE_REPO)/2020-leaderboard-broadcast
 
 native:	leaderboard-broadcast/target/*-runner
 
@@ -51,4 +53,4 @@ native_image_build_push:	start_docker	native
 	@docker push $(IMAGE_REPO)/2020-leaderboard-broadcast:"$(APP_VERSION)-native"	
 	@docker push $(IMAGE_REPO)/2020-leaderboard-broadcast
 
-all:	clean	common	start_docker	jvm_image_build_push	native_image_build_push
+all:	clean	common	start_docker	jvm_image_build_push
