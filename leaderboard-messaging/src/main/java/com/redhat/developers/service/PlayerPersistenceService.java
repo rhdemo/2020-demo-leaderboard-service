@@ -25,12 +25,17 @@ import java.time.Instant;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.inject.Produces;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.json.bind.Jsonb;
 import com.redhat.developers.data.Player;
 import com.redhat.developers.sql.PlayerQueries;
-import org.eclipse.microprofile.reactive.messaging.Incoming;
+import org.apache.kafka.common.serialization.Serdes;
+import org.apache.kafka.streams.StreamsBuilder;
+import org.apache.kafka.streams.Topology;
+import org.apache.kafka.streams.kstream.Consumed;
+import io.quarkus.kafka.client.serialization.JsonbSerde;
 
 /**
  * PlayerPersistenceService
@@ -50,8 +55,21 @@ public class PlayerPersistenceService {
   @Inject
   PlayerQueries playerQueries;
 
-  @Incoming("leaderboard-persist-to-db")
-  public void handleScores(Player player) {
+  @Produces
+  public Topology handleTransactions() {
+    JsonbSerde<Player> playerSerde = new JsonbSerde<>(Player.class);
+    StreamsBuilder builder = new StreamsBuilder();
+
+    builder
+        .stream("transactions",
+            (Consumed.with(Serdes.String(), playerSerde)))
+        .foreach((k, v) -> save(v));
+    Topology topology = builder.build();
+    logger.log(Level.FINE, topology.describe().toString());
+    return topology;
+  }
+
+  protected void save(Player player) {
     final Instant startTime = Instant.now();
     logger.log(Level.FINE,
         "Saving Player  {0} ", player.getPlayerId());
@@ -69,4 +87,5 @@ public class PlayerPersistenceService {
     }
 
   }
+
 }

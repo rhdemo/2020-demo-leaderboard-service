@@ -24,7 +24,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import java.sql.Connection;
 import java.time.Duration;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
@@ -47,7 +49,7 @@ import org.junit.jupiter.api.TestMethodOrder;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 import io.vertx.core.Vertx;
-import io.vertx.kafka.client.consumer.KafkaConsumer;
+import io.vertx.reactivex.kafka.client.consumer.KafkaConsumer;
 
 /**
  * LeaderBoardStreamTest
@@ -81,7 +83,7 @@ public class PlayerPersistenceTest {
   @SuppressWarnings("all")
   public void setupData() throws Exception {
     assertTrue(gameInitializer.gameExist().isPresent());
-    Properties config = new Properties();
+    Map<String, String> config = new HashMap<>();
     config.put("bootstrap.servers", System.getProperty("bootstrap.servers"));
     config.put("group.id", getClass().getCanonicalName());
     config.put("key.deserializer",
@@ -91,14 +93,14 @@ public class PlayerPersistenceTest {
     config.put("auto.offset.reset", "earliest");
     config.put("enable.auto.commit", "false");
 
-    KafkaConsumer<String, String> kafkaConsumer =
-        KafkaConsumer.<String, String>create(vertx, config)
-            .subscribe("my-topic");
-    kafkaConsumer.handler(record -> {
-      int i = testRecordCount.incrementAndGet();
-      logger.log(Level.FINER, "Received Record {0} Key:{1} Value:{2} ",
-          new Object[] {i, record.key(), record.value()});
-    });
+    // KafkaConsumer<String, String> kafkaConsumer =
+    // KafkaConsumer.<String, String>create(vertx, config)
+    // .subscribe("my-topic");
+    // kafkaConsumer.handler(record -> {
+    // int i = testRecordCount.incrementAndGet();
+    // logger.log(Level.FINER, "Received Record {0} Key:{1} Value:{2} ",
+    // new Object[] {i, record.key(), record.value()});
+    // });
   }
 
   @Test
