@@ -147,7 +147,8 @@ public class LeaderBoardResourceTest {
     assertEquals(95, aPlayer.getScore());
 
     assertEquals(290, leaderboard.getDollars());
-    assertEquals(11, leaderboard.getGuesses());
+    assertEquals(11, leaderboard.getRights());
+    assertEquals(3, leaderboard.getWrongs());
     assertEquals(3, leaderboard.getPlayers());
 
   }
@@ -178,9 +179,9 @@ public class LeaderBoardResourceTest {
     assertEquals(1, aPlayer.getWrong());
     assertEquals(100, aPlayer.getScore());
 
-
     assertEquals(290, leaderboard.getDollars());
-    assertEquals(11, leaderboard.getGuesses());
+    assertEquals(11, leaderboard.getRights());
+    assertEquals(3, leaderboard.getWrongs());
     assertEquals(3, leaderboard.getPlayers());
 
   }

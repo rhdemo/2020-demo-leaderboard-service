@@ -76,7 +76,8 @@ public class LeaderBoardResource {
     if (gameTotals.isPresent()) {
       GameTotal gameTotal = gameTotals.get();
       leaderboard.setDollars(gameTotal.getTotalDollars());
-      leaderboard.setGuesses(gameTotal.getTotalGuesses());
+      leaderboard.setRights(gameTotal.getTotalRights());
+      leaderboard.setWrongs(gameTotal.getTotalWrongs());
       leaderboard.setPlayers(gameTotal.getTotalPlayers());
     }
     logger.log(Level.INFO, "Leaderboard",

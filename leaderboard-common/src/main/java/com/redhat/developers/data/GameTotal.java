@@ -25,11 +25,32 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
 public class GameTotal {
 
   private long totalPlayers;
-  private long totalGuesses;
+  private long totalRights;
+  private long totalWrongs;
   private long totalDollars;
 
   public long getTotalPlayers() {
     return totalPlayers;
+  }
+
+  public void setTotalPlayers(long totalPlayers) {
+    this.totalPlayers = totalPlayers;
+  }
+
+  public long getTotalRights() {
+    return totalRights;
+  }
+
+  public void setTotalRights(long totalRights) {
+    this.totalRights = totalRights;
+  }
+
+  public long getTotalWrongs() {
+    return totalWrongs;
+  }
+
+  public void setTotalWrongs(long totalWrongs) {
+    this.totalWrongs = totalWrongs;
   }
 
   public long getTotalDollars() {
@@ -40,35 +61,27 @@ public class GameTotal {
     this.totalDollars = totalDollars;
   }
 
-  public long getTotalGuesses() {
-    return totalGuesses;
-  }
-
-  public void setTotalGuesses(long totalGuesses) {
-    this.totalGuesses = totalGuesses;
-  }
-
-  public void setTotalPlayers(long totalPlayers) {
-    this.totalPlayers = totalPlayers;
-  }
-
   public static GameTotal newGameTotal() {
     return new GameTotal();
   }
 
   public GameTotal totalPlayers(long totalPlayers) {
-    this.totalPlayers = totalPlayers;
-    return this;
-  }
-
-  public GameTotal totalGuesses(long totalGuesses) {
-    this.totalGuesses = totalGuesses;
+    setTotalPlayers(totalPlayers);
     return this;
   }
 
   public GameTotal totalDollars(long totalDollars) {
-    this.totalDollars = totalDollars;
+    setTotalDollars(totalDollars);
     return this;
   }
 
+  public GameTotal totalRights(long totalRights) {
+    setTotalRights(totalRights);
+    return this;
+  }
+
+  public GameTotal totalWrongs(long totalWrongs) {
+    setTotalWrongs(totalWrongs);
+    return this;
+  }
 }
