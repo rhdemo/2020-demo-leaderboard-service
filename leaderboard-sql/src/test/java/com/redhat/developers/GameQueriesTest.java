@@ -23,19 +23,16 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import java.sql.Connection;
 import java.util.List;
 import java.util.Optional;
 import javax.inject.Inject;
 import com.redhat.developers.data.Game;
 import com.redhat.developers.data.GameState;
 import com.redhat.developers.sql.GameQueries;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
-import io.agroal.api.AgroalDataSource;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 
@@ -50,19 +47,6 @@ public class GameQueriesTest {
   @Inject
   GameQueries gameQueries;
 
-  @Inject
-  ConnectionUtil connectionUtil;
-
-  Connection client;
-
-  @BeforeEach
-  public void checkIfGameExist() throws Exception {
-
-    if (client == null) {
-      this.client = connectionUtil.getConnection();
-    }
-  }
-
   @Order(1)
   @Test
   public void testAdd() throws Exception {
@@ -71,7 +55,7 @@ public class GameQueriesTest {
         .state(GameState.byCode(1))
         .configuration("{}");
 
-    Boolean isUpserted = gameQueries.upsert(client, game);
+    Boolean isUpserted = gameQueries.upsert(game);
     assertTrue(isUpserted);
   }
 
@@ -84,7 +68,7 @@ public class GameQueriesTest {
         .state(GameState.byCode(1))
         .configuration("{}");
 
-    List<Game> games = gameQueries.findAll(client);
+    List<Game> games = gameQueries.findAll();
     assertNotNull(games);
     assertTrue(games.size() == 1);
     Game actualGame = games.get(0);
@@ -105,7 +89,7 @@ public class GameQueriesTest {
         .state(GameState.byCode(1))
         .configuration("{}");
 
-    Optional<Game> optGame = gameQueries.findById(client, 1);
+    Optional<Game> optGame = gameQueries.findById(1);
     assertTrue(optGame.isPresent());
     Game actualGame = optGame.get();
     assertNotNull(actualGame);
@@ -126,11 +110,11 @@ public class GameQueriesTest {
         .configuration("{}");
 
     Boolean isUpserted = gameQueries
-        .upsert(client, game);
+        .upsert(game);
     assertTrue(isUpserted);
 
     // Query
-    Optional<Game> optGame = gameQueries.findById(client, 1);
+    Optional<Game> optGame = gameQueries.findById(1);
     assertTrue(optGame.isPresent());
     Game actualGame = optGame.get();
     assertNotNull(actualGame);
@@ -155,16 +139,16 @@ public class GameQueriesTest {
         .configuration("{}");
 
     Boolean isUpserted = gameQueries
-        .upsert(client, game3);
+        .upsert(game3);
     assertTrue(isUpserted);
 
     isUpserted = gameQueries
-        .upsert(client, game4);
+        .upsert(game4);
 
     assertTrue(isUpserted);
 
     // Query
-    Optional<Game> optGame = gameQueries.findActiveGame(client);
+    Optional<Game> optGame = gameQueries.findActiveGame();
     assertTrue(optGame.isPresent());
     Game actualGame = optGame.get();
     assertNotNull(actualGame);
@@ -176,14 +160,14 @@ public class GameQueriesTest {
   @Order(6)
   @Test
   public void testDelete() throws Exception {
-    Boolean isDeleted = gameQueries.delete(client, 1);
+    Boolean isDeleted = gameQueries.delete(1);
     assertTrue(isDeleted);
   }
 
   @Order(7)
   @Test
   public void testNotFound() throws Exception {
-    Optional<Game> og = gameQueries.findById(client, 1);
+    Optional<Game> og = gameQueries.findById(1);
     assertFalse(og.isPresent());
   }
 }

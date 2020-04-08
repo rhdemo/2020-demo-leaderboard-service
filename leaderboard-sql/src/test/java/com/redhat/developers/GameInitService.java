@@ -44,9 +44,6 @@ import com.redhat.developers.sql.GameQueries;
 public class GameInitService {
 
   @Inject
-  ConnectionUtil connectionUtil;
-
-  @Inject
   GameQueries gameQueries;
   Connection client;
 
@@ -58,17 +55,13 @@ public class GameInitService {
   @PostConstruct
   void init() throws Exception {
 
-    if (client == null) {
-      this.client = connectionUtil.getConnection();
-    }
     Boolean isInserted = gameQueries
-        .upsert(client, game);
+        .upsert(game);
     assertTrue(isInserted);
   }
 
   public Optional<Game> gameExist() {
-    List<Game> games = gameQueries
-        .findAll(client);
+    List<Game> games = gameQueries.findAll();
     return Optional.ofNullable(games.get(0));
   }
 

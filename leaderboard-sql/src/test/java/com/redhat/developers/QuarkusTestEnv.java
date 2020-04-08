@@ -44,22 +44,22 @@ public class QuarkusTestEnv implements QuarkusTestResourceLifecycleManager {
     postgreSQL.start();
     Map<String, String> sysProps = new HashMap<>();
     sysProps.put("quarkus.http.test-port", "8085");
-    sysProps.put("quarkus.datasource.jdbc.transaction-isolation-level",
-        "read-committed");
-    sysProps.put("quarkus.datasource.jdbc.new-connection-sql",
-        "SELECT 1");
-    sysProps.put("quarkus.datasource.jdbc.new-connection-sq",
-        "SELECT 1");
-    sysProps.put("quarkus.datasource.jdbc.new-connection-sq",
-        "SELECT 1");
-    sysProps.put("quarkus.datasource.jdbc.min-size",
-        "1");
-    sysProps.put("quarkus.datasource.jdbc.max-size",
-        "1");
-    sysProps.put("quarkus.datasource.username",
-        "demo");
-    sysProps.put("quarkus.datasource.password",
-        "password!");
+    // sysProps.put("quarkus.datasource.jdbc.transaction-isolation-level",
+    // "read-committed");
+    // sysProps.put("quarkus.datasource.jdbc.new-connection-sql",
+    // "SELECT 1");
+    // sysProps.put("quarkus.datasource.jdbc.new-connection-sq",
+    // "SELECT 1");
+    // sysProps.put("quarkus.datasource.jdbc.new-connection-sq",
+    // "SELECT 1");
+    // sysProps.put("quarkus.datasource.jdbc.min-size",
+    // "1");
+    // sysProps.put("quarkus.datasource.jdbc.max-size",
+    // "1");
+    // sysProps.put("quarkus.datasource.username",
+    // "demo");
+    // sysProps.put("quarkus.datasource.password",
+    // "password!");
     sysProps.put("quarkus.datasource.jdbc.url", String.format(JDBC_URL,
         "localhost", postgreSQL.getMappedPort(5432)));
     return sysProps;

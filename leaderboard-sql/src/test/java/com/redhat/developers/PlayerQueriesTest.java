@@ -23,7 +23,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import java.sql.Connection;
 import java.util.List;
 import java.util.Optional;
 import javax.inject.Inject;
@@ -55,21 +54,12 @@ public class PlayerQueriesTest {
   PlayerQueries playerQueries;
 
   @Inject
-  ConnectionUtil connectionUtil;
-
-  Connection client;
-
-  @Inject
   Jsonb jsonb;
 
   @BeforeEach
   public void checkIfGameExist() throws Exception {
     Optional<Game> thisGame = gameInitService.gameExist();
     assertTrue(thisGame.isPresent());
-
-    if (client == null) {
-      this.client = connectionUtil.getConnection();
-    }
   }
 
   @Order(1)
@@ -89,7 +79,7 @@ public class PlayerQueriesTest {
         .scoringServer("BLR");
 
     Boolean isUpserted = playerQueries
-        .upsert(client, player);
+        .upsert(player);
     assertTrue(isUpserted);
   }
 
@@ -110,7 +100,7 @@ public class PlayerQueriesTest {
         .scoringServer("BLR");
 
     Optional<Player> optPlayer = playerQueries
-        .findById(client, 1);
+        .findById(1);
 
     assertTrue(optPlayer.isPresent());
     Player actualPlayer = optPlayer.get();
@@ -137,12 +127,12 @@ public class PlayerQueriesTest {
         .scoringServer("BLR");
 
     Boolean isUpserted = playerQueries
-        .upsert(client, player);
+        .upsert(player);
     assertTrue(isUpserted);
 
     // Check by Querying back
     Optional<Player> optPlayer = playerQueries
-        .findById(client, 1);
+        .findById(1);
     assertTrue(optPlayer.isPresent());
     Player actualPlayer = optPlayer.get();
     assertPlayer(1, player, actualPlayer);
@@ -155,7 +145,7 @@ public class PlayerQueriesTest {
   public void testRankPlayers() throws Exception {
     List<Player> seededPlayers = seedPlayers();
     List<Player> players = playerQueries
-        .rankPlayers(client, 3);
+        .rankPlayers(3);
     assertEquals(3, players.size());
     Player firstPlayer = players.get(0);
     // Check if tom wins the game
@@ -170,7 +160,7 @@ public class PlayerQueriesTest {
   @Test
   public void testDelete() throws Exception {
     Boolean isDeleted = playerQueries
-        .delete(client, 1);
+        .delete(1);
     assertTrue(isDeleted);
   }
 
@@ -178,7 +168,7 @@ public class PlayerQueriesTest {
   @Test
   public void testNoPlayer() throws Exception {
     Optional<Player> player = playerQueries
-        .findById(client, 1);
+        .findById(1);
     assertFalse(player.isPresent());
   }
 
@@ -230,7 +220,7 @@ public class PlayerQueriesTest {
     players.stream()
         .forEach(p -> {
           Boolean isUpserted = playerQueries
-              .upsert(client, p);
+              .upsert(p);
           assertTrue(isUpserted);
         });
     return players;
