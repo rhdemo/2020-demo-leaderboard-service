@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
 import com.redhat.developers.containers.PostgreSqlContainer;
+import com.redhat.developers.containers.QdrouterContainer;
 import com.redhat.developers.containers.StrimziKafkaContainer;
 import com.redhat.developers.containers.StrimziZookeeperContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
@@ -32,10 +33,10 @@ import io.quarkus.test.common.QuarkusTestResourceLifecycleManager;
  * QuarkusTestEnv
  */
 @SuppressWarnings("all")
-public class AggregatorQuarkusTestEnv
+public class QuarkusTestEnv
     implements QuarkusTestResourceLifecycleManager {
 
-  Logger logger = Logger.getLogger(AggregatorQuarkusTestEnv.class.getName());
+  Logger logger = Logger.getLogger(QuarkusTestEnv.class.getName());
 
   public final static String JDBC_URL =
       "jdbc:postgresql://%s:%d/gamedb";
@@ -52,12 +53,15 @@ public class AggregatorQuarkusTestEnv
           .dependsOn(zookeeper)
           .waitingFor(Wait.forListeningPort());
 
+  public static QdrouterContainer amqpContainer = new QdrouterContainer();
+
   @Override
   public Map<String, String> start() {
 
     try {
       kafka.start();
       postgreSQL.start();
+      amqpContainer.start();
     } catch (Exception e) {
       e.printStackTrace();
     }
@@ -73,30 +77,25 @@ public class AggregatorQuarkusTestEnv
 
     Map<String, String> sysProps = new HashMap<>();
 
-    sysProps.put("bootstrap.servers", System.getProperty("bootstrap.servers"));
-    sysProps.put("group.id", getClass().getCanonicalName());
-    sysProps.put("key.deserializer",
-        "org.apache.kafka.common.serialization.StringDeserializer");
-    sysProps.put("value.deserializer",
-        "org.apache.kafka.common.serialization.StringDeserializer");
-    sysProps.put("auto.offset.reset", "earliest");
-    sysProps.put("enable.auto.commit", "false");
-
-    sysProps.put("bootstrap.servers", kafka.getBootstrapServers());
-    sysProps.put("acks", "all");
-    sysProps.put("key.serializer",
-        "org.apache.kafka.common.serialization.StringSerializer");
-    sysProps.put("value.serializer",
-        "org.apache.kafka.common.serialization.StringSerializer");
-
-
     // Quarkus
     sysProps.put("quarkus.http.test-port", "8085"); // Kafka
-
-    sysProps.put("kafka.bootstrap.servers", kafka.getBootstrapServers());
-
+    sysProps.put("quarkus.kafka-streams.bootstrap-servers",
+        kafka.getBootstrapServers());
+    sysProps.put("quarkus.datasource.username", "demo");
+    sysProps.put("quarkus.datasource.password", "password!");
     sysProps.put("quarkus.datasource.jdbc.url", String.format(JDBC_URL,
         postgreSQL.getContainerIpAddress(), postgreSQL.getMappedPort(5432)));
+
+    // AMQP
+    sysProps.put("amqp-host", amqpContainer.getContainerIpAddress());
+    sysProps.put("amqp-port",
+        String.valueOf(amqpContainer.getMappedPort(5671)));
+    sysProps.put("skupper.messaging.ca.cert.path",
+        "src/test/resources/ssl/ca.crt");
+    sysProps.put("skupper.messaging.cert.path",
+        "src/test/resources/ssl/tls.crt");
+    sysProps.put("skupper.messaging.key.path",
+        "src/test/resources/ssl/tls.key");
 
     return sysProps;
   }
@@ -106,6 +105,7 @@ public class AggregatorQuarkusTestEnv
     try {
       kafka.stop();
       postgreSQL.stop();
+      amqpContainer.stop();
     } catch (Exception e) {
 
     }

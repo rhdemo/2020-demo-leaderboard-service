@@ -65,10 +65,10 @@ public class LeaderBoardResource {
       @QueryParam("rowCount") String qRowCount) {
     logger.log(Level.INFO, "Getting Ranked {0} player(s) for game ", qRowCount);
     int rowCount = qRowCount != null ? Integer.parseInt(qRowCount) : 10;
-    List<Player> leaders = playerQueries.rankPlayers(dbConn, rowCount);
+    List<Player> leaders = playerQueries.rankPlayers(rowCount);
     logger.log(Level.INFO, "Got Ranked {0} player(s) for game ",
         leaders.size());
-    Optional<GameTotal> gameTotals = playerQueries.gameTotals(dbConn);
+    Optional<GameTotal> gameTotals = playerQueries.gameTotals();
     logger.log(Level.INFO, "Game Totals ",
         gameTotals.isPresent());
     Leaderboard leaderboard = new Leaderboard();

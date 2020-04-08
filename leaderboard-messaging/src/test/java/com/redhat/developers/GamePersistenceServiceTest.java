@@ -23,14 +23,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
-import java.sql.Connection;
 import java.time.Duration;
-import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.inject.Inject;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import javax.json.bind.Jsonb;
 import com.redhat.developers.data.Game;
 import com.redhat.developers.data.GameMessage;
 import com.redhat.developers.data.GameState;
@@ -48,7 +46,6 @@ import io.vertx.axle.amqp.AmqpClient;
 import io.vertx.axle.amqp.AmqpConnection;
 import io.vertx.axle.amqp.AmqpMessage;
 import io.vertx.axle.amqp.AmqpSender;
-import io.vertx.core.json.Json;
 import io.vertx.core.net.PemKeyCertOptions;
 import io.vertx.core.net.PemTrustOptions;
 import io.vertx.reactivex.core.Vertx;
@@ -57,12 +54,9 @@ import io.vertx.reactivex.core.Vertx;
  * GameResourceTest
  */
 @QuarkusTest
-@QuarkusTestResource(QuarkusMessagingTestEnv.class)
+@QuarkusTestResource(QuarkusTestEnv.class)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class GamePersistenceServiceTest {
-
-  @Inject
-  ObjectMapper objectMapper;
 
   @ConfigProperty(name = "skupper.messaging.ca.cert.path")
   String caCertPath;
@@ -81,7 +75,7 @@ public class GamePersistenceServiceTest {
   GameQueries gameQueries;
 
   @Inject
-  Connection dbConn;
+  Jsonb jsonb;
 
   @Test
   @Order(1)
@@ -105,7 +99,7 @@ public class GamePersistenceServiceTest {
             .address(MC_GAME)
             .durable(false)
             .contentType("application/json")
-            .withBody(Json.encode(gameMessage))
+            .withBody(jsonb.toJson(gameMessage))
             .build();
 
     AmqpMessage message = AmqpMessage.newInstance(delegate);
@@ -135,18 +129,18 @@ public class GamePersistenceServiceTest {
 
     Awaitility.await().atMost(Duration.ofSeconds(10)).untilTrue(messageSent);
     Optional<Game> optGame = gameQueries
-        .findById(dbConn, 1);
+        .findById(2);
     assertTrue(optGame.isPresent());
     Game g = optGame.get();
     assertNotNull(g);
-    assertEquals(1, g.getPk());
+    assertEquals(2, g.getPk());
     assertEquals(game.getGameId(), g.getGameId());
     assertEquals(game.getState(), g.getState());
-    assertEquals(game.getConfiguration(), g.getConfiguration());
+    assertEquals(game.getConfiguration(), "{}");
   }
 
   @Test
-  @Order(3)
+  @Order(2)
   public void testGameUpdate() throws Exception {
     GameMessage gameMessage = new GameMessage();
     Game game = Game.newGame()
@@ -167,7 +161,7 @@ public class GamePersistenceServiceTest {
             .address(MC_GAME)
             .durable(false)
             .contentType("application/json")
-            .withBody(Json.encode(gameMessage))
+            .withBody(jsonb.toJson(gameMessage))
             .build();
 
     AmqpMessage message = AmqpMessage.newInstance(delegate);
@@ -198,22 +192,23 @@ public class GamePersistenceServiceTest {
 
     Awaitility.await().atMost(Duration.ofSeconds(10)).untilTrue(messageSent);
     Optional<Game> optGame = gameQueries
-        .findById(dbConn, 1);
+        .findById(2);
     assertTrue(optGame.isPresent());
     Game g = optGame.get();
     assertNotNull(g);
-    assertEquals(1, g.getPk());
+    assertEquals(2, g.getPk());
     assertEquals(game.getGameId(), g.getGameId());
     assertEquals(game.getState(), g.getState());
-    assertEquals(game.getConfiguration(), g.getConfiguration());
+    assertEquals(game.getConfiguration(), "{}");
   }
 
   @Test
   @Order(3)
   public void testGameDelete() throws Exception {
-    List<Game> games = gameQueries
-        .findAll(dbConn);
-    games.forEach(g -> gameQueries.delete(dbConn, g.getPk()));
+    Optional<Game> optGame = gameQueries
+        .findById(2);
+    assertTrue(optGame.isPresent());
+    gameQueries.delete(optGame.get().getPk());
   }
 
 

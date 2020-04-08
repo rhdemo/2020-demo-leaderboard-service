@@ -24,7 +24,7 @@
     </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>leaderboard-sql</artifactId>
+      <artifactId>leaderboard-common</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>

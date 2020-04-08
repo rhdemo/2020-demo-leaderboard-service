@@ -130,7 +130,6 @@
       </activation>
       <modules>
         <module>leaderboard-common</module>
-        <module>leaderboard-sql</module>
       </modules>
       <properties>
         <skipTests>true</skipTests>
@@ -157,7 +156,6 @@
       </activation>
       <modules>
         <module>leaderboard-common</module>
-        <module>leaderboard-sql</module>
         <module>leaderboard-messaging</module>
         <module>leaderboard-broadcast</module>
         <module>leaderboard-aggregator</module>

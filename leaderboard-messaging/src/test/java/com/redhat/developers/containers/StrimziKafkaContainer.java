@@ -33,7 +33,6 @@ import com.redhat.developers.data.GameMessage;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
 import org.testcontainers.images.builder.Transferable;
-import io.vertx.core.json.Json;
 
 /**
  * StrimziKafkaContainer
@@ -111,8 +110,9 @@ public class StrimziKafkaContainer
       List<GameMessage> gameMessages = jsonb.fromJson(in,
           new ArrayList<GameMessage>() {}.getClass().getGenericSuperclass());
       dataContent = gameMessages.stream()
-          .map(gameMessage -> gameMessage.getPlayer().getPlayerId() + "~"
-              + Json.encode(gameMessage))
+          .map(gameMessage -> gameMessage.getPlayer())
+          .map(p -> p.getPlayerId() + "~"
+              + jsonb.toJson(p))
           .collect(Collectors.joining("\n"));
     } catch (IOException e) {
       logger().error("Error loading data file", e);
@@ -125,7 +125,7 @@ public class StrimziKafkaContainer
     loadCmd.append("\n");
     loadCmd.append("bin/kafka-console-producer.sh");
     loadCmd.append(" --broker-list localhost:9092");
-    loadCmd.append(" --topic my-topic");
+    loadCmd.append(" --topic transactions");
     loadCmd.append(" --property \"parse.key=true\"");
     loadCmd.append(" --property \"key.separator=~\"");
     loadCmd.append(" < " + DATA_FILE);

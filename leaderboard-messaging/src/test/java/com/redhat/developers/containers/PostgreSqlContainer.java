@@ -21,20 +21,22 @@ package com.redhat.developers.containers;
 
 import java.util.HashMap;
 import java.util.Map;
+
+import org.testcontainers.containers.BindMode;
 import org.testcontainers.containers.JdbcDatabaseContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.containers.wait.strategy.WaitStrategy;
 
 /**
- * PostgreSqlContainer
- */
+  * PostgreSqlContainer
+  */
 public class PostgreSqlContainer<SELF extends PostgreSqlContainer<SELF>>
-    extends JdbcDatabaseContainer<SELF> {
+  extends JdbcDatabaseContainer<SELF> {
 
   final private Map<String, String> env = new HashMap<>();
 
   public PostgreSqlContainer() {
-    super("quay.io/redhatdemo/openshift-pgsql12-centos8");
+    super("quay.io/rhdevelopers/openshift-pgsql12-primary:centos7-monitoring");
     env.put("PG_USER_NAME", "demo");
     env.put("PG_USER_PASSWORD", "password!");
     env.put("PG_DATABASE", "gamedb");
@@ -42,11 +44,13 @@ public class PostgreSqlContainer<SELF extends PostgreSqlContainer<SELF>>
     withEnv(env);
     withInitScript("schema.sql");
     waitingFor(Wait.forListeningPort());
+    withExposedPorts(5432);
+    withClasspathResourceMapping("/postgresql/pgdata", "/pgdata",
+      BindMode.READ_WRITE);
   }
 
   @Override
   public void start() {
-    // addFixedExposedPort(5432, 5432);
     super.start();
   }
 
@@ -63,8 +67,8 @@ public class PostgreSqlContainer<SELF extends PostgreSqlContainer<SELF>>
   @Override
   public String getJdbcUrl() {
     return "jdbc:postgresql://" + getContainerIpAddress() + ":"
-        + getMappedPort(5432) + "/" + env.get("PG_DATABASE")
-        + "?loggerLevel=OFF";
+      + getMappedPort(5432) + "/" + env.get("PG_DATABASE")
+      + "?loggerLevel=OFF";
   }
 
 

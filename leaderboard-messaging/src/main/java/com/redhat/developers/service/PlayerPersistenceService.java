@@ -19,7 +19,6 @@
  */
 package com.redhat.developers.service;
 
-import java.sql.Connection;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.logging.Level;
@@ -27,7 +26,6 @@ import java.util.logging.Logger;
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Produces;
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.json.bind.Jsonb;
 import com.redhat.developers.data.Player;
 import com.redhat.developers.sql.PlayerQueries;
@@ -35,6 +33,7 @@ import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.Consumed;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import io.quarkus.kafka.client.serialization.JsonbSerde;
 
 /**
@@ -49,11 +48,10 @@ public class PlayerPersistenceService {
   Jsonb jsonb;
 
   @Inject
-  @Named("gamedb")
-  Connection dbConn;
-
-  @Inject
   PlayerQueries playerQueries;
+
+  @ConfigProperty(name = "quarkus.kafka-streams.topics")
+  String streamTopic;
 
   @Produces
   public Topology handleTransactions() {
@@ -61,7 +59,7 @@ public class PlayerPersistenceService {
     StreamsBuilder builder = new StreamsBuilder();
 
     builder
-        .stream("transactions",
+        .stream(streamTopic,
             (Consumed.with(Serdes.String(), playerSerde)))
         .foreach((k, v) -> save(v));
     Topology topology = builder.build();
@@ -74,7 +72,7 @@ public class PlayerPersistenceService {
     logger.log(Level.FINE,
         "Saving Player  {0} ", player.getPlayerId());
     boolean isInserted = playerQueries
-        .upsert(dbConn, player);
+        .upsert(player);
     final Instant endTime = Instant.now();
     if (isInserted) {
       logger.log(Level.FINE,
