@@ -55,10 +55,6 @@ public class LeaderBoardResource {
   @Inject
   PlayerQueries playerQueries;
 
-  @Inject
-  @Named("gamedb")
-  Connection dbConn;
-
   @GET
   @Path("leaderboard")
   public Response getLeaderBoard(

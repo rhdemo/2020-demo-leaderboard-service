@@ -25,13 +25,11 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.IOException;
 import java.io.InputStream;
-import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.json.bind.Jsonb;
 import com.redhat.developers.data.Game;
 import com.redhat.developers.data.GameMessage;
@@ -65,10 +63,6 @@ public class LeaderBoardResourceTest {
   Jsonb jsonb;
 
   @Inject
-  @Named("gamedb")
-  Connection client;
-
-  @Inject
   PlayerQueries playerQueries;
 
   @Inject
@@ -81,9 +75,9 @@ public class LeaderBoardResourceTest {
         .state(GameState.byCode(1))
         .configuration("{}");
 
-    Boolean gameInserted = gameQueries
-        .upsert(client, g);
-    assertTrue(gameInserted);
+    long pk = gameQueries
+        .upsert(g);
+    assertTrue(pk > 0);
 
     try (InputStream in = getClass().getResource("/data.json").openStream()) {
       List<GameMessage> gameMessages = jsonb.fromJson(in,
@@ -91,8 +85,7 @@ public class LeaderBoardResourceTest {
       gameMessages.stream()
           .map(gm -> gm.getPlayer())
           .forEach(p -> {
-            playerQueries
-                .upsert(client, p);
+            playerQueries.upsert(p);
           });
     } catch (IOException e) {
       logger.log(Level.SEVERE, "Error loading data file", e);
@@ -188,11 +181,11 @@ public class LeaderBoardResourceTest {
 
   @AfterEach
   public void clearRecords() {
-    playerQueries.delete(client, 1);
-    playerQueries.delete(client, 2);
-    playerQueries.delete(client, 3);
-    playerQueries.delete(client, 4);
-    gameQueries.delete(client, 1);
+    playerQueries.delete(1);
+    playerQueries.delete(2);
+    playerQueries.delete(3);
+    playerQueries.delete(4);
+    gameQueries.delete(1);
   }
 
 

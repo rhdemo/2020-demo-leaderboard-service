@@ -86,8 +86,8 @@ public class GameResource {
   @Path("/game/save")
   public Uni<Response> save(Game game) {
     logger.log(Level.FINE, "Saving game {0} ", game.getPk());
-    boolean saved = gameQueries.upsert(game);
-    if (saved) {
+    long pk = gameQueries.upsert(game);
+    if (pk > 0) {
       return Uni.createFrom().item(Response.accepted().build());
     }
     return Uni.createFrom().item(Response.noContent().build());

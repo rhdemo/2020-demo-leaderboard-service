@@ -74,4 +74,3 @@ public class LeaderboardBroadcasterService {
     return jsonb.toJson(players);
   }
 }
-̦

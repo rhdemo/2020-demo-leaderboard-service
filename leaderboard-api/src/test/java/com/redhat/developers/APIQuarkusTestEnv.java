@@ -50,6 +50,8 @@ public class APIQuarkusTestEnv
     // Quarkus
     sysProps.put("quarkus.http.test-port", "8085");
     sysProps.put("quarkus.datasource.db-kind", "postgresql");
+    sysProps.put("quarkus.datasource.username", "demo");
+    sysProps.put("quarkus.datasource.password", "password!");
     sysProps.put("quarkus.datasource.jdbc.url", String.format(JDBC_URL,
         "postgresql", postgreSQL.getMappedPort(5432)));
 
