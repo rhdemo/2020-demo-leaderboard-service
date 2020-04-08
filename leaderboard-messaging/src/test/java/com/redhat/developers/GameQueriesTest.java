@@ -55,8 +55,8 @@ public class GameQueriesTest {
         .state(GameState.byCode(1))
         .configuration("{}");
 
-    Boolean isUpserted = gameQueries.upsert(game);
-    assertTrue(isUpserted);
+    long pk = gameQueries.upsert(game);
+    assertEquals(1, pk);
   }
 
   @Order(2)
@@ -109,9 +109,8 @@ public class GameQueriesTest {
         .state(GameState.byCode(2))
         .configuration("{}");
 
-    Boolean isUpserted = gameQueries
-        .upsert(game);
-    assertTrue(isUpserted);
+    long pk = gameQueries.upsert(game);
+    assertEquals(1, pk);
 
     // Query
     Optional<Game> optGame = gameQueries.findById(1);
@@ -138,14 +137,11 @@ public class GameQueriesTest {
         .state(GameState.byCode(1))
         .configuration("{}");
 
-    Boolean isUpserted = gameQueries
-        .upsert(game3);
-    assertTrue(isUpserted);
+    long pk = gameQueries.upsert(game3);
+    assertEquals(pk, 3);
 
-    isUpserted = gameQueries
-        .upsert(game4);
-
-    assertTrue(isUpserted);
+    pk = gameQueries.upsert(game4);
+    assertEquals(pk, 4);
 
     // Query
     Optional<Game> optGame = gameQueries.findActiveGame();
@@ -162,6 +158,10 @@ public class GameQueriesTest {
   public void testDelete() throws Exception {
     Boolean isDeleted = gameQueries.delete(1);
     assertTrue(isDeleted);
+    // delete other rows as well
+    gameQueries.delete(2);
+    gameQueries.delete(3);
+    gameQueries.delete(4);
   }
 
   @Order(7)

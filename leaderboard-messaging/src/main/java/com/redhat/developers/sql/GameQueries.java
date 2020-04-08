@@ -123,9 +123,9 @@ public class GameQueries {
    * @param game
    * @return
    */
-  public Boolean upsert(Game game) {
+  public long upsert(Game game) {
     logger.info("Upserting game with id " + game.getPk());
-    boolean isSaved = false;
+    long pk = 0;
     try (Connection dbConn = dataSource.getConnection();
         PreparedStatement pst = dbConn
             .prepareStatement(
@@ -135,16 +135,20 @@ public class GameQueries {
                     + " DO"
                     + "   UPDATE set "
                     + "     game_config=?::JSONB,"
-                    + "     game_state=?")) {
+                    + "     game_state=?"
+                    + " RETURNING id")) {
       gameTuple(pst, game);
-      int rowCount = pst.executeUpdate();
-      isSaved = rowCount == 1;
+      ResultSet rs = pst.executeQuery();
+      if (rs.next()) {
+        pk = rs.getLong("id");
+      }
+      logger.log(Level.FINE, "Inserted game with Primary Key {0} ", pk);
       pst.close();
     } catch (SQLException e) {
       logger.log(Level.SEVERE,
           "Error Upserting Game with id " + game.getPk(), e);
     }
-    return isSaved;
+    return pk;
   }
 
   /**

@@ -125,9 +125,9 @@ public class PlayerQueries {
    * @param player
    * @return
    */
-  public Boolean upsert(Player player) {
+  public long upsert(Player player) {
     logger.info("Upserting player with id " + player.getPk());
-    boolean isSaved = false;
+    long pk = 0;
     try (Connection dbConn = dataSource.getConnection();
         PreparedStatement pst = dbConn.prepareStatement("INSERT INTO players"
             + "(player_id,player_name,guess_right,"
@@ -141,15 +141,18 @@ public class PlayerQueries {
             + "     player_name=?,guess_right=?,"
             + "     guess_wrong=?,guess_score=?,"
             + "     creation_server=?,game_server=?,"
-            + "     scoring_server=?,player_avatar=?::JSONB")) {
+            + "     scoring_server=?,player_avatar=?::JSONB"
+            + " RETURNING id")) {
       playerParams(pst, player);
-      int rowCount = pst.executeUpdate();
+      ResultSet rs = pst.executeQuery();
+      if (rs.next()) {
+        pk = rs.getLong("id");
+      }
       pst.close();
-      isSaved = rowCount == 1;
     } catch (SQLException e) {
       logger.log(Level.SEVERE, "Error Inserting " + player.getPk(), e);
     }
-    return isSaved;
+    return pk;
   }
 
   public Boolean delete(long id) {

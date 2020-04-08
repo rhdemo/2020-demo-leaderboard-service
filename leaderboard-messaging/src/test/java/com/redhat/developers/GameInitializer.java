@@ -67,9 +67,9 @@ public class GameInitializer {
         .state(GameState.byCode(1))
         .configuration("{}");
 
-    boolean isInserted = gameQueries
-        .upsert(game);
-    assertTrue(isInserted);
+    long pk = gameQueries.upsert(game);
+    assertTrue(pk > 0);
+    this.game = this.game.pk(pk);
   }
 
   public Optional<Game> gameExist() {

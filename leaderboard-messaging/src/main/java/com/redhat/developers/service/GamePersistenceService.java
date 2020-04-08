@@ -51,11 +51,11 @@ public class GamePersistenceService {
             || "game".equals(gameMessage.getType()))) {
       Game game = gameMessage.getGame();
       logger.log(Level.INFO, "Saving game {0} ", jsonb.toJson(game));
-      boolean isInserted = gameQueries.upsert(game);
+      long pk = gameQueries.upsert(game);
 
-      if (isInserted) {
+      if (pk > 0) {
         logger.log(Level.INFO,
-            "Saved Game {0} sucessfully ", game.getGameId());
+            "Saved Game {0} sucessfully with id ", pk);
       } else {
         logger.log(Level.INFO,
             "Unable to save Game {0} ", game.getGameId());

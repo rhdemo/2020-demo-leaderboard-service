@@ -129,11 +129,11 @@ public class GamePersistenceServiceTest {
 
     Awaitility.await().atMost(Duration.ofSeconds(10)).untilTrue(messageSent);
     Optional<Game> optGame = gameQueries
-        .findById(2);
+        .findById(6);
     assertTrue(optGame.isPresent());
     Game g = optGame.get();
     assertNotNull(g);
-    assertEquals(2, g.getPk());
+    assertEquals(6, g.getPk());
     assertEquals(game.getGameId(), g.getGameId());
     assertEquals(game.getState(), g.getState());
     assertEquals(game.getConfiguration(), "{}");
@@ -192,11 +192,11 @@ public class GamePersistenceServiceTest {
 
     Awaitility.await().atMost(Duration.ofSeconds(10)).untilTrue(messageSent);
     Optional<Game> optGame = gameQueries
-        .findById(2);
+        .findById(6);
     assertTrue(optGame.isPresent());
     Game g = optGame.get();
     assertNotNull(g);
-    assertEquals(2, g.getPk());
+    assertEquals(6, g.getPk());
     assertEquals(game.getGameId(), g.getGameId());
     assertEquals(game.getState(), g.getState());
     assertEquals(game.getConfiguration(), "{}");
@@ -206,7 +206,7 @@ public class GamePersistenceServiceTest {
   @Order(3)
   public void testGameDelete() throws Exception {
     Optional<Game> optGame = gameQueries
-        .findById(2);
+        .findById(6);
     assertTrue(optGame.isPresent());
     gameQueries.delete(optGame.get().getPk());
   }

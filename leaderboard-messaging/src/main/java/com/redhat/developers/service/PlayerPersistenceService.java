@@ -71,13 +71,12 @@ public class PlayerPersistenceService {
     final Instant startTime = Instant.now();
     logger.log(Level.FINE,
         "Saving Player  {0} ", player.getPlayerId());
-    boolean isInserted = playerQueries
-        .upsert(player);
+    long pk = playerQueries.upsert(player);
     final Instant endTime = Instant.now();
-    if (isInserted) {
+    if (pk > 0) {
       logger.log(Level.FINE,
-          "Player {0} Saved in {1} ms",
-          new Object[] {player.getPlayerId(),
+          "Player {0} Saved with Primary key {1} in {2} ms",
+          new Object[] {player.getPlayerId(), pk,
               Duration.between(startTime, endTime).toMillis()});
     } else {
       logger.log(Level.FINE,

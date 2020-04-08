@@ -77,15 +77,13 @@ public class PlayerQueriesTest {
         .gameServer("BLR")
         .scoringServer("BLR");
 
-    Boolean isUpserted = playerQueries
-        .upsert(player);
-    assertTrue(isUpserted);
+    long pk = playerQueries.upsert(player);
+    assertEquals(1, pk);
   }
 
   @Order(2)
   @Test
   public void testFindAll() throws Exception {
-    Game game = gameInitService.game;
     Player player = Player.newPlayer()
         .avatar(avatar())
         .playerId("tom")
@@ -124,9 +122,8 @@ public class PlayerQueriesTest {
         .gameServer("MAA")
         .scoringServer("BLR");
 
-    Boolean isUpserted = playerQueries
-        .upsert(player);
-    assertTrue(isUpserted);
+    long pk = playerQueries.upsert(player);
+    assertEquals(1, pk);
 
     // Check by Querying back
     Optional<Player> optPlayer = playerQueries
@@ -150,8 +147,8 @@ public class PlayerQueriesTest {
     assertEquals("tom", firstPlayer.getPlayerId());
     // Check all the other parameters
     assertPlayer(1, seededPlayers.get(0), players.get(0));
-    assertPlayer(4, seededPlayers.get(1), players.get(1));
-    assertPlayer(5, seededPlayers.get(2), players.get(2));
+    assertPlayer(2, seededPlayers.get(1), players.get(1));
+    assertPlayer(3, seededPlayers.get(2), players.get(2));
   }
 
   @Order(5)
@@ -217,9 +214,8 @@ public class PlayerQueriesTest {
     List<Player> players = gameInitService.seedPlayers();
     players.stream()
         .forEach(p -> {
-          Boolean isUpserted = playerQueries
-              .upsert(p);
-          assertTrue(isUpserted);
+          long pk = playerQueries.upsert(p);
+          assertTrue(pk > 0);
         });
     return players;
   }
