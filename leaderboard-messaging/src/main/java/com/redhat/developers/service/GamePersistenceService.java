@@ -50,12 +50,13 @@ public class GamePersistenceService {
         && ("reset-game".equals(gameMessage.getType())
             || "game".equals(gameMessage.getType()))) {
       Game game = gameMessage.getGame();
-      logger.log(Level.INFO, "Saving game {0} ", jsonb.toJson(game));
+      logger.log(Level.FINEST, "Saving game {0} ", jsonb.toJson(game));
       long pk = gameQueries.upsert(game);
 
       if (pk > 0) {
         logger.log(Level.INFO,
-            "Saved Game {0} sucessfully with id ", pk);
+            "Saved Game {0} sucessfully with id {1} ",
+            new Object[] {game.getGameId(), pk});
       } else {
         logger.log(Level.INFO,
             "Unable to save Game {0} ", game.getGameId());
