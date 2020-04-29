@@ -82,26 +82,26 @@ public class GameResource {
     return Uni.createFrom().item(Response.status(Status.NOT_FOUND).build());
   }
 
-  @POST
-  @Path("/game/save")
-  public Uni<Response> save(Game game) {
-    logger.log(Level.FINE, "Saving game {0} ", game.getPk());
-    long pk = gameQueries.upsert(game);
-    if (pk > 0) {
-      return Uni.createFrom().item(Response.accepted().build());
-    }
-    return Uni.createFrom().item(Response.noContent().build());
-  }
+  // @POST
+  // @Path("/game/save")
+  // public Uni<Response> save(Game game) {
+  // logger.log(Level.FINE, "Saving game {0} ", game.getPk());
+  // long pk = gameQueries.upsert(game);
+  // if (pk > 0) {
+  // return Uni.createFrom().item(Response.accepted().build());
+  // }
+  // return Uni.createFrom().item(Response.noContent().build());
+  // }
 
-  @DELETE
-  @Path("/game/{id}")
-  public Uni<Response> delete(@PathParam("id") Integer id) {
-    logger.log(Level.FINE, "Deleting game with id {0} ", id);
-    boolean deleted = gameQueries.delete(id);
-    if (deleted) {
-      return Uni.createFrom().item(Response.noContent().build());
-    }
-    return Uni.createFrom().item(Response.status(Status.NOT_FOUND).build());
-  }
+  // @DELETE
+  // @Path("/game/{id}")
+  // public Uni<Response> delete(@PathParam("id") Integer id) {
+  // logger.log(Level.FINE, "Deleting game with id {0} ", id);
+  // boolean deleted = gameQueries.delete(id);
+  // if (deleted) {
+  // return Uni.createFrom().item(Response.noContent().build());
+  // }
+  // return Uni.createFrom().item(Response.status(Status.NOT_FOUND).build());
+  // }
 
 }

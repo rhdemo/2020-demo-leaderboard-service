@@ -4,7 +4,7 @@
   <parent>
     <groupId>com.redhat.developers.demo</groupId>
     <artifactId>leaderboard-parent</artifactId>
-    <version>0.0.2</version>
+    <version>1.0.0.Final</version>
   </parent>
   <artifactId>leaderboard-aggregator</artifactId>
   <name>Leaderboard Aggregator</name>
