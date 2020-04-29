@@ -29,8 +29,10 @@ import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 import com.redhat.developers.data.Game;
 import com.redhat.developers.data.GameState;
+import io.agroal.api.AgroalDataSource;
 
 /**
  * GameQueries
@@ -40,13 +42,16 @@ public class GameQueries {
 
   static Logger logger = Logger.getLogger(GameQueries.class.getName());
 
+  @Inject
+  AgroalDataSource dataSource;
 
-  public List<Game> findAll(Connection dbConn) {
+
+  public List<Game> findAll() {
     logger.info("Find All");
     List<Game> games = new ArrayList<>();
-    try {
-      PreparedStatement pst = dbConn
-          .prepareStatement("SELECT * from games ORDER BY game_date DESC");
+    try (Connection dbConn = dataSource.getConnection();
+        PreparedStatement pst = dbConn
+            .prepareStatement("SELECT * from games ORDER BY game_date DESC")) {
       ResultSet resultSet = pst.executeQuery();
       games = games(resultSet);
     } catch (SQLException e) {
@@ -56,25 +61,19 @@ public class GameQueries {
     return games;
   }
 
-  /**
-   * 
-   * @param client
-   * @param id
-   * @return
-   */
-  public Optional<Game> findById(Connection dbConn,
-      int id) {
+  public Optional<Game> findById(int id) {
     logger.info("Finding game with id " + id);
     Game game = null;
-    try {
-      PreparedStatement pst = dbConn.prepareStatement("SELECT * from games "
-          + " WHERE  id=?"
-          + "ORDER BY game_date DESC");
+    try (Connection dbConn = dataSource.getConnection();
+        PreparedStatement pst = dbConn.prepareStatement("SELECT * from games "
+            + " WHERE  id=?"
+            + "ORDER BY game_date DESC");) {
       pst.setLong(1, id);
       ResultSet rs = pst.executeQuery();
       if (rs.next()) {
         game = from(rs);
       }
+      pst.close();
     } catch (SQLException e) {
       logger.log(Level.SEVERE,
           "Error Finding game with id " + id, e);
@@ -82,23 +81,19 @@ public class GameQueries {
     return Optional.ofNullable(game);
   }
 
-  /**
-   * 
-   * @param dbConn
-   * @return
-   */
-  public Optional<Game> findActiveGame(Connection dbConn) {
+  public Optional<Game> findActiveGame() {
     logger.info("Finding Acive game");
     Game game = null;
-    try {
-      PreparedStatement pst = dbConn.prepareStatement("SELECT * from games "
-          + " WHERE game_state=1"
-          + " ORDER BY game_date DESC"
-          + " FETCH FIRST 1 ROW ONLY");
+    try (Connection dbConn = dataSource.getConnection();
+        PreparedStatement pst = dbConn.prepareStatement("SELECT * from games "
+            + " WHERE game_state=1"
+            + " ORDER BY game_date DESC"
+            + " FETCH FIRST 1 ROW ONLY")) {
       ResultSet rs = pst.executeQuery();
       if (rs.next()) {
         game = from(rs);
       }
+      pst.close();
     } catch (SQLException e) {
       logger.log(Level.SEVERE,
           "Error Finding active game ", e);
@@ -106,46 +101,54 @@ public class GameQueries {
     return Optional.ofNullable(game);
   }
 
-  public Boolean delete(Connection dbConn, long id) {
+  public Boolean delete(long id) {
     logger.info("Deleting game with id " + id);
-    try {
-      PreparedStatement pst = dbConn
-          .prepareStatement("DELETE FROM games WHERE id=?");
+    boolean isDeleted = false;
+    try (Connection dbConn = dataSource.getConnection();
+        PreparedStatement pst = dbConn
+            .prepareStatement("DELETE FROM games WHERE id=?")) {
       pst.setLong(1, id);
       int rowCount = pst.executeUpdate();
-      return rowCount == 1;
+      isDeleted = rowCount == 1;
+      pst.close();
     } catch (SQLException e) {
       logger.log(Level.SEVERE, "Error deleting game with id " + id,
           e);
     }
-    return false;
+    return isDeleted;
   }
 
   /**
    * 
-   * @param client
    * @param game
    * @return
    */
-  public Boolean upsert(Connection dbConn, Game game) {
+  public long upsert(Game game) {
     logger.info("Upserting game with id " + game.getPk());
-    try {
-      PreparedStatement pst = dbConn
-          .prepareStatement("INSERT INTO games(game_id,game_config,game_state)"
-              + " VALUES (?,?::JSON,?)"
-              + " ON CONFLICT (game_id)"
-              + " DO"
-              + "   UPDATE set "
-              + "     game_config=?::JSON,"
-              + "     game_state=?");
+    long pk = 0;
+    try (Connection dbConn = dataSource.getConnection();
+        PreparedStatement pst = dbConn
+            .prepareStatement(
+                "INSERT INTO games(game_id,game_config,game_state)"
+                    + " VALUES (?,?::JSONB,?)"
+                    + " ON CONFLICT (game_id)"
+                    + " DO"
+                    + "   UPDATE set "
+                    + "     game_config=?::JSONB,"
+                    + "     game_state=?"
+                    + " RETURNING id")) {
       gameTuple(pst, game);
-      int rowCount = pst.executeUpdate();
-      return rowCount == 1;
+      ResultSet rs = pst.executeQuery();
+      if (rs.next()) {
+        pk = rs.getLong("id");
+      }
+      logger.log(Level.FINE, "Inserted game with Primary Key {0} ", pk);
+      pst.close();
     } catch (SQLException e) {
       logger.log(Level.SEVERE,
           "Error Upserting Game with id " + game.getPk(), e);
     }
-    return false;
+    return pk;
   }
 
   /**

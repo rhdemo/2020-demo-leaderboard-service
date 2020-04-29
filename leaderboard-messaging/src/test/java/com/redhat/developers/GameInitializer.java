@@ -20,18 +20,24 @@
 package com.redhat.developers;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import java.sql.Connection;
+import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
+import javax.json.bind.JsonbBuilder;
 import com.redhat.developers.data.Game;
 import com.redhat.developers.data.GameMessage;
 import com.redhat.developers.data.GameState;
+import com.redhat.developers.data.Player;
 import com.redhat.developers.sql.GameQueries;
+import com.redhat.developers.sql.PlayerQueries;
 
 /**
  * GameInitService
@@ -48,7 +54,7 @@ public class GameInitializer {
   GameQueries gameQueries;
 
   @Inject
-  Connection client;
+  PlayerQueries playerQueries;
 
   Game game;
 
@@ -56,24 +62,37 @@ public class GameInitializer {
 
   @PostConstruct
   void init() throws Exception {
-    Game g = Game.newGame()
+    this.game = Game.newGame()
         .gameId("new-game-1583157438")
         .state(GameState.byCode(1))
         .configuration("{}");
 
-    boolean isInserted = gameQueries
-        .upsert(client, g);
-    assertTrue(isInserted);
-
+    long pk = gameQueries.upsert(game);
+    assertTrue(pk > 0);
+    this.game = this.game.pk(pk);
   }
 
   public Optional<Game> gameExist() {
     List<Game> games = gameQueries
-        .findAll(client);
-    return Optional.ofNullable(games.get(0));
+        .findAll();
+    this.game = games.get(0);
+    return Optional.ofNullable(game);
   }
 
   public void deleteGame() {
-    gameQueries.delete(client, this.game.getPk());
+    gameQueries.delete(this.game.getPk());
   }
+
+  public List<Player> seedPlayers()
+      throws Exception {
+    URL dataFileUrl = this.getClass().getResource("/data.json");
+    Jsonb jsonb = JsonbBuilder.newBuilder().build();
+    List<GameMessage> gameMessages = jsonb.fromJson(dataFileUrl.openStream(),
+        new ArrayList<GameMessage>() {}.getClass()
+            .getGenericSuperclass());
+    return gameMessages.stream()
+        .map(g -> g.getPlayer())
+        .collect(Collectors.toList());
+  }
+
 }

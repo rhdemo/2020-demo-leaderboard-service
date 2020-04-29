@@ -20,12 +20,9 @@
 package com.redhat.developers.service;
 
 import static java.util.logging.Level.FINE;
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.time.Duration;
 import java.util.List;
 import java.util.logging.Logger;
-import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
@@ -33,7 +30,6 @@ import com.redhat.developers.data.Player;
 import com.redhat.developers.sql.PlayerQueries;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.reactive.messaging.Outgoing;
-import io.agroal.api.AgroalDataSource;
 import io.smallrye.mutiny.Multi;
 
 /**
@@ -46,9 +42,6 @@ public class LeaderboardBroadcasterService {
       Logger.getLogger(LeaderboardBroadcasterService.class.getName());
 
   @Inject
-  AgroalDataSource dataSource;
-
-  @Inject
   Jsonb jsonb;
 
   @Inject
@@ -59,13 +52,6 @@ public class LeaderboardBroadcasterService {
 
   @ConfigProperty(name = "rhdemo.leaderboard-broadcast.tickInterval")
   int tickInterval;
-
-  Connection dbConn;
-
-  @PostConstruct
-  void init() throws SQLException {
-    this.dbConn = dataSource.getConnection();
-  }
 
   @Outgoing("leaderboard-broadcast")
   public Multi<String> broadcastLeaderboard() {
@@ -84,7 +70,7 @@ public class LeaderboardBroadcasterService {
   public String rankedPlayerList(long tick) {
     logger.log(FINE, "Sending message for tick {0} ", tick);
     List<Player> players = playerQueries
-        .rankPlayers(dbConn, rowCount);
+        .rankPlayers(rowCount);
     return jsonb.toJson(players);
   }
 }

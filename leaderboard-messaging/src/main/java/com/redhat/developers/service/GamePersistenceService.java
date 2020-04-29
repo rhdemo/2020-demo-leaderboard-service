@@ -19,12 +19,10 @@
  */
 package com.redhat.developers.service;
 
-import java.sql.Connection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.json.bind.Jsonb;
 import com.redhat.developers.data.Game;
 import com.redhat.developers.data.GameMessage;
@@ -43,10 +41,6 @@ public class GamePersistenceService {
   Jsonb jsonb;
 
   @Inject
-  @Named("gamedb")
-  Connection dbConn;
-
-  @Inject
   GameQueries gameQueries;
 
   @Incoming("game-state")
@@ -56,12 +50,13 @@ public class GamePersistenceService {
         && ("reset-game".equals(gameMessage.getType())
             || "game".equals(gameMessage.getType()))) {
       Game game = gameMessage.getGame();
-      logger.log(Level.INFO, "Saving game {0} ", game.getPk());
-      boolean isInserted = gameQueries.upsert(dbConn, game);
+      logger.log(Level.FINEST, "Saving game {0} ", jsonb.toJson(game));
+      long pk = gameQueries.upsert(game);
 
-      if (isInserted) {
+      if (pk > 0) {
         logger.log(Level.INFO,
-            "Saved Game {0} sucessfully ", game.getGameId());
+            "Saved Game {0} sucessfully with id {1} ",
+            new Object[] {game.getGameId(), pk});
       } else {
         logger.log(Level.INFO,
             "Unable to save Game {0} ", game.getGameId());

@@ -19,13 +19,11 @@
  */
 package com.redhat.developers.api;
 
-import java.sql.Connection;
 import java.util.List;
 import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -53,15 +51,11 @@ public class GameResource {
   @Inject
   GameQueries gameQueries;
 
-  @Inject
-  @Named("gamedb")
-  Connection dbConn;
-
   @Path("/game/all")
   @GET
   public Uni<Response> all() {
     logger.info("Finding active game");
-    List<Game> games = gameQueries.findAll(dbConn);
+    List<Game> games = gameQueries.findAll();
     return Uni.createFrom().item(Response.ok().entity(games).build());
   }
 
@@ -69,7 +63,7 @@ public class GameResource {
   @GET
   public Uni<Response> activeGame() {
     logger.info("Finding active game");
-    Optional<Game> game = gameQueries.findActiveGame(dbConn);
+    Optional<Game> game = gameQueries.findActiveGame();
 
     if (game.isPresent()) {
       return Uni.createFrom().item(Response.ok().entity(game).build());
@@ -81,33 +75,33 @@ public class GameResource {
   @Path("/game/{id}")
   public Uni<Response> find(@PathParam("id") Integer id) {
     logger.log(Level.FINE, "Finding game by id {0} ", id);
-    Optional<Game> game = gameQueries.findById(dbConn, id);
+    Optional<Game> game = gameQueries.findById(id);
     if (game.isPresent()) {
       return Uni.createFrom().item(Response.ok().entity(game).build());
     }
     return Uni.createFrom().item(Response.status(Status.NOT_FOUND).build());
   }
 
-  @POST
-  @Path("/game/save")
-  public Uni<Response> save(Game game) {
-    logger.log(Level.FINE, "Saving game {0} ", game.getPk());
-    boolean saved = gameQueries.upsert(dbConn, game);
-    if (saved) {
-      return Uni.createFrom().item(Response.accepted().build());
-    }
-    return Uni.createFrom().item(Response.noContent().build());
-  }
+  // @POST
+  // @Path("/game/save")
+  // public Uni<Response> save(Game game) {
+  // logger.log(Level.FINE, "Saving game {0} ", game.getPk());
+  // long pk = gameQueries.upsert(game);
+  // if (pk > 0) {
+  // return Uni.createFrom().item(Response.accepted().build());
+  // }
+  // return Uni.createFrom().item(Response.noContent().build());
+  // }
 
-  @DELETE
-  @Path("/game/{id}")
-  public Uni<Response> delete(@PathParam("id") Integer id) {
-    logger.log(Level.FINE, "Deleting game with id {0} ", id);
-    boolean deleted = gameQueries.delete(dbConn, id);
-    if (deleted) {
-      return Uni.createFrom().item(Response.noContent().build());
-    }
-    return Uni.createFrom().item(Response.status(Status.NOT_FOUND).build());
-  }
+  // @DELETE
+  // @Path("/game/{id}")
+  // public Uni<Response> delete(@PathParam("id") Integer id) {
+  // logger.log(Level.FINE, "Deleting game with id {0} ", id);
+  // boolean deleted = gameQueries.delete(id);
+  // if (deleted) {
+  // return Uni.createFrom().item(Response.noContent().build());
+  // }
+  // return Uni.createFrom().item(Response.status(Status.NOT_FOUND).build());
+  // }
 
 }

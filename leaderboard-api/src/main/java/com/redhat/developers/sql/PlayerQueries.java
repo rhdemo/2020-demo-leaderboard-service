@@ -19,6 +19,14 @@
  */
 package com.redhat.developers.sql;
 
+import com.redhat.developers.data.Avatar;
+import com.redhat.developers.data.GameTotal;
+import com.redhat.developers.data.Player;
+import io.agroal.api.AgroalDataSource;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import javax.json.bind.Jsonb;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -28,12 +36,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import javax.json.bind.Jsonb;
-import com.redhat.developers.data.Avatar;
-import com.redhat.developers.data.GameTotal;
-import com.redhat.developers.data.Player;
 
 /**
  * PlayerQueries
@@ -46,20 +48,22 @@ public class PlayerQueries {
   @Inject
   Jsonb jsonb;
 
+  @Inject
+  AgroalDataSource dataSource;
 
-  public Optional<Player> findById(Connection dbConn, long id) {
+  public Optional<Player> findById(long id) {
     Player player = null;
-    try {
-      PreparedStatement pst =
-          dbConn.prepareStatement("SELECT * from players where id=?");
+    try (Connection dbConn = dataSource.getConnection();
+        PreparedStatement pst =
+            dbConn.prepareStatement("SELECT * from players where id=?")) {
       pst.setLong(1, id);
       ResultSet rs = pst.executeQuery();
 
       if (rs.next()) {
         player = from(rs);
-      } else {
-
       }
+      pst.close();
+      dbConn.close();
     } catch (SQLException e) {
       logger.log(Level.SEVERE, "Error Finding player with id " + id,
           e);
@@ -68,26 +72,20 @@ public class PlayerQueries {
 
   }
 
-  /**
-   * 
-   * @param dbConn
-   * @param rowCount
-   * @return
-   */
-  public List<Player> rankPlayers(Connection dbConn,
-      int rowCount) {
-    ArrayList<Player> players = new ArrayList<>();
-    try {
-      PreparedStatement pst =
-          dbConn.prepareStatement("SELECT p.* FROM players p"
-              + " WHERE p.game_id=(SELECT g.game_id from games g ORDER BY g.game_date DESC FETCH FIRST 1 ROW ONLY)"
-              + " ORDER BY p.guess_score DESC,"
-              + " p.guess_right DESC,"
-              + " p.guess_wrong ASC"
-              + " FETCH FIRST ? ROW ONLY");
+  public List<Player> rankPlayers(int rowCount) {
+    List<Player> players = new ArrayList<>();
+    try (Connection dbConn = dataSource.getConnection();
+        PreparedStatement pst =
+            dbConn.prepareStatement("SELECT p.* FROM players p"
+                + " WHERE p.game_id=(SELECT g.game_id from games g ORDER BY g.game_date DESC FETCH FIRST 1 ROW ONLY)"
+                + " ORDER BY p.guess_score DESC,"
+                + " p.guess_right DESC,"
+                + " p.guess_wrong ASC"
+                + " FETCH FIRST ? ROW ONLY")) {
       pst.setLong(1, rowCount);
       ResultSet rs = pst.executeQuery();
-      return this.playersList(rs);
+      players = this.playersList(rs);
+      pst.close();
     } catch (SQLException e) {
       logger.log(Level.SEVERE,
           "Error ranking players for game", e);
@@ -97,24 +95,23 @@ public class PlayerQueries {
 
   /**
    * 
-   * @param dbConn
    * @return
    */
-  public Optional<GameTotal> gameTotals(Connection dbConn) {
+  public Optional<GameTotal> gameTotals() {
     GameTotal gameTotal = null;
-    try {
-      PreparedStatement pst =
-          dbConn.prepareStatement("SELECT COUNT(*) as total_players,"
-              + " SUM(p.guess_right) as total_rights,"
-              + " SUM(p.guess_wrong) as total_wrongs,"
-              + " SUM(p.guess_score) as total_dollars"
-              + " FROM players p"
-              + " WHERE p.game_id=(SELECT g.game_id from games g ORDER BY g.game_date DESC FETCH FIRST 1 ROW ONLY)");
+    try (Connection dbConn = dataSource.getConnection();
+        PreparedStatement pst =
+            dbConn.prepareStatement("SELECT COUNT(*) as total_players,"
+                + " SUM(p.guess_right) as total_rights,"
+                + " SUM(p.guess_wrong) as total_wrongs,"
+                + " SUM(p.guess_score) as total_dollars"
+                + " FROM players p"
+                + " WHERE p.game_id=(SELECT g.game_id from games g ORDER BY g.game_date DESC FETCH FIRST 1 ROW ONLY)")) {
       ResultSet rs = pst.executeQuery();
-
       if (rs.next()) {
         gameTotal = gameTotal(rs);
       }
+      pst.close();
     } catch (SQLException e) {
       logger.log(Level.SEVERE,
           "Error getting game totals for game", e);
@@ -126,54 +123,53 @@ public class PlayerQueries {
 
   /**
    * 
-   * @param dbConn
    * @param player
    * @return
    */
-  public Boolean upsert(Connection dbConn, Player player) {
+  public long upsert(Player player) {
     logger.info("Upserting player with id " + player.getPk());
-    try {
-      PreparedStatement pst = dbConn.prepareStatement("INSERT INTO players"
-          + "(player_id,player_name,guess_right,"
-          + "guess_wrong,guess_score,creation_server,"
-          + "game_server,scoring_server,"
-          + "player_avatar,game_id)"
-          + " VALUES (?,?,?,?,?,?,?,?,?::JSON,?)"
-          + " ON CONFLICT (player_id) WHERE game_id=?"
-          + "  DO "
-          + "   UPDATE  set "
-          + "     player_name=?,guess_right=?,"
-          + "     guess_wrong=?,guess_score=?,"
-          + "     creation_server=?,game_server=?,"
-          + "     scoring_server=?,player_avatar=?::JSON");
+    long pk = 0;
+    try (Connection dbConn = dataSource.getConnection();
+        PreparedStatement pst = dbConn.prepareStatement("INSERT INTO players"
+            + "(player_id,player_name,guess_right,"
+            + "guess_wrong,guess_score,creation_server,"
+            + "game_server,scoring_server,"
+            + "player_avatar,game_id)"
+            + " VALUES (?,?,?,?,?,?,?,?,?::JSONB,?)"
+            + " ON CONFLICT (player_id) WHERE game_id=?"
+            + "  DO "
+            + "   UPDATE  set "
+            + "     player_name=?,guess_right=?,"
+            + "     guess_wrong=?,guess_score=?,"
+            + "     creation_server=?,game_server=?,"
+            + "     scoring_server=?,player_avatar=?::JSONB"
+            + " RETURNING id")) {
       playerParams(pst, player);
-      int rowCount = pst.executeUpdate();
-      return rowCount == 1;
+      ResultSet rs = pst.executeQuery();
+      if (rs.next()) {
+        pk = rs.getLong("id");
+      }
+      pst.close();
     } catch (SQLException e) {
       logger.log(Level.SEVERE, "Error Inserting " + player.getPk(), e);
     }
-    return false;
+    return pk;
   }
 
-  /**
-   * 
-   * @param dbConn
-   * @param id
-   * @return
-   */
-  public Boolean delete(Connection dbConn, long id) {
-
-    try {
-      PreparedStatement pst =
-          dbConn.prepareStatement("DELETE FROM players WHERE id=?");
+  public Boolean delete(long id) {
+    boolean isDeleted = false;
+    try (Connection dbConn = dataSource.getConnection();
+        PreparedStatement pst =
+            dbConn.prepareStatement("DELETE FROM players WHERE id=?")) {
       pst.setLong(1, id);
       int rowCount = pst.executeUpdate();
-      return rowCount == 1;
+      pst.close();
+      isDeleted = rowCount == 1;
     } catch (SQLException e) {
       logger.log(Level.SEVERE, "Error Finding player with id " + id,
           e);
     }
-    return false;
+    return isDeleted;
 
   }
 

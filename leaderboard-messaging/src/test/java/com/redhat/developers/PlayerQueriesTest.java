@@ -23,7 +23,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import java.sql.Connection;
 import java.util.List;
 import java.util.Optional;
 import javax.inject.Inject;
@@ -49,15 +48,10 @@ import io.quarkus.test.junit.QuarkusTest;
 public class PlayerQueriesTest {
 
   @Inject
-  GameInitService gameInitService;
+  GameInitializer gameInitService;
 
   @Inject
   PlayerQueries playerQueries;
-
-  @Inject
-  ConnectionUtil connectionUtil;
-
-  Connection client;
 
   @Inject
   Jsonb jsonb;
@@ -66,16 +60,11 @@ public class PlayerQueriesTest {
   public void checkIfGameExist() throws Exception {
     Optional<Game> thisGame = gameInitService.gameExist();
     assertTrue(thisGame.isPresent());
-
-    if (client == null) {
-      this.client = connectionUtil.getConnection();
-    }
   }
 
   @Order(1)
   @Test
   public void testAdd() throws Exception {
-    Game game = gameInitService.game;
     Player player = Player.newPlayer()
         .avatar(avatar())
         .playerId("tom")
@@ -83,20 +72,18 @@ public class PlayerQueriesTest {
         .score(10)
         .right(5)
         .wrong(2)
-        .gameId(game.getGameId())
+        .gameId("new-game-1583157438")
         .creationServer("BLR")
         .gameServer("BLR")
         .scoringServer("BLR");
 
-    Boolean isUpserted = playerQueries
-        .upsert(client, player);
-    assertTrue(isUpserted);
+    long pk = playerQueries.upsert(player);
+    assertEquals(1, pk);
   }
 
   @Order(2)
   @Test
   public void testFindAll() throws Exception {
-    Game game = gameInitService.game;
     Player player = Player.newPlayer()
         .avatar(avatar())
         .playerId("tom")
@@ -104,13 +91,13 @@ public class PlayerQueriesTest {
         .score(10)
         .right(5)
         .wrong(2)
-        .gameId(game.getGameId())
+        .gameId("new-game-1583157438")
         .creationServer("BLR")
         .gameServer("BLR")
         .scoringServer("BLR");
 
     Optional<Player> optPlayer = playerQueries
-        .findById(client, 1);
+        .findById(1);
 
     assertTrue(optPlayer.isPresent());
     Player actualPlayer = optPlayer.get();
@@ -122,7 +109,6 @@ public class PlayerQueriesTest {
   @Order(3)
   @Test
   public void testUpsert() throws Exception {
-    Game game = gameInitService.game;
     Player player = Player.newPlayer()
         .pk(1)
         .avatar(avatar())
@@ -131,18 +117,17 @@ public class PlayerQueriesTest {
         .score(20)
         .right(7)
         .wrong(2)
-        .gameId(game.getGameId())
+        .gameId("new-game-1583157438")
         .creationServer("BLR")
         .gameServer("MAA")
         .scoringServer("BLR");
 
-    Boolean isUpserted = playerQueries
-        .upsert(client, player);
-    assertTrue(isUpserted);
+    long pk = playerQueries.upsert(player);
+    assertEquals(1, pk);
 
     // Check by Querying back
     Optional<Player> optPlayer = playerQueries
-        .findById(client, 1);
+        .findById(1);
     assertTrue(optPlayer.isPresent());
     Player actualPlayer = optPlayer.get();
     assertPlayer(1, player, actualPlayer);
@@ -155,22 +140,22 @@ public class PlayerQueriesTest {
   public void testRankPlayers() throws Exception {
     List<Player> seededPlayers = seedPlayers();
     List<Player> players = playerQueries
-        .rankPlayers(client, 3);
+        .rankPlayers(3);
     assertEquals(3, players.size());
     Player firstPlayer = players.get(0);
     // Check if tom wins the game
     assertEquals("tom", firstPlayer.getPlayerId());
     // Check all the other parameters
     assertPlayer(1, seededPlayers.get(0), players.get(0));
-    assertPlayer(4, seededPlayers.get(1), players.get(1));
-    assertPlayer(5, seededPlayers.get(2), players.get(2));
+    assertPlayer(2, seededPlayers.get(1), players.get(1));
+    assertPlayer(3, seededPlayers.get(2), players.get(2));
   }
 
   @Order(5)
   @Test
   public void testDelete() throws Exception {
     Boolean isDeleted = playerQueries
-        .delete(client, 1);
+        .delete(1);
     assertTrue(isDeleted);
   }
 
@@ -178,7 +163,7 @@ public class PlayerQueriesTest {
   @Test
   public void testNoPlayer() throws Exception {
     Optional<Player> player = playerQueries
-        .findById(client, 1);
+        .findById(1);
     assertFalse(player.isPresent());
   }
 
@@ -229,9 +214,8 @@ public class PlayerQueriesTest {
     List<Player> players = gameInitService.seedPlayers();
     players.stream()
         .forEach(p -> {
-          Boolean isUpserted = playerQueries
-              .upsert(client, p);
-          assertTrue(isUpserted);
+          long pk = playerQueries.upsert(p);
+          assertTrue(pk > 0);
         });
     return players;
   }

@@ -4,7 +4,7 @@
   <parent>
     <groupId>com.redhat.developers.demo</groupId>
     <artifactId>leaderboard-parent</artifactId>
-    <version>0.0.2</version>
+    <version>1.0.0.Final</version>
   </parent>
   <artifactId>leaderboard-messaging</artifactId>
   <name>Leaderboard Reactive Messaging</name>
@@ -12,16 +12,20 @@
   <dependencies>
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>leaderboard-sql</artifactId>
+      <artifactId>leaderboard-common</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-resteasy</artifactId>
+      <artifactId>quarkus-jdbc-postgresql</artifactId>
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-smallrye-health</artifactId>
+      <artifactId>quarkus-agroal</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-resteasy</artifactId>
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
